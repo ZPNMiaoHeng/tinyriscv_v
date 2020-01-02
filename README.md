@@ -13,10 +13,9 @@
 本项目实现的是一个微RISC-V处理器核(tinyriscv)，用verilog语言编写，只求以最简单、最通俗易懂的方式实现riscv指令的功能，因此没有特意去对代码做任何的优化，因此你会看到里面写的代码有很多冗余的地方。tinyriscv处理器核有以下特点：
 
 1. 实现了RV32I指令集，通过riscv的RV32I指令兼容性测试，支持以下指令：add addi and andi auipc beq bge bgeu blt bltu bne fence\_i jal jalr lb lbu lh lhu lw lui or ori sb sh sw sll slli slt slti sltiu sltu sra srai srl srli sub xor xori；
-
-2. 采用三级流水线，即取指，译码、访存、执行，回写；
-
-3. 可以运行简单的c语言程序；
+2. 支持RV32M的乘法(单周期)指令：mul mulh mulhu mulhsu；
+3. 采用三级流水线，即取指，译码、访存、执行，回写；
+4. 可以运行简单的c语言程序；
 
 项目中的各目录说明：
 
@@ -64,8 +63,10 @@ tinyriscv的整体框架如下：
 
 # 4.未来计划
 
-1. 支持乘、除法指令；
-
+1. 支持除法指令；
 2. 在真实的FPGA平台(xilinx artix-7)上跑起来；
-
 3. ……
+
+# 5.更新记录
+
+2020-01-02：支持RV32M的乘法指令。
