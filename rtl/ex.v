@@ -52,12 +52,28 @@ module ex (
     wire[4:0] shift_bits;
     reg[1:0] sram_raddr_index;
     reg[1:0] sram_waddr_index;
+    wire[`DoubleRegBus] mul_temp;
+    wire[`DoubleRegBus] mulh_temp;
+    wire[`DoubleRegBus] mulh_temp_invert;
+    wire[`DoubleRegBus] mulhsu_temp;
+    wire[`DoubleRegBus] mulhsu_temp_invert;
+    wire[`RegBus] op1_mul;
+    wire[`RegBus] op2_mul;
 
     wire[6:0] opcode = inst_i[6:0];
     wire[2:0] funct3 = inst_i[14:12];
+    wire[6:0] funct7 = inst_i[31:25];
 
     assign sign_extend_tmp = {{20{inst_i[31]}}, inst_i[31:20]};
     assign shift_bits = inst_i[24:20];
+    assign mul_temp = reg1_rdata_i * reg2_rdata_i;
+    assign op1_mul = (reg1_rdata_i[31] == 1'b1)? (~reg1_rdata_i + 1): reg1_rdata_i;
+    assign op2_mul = (reg2_rdata_i[31] == 1'b1)? (~reg2_rdata_i + 1): reg2_rdata_i;
+    assign mulhsu_temp = op1_mul * reg2_rdata_i;
+    assign mulh_temp = op1_mul * op2_mul;
+    assign mulhsu_temp_invert = ~mulhsu_temp + 1;
+    assign mulh_temp_invert = ~mulh_temp + 1;
+
 
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
@@ -143,81 +159,114 @@ module ex (
                         end
                     endcase
                 end
-                `INST_TYPE_R: begin
-                    case (funct3)
-                        `INST_ADD_SUB: begin
-                            jump_flag_o <= `JumpDisable;
-                            if (inst_i[30] == 1'b0) begin
-                                reg_wdata_o <= reg1_rdata_i + reg2_rdata_i;
-                            end else begin
-                                reg_wdata_o <= reg1_rdata_i - reg2_rdata_i;
-                            end
-                        end
-                        `INST_SLL: begin
-                            jump_flag_o <= `JumpDisable;
-                            reg_wdata_o <= reg1_rdata_i << reg2_rdata_i[4:0];
-                        end
-                        `INST_SLT: begin
-                            jump_flag_o <= `JumpDisable;
-                            if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b1) begin
-                                if (reg1_rdata_i < reg2_rdata_i) begin
-                                    reg_wdata_o <= 32'h00000001;
+                `INST_TYPE_R_M: begin
+                    if ((funct7 == 7'b0000000) || (funct7 == 7'b0100000)) begin
+                        case (funct3)
+                            `INST_ADD_SUB: begin
+                                jump_flag_o <= `JumpDisable;
+                                if (inst_i[30] == 1'b0) begin
+                                    reg_wdata_o <= reg1_rdata_i + reg2_rdata_i;
                                 end else begin
-                                    reg_wdata_o <= 32'h00000000;
-                                end
-                            end else if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b0) begin
-                                reg_wdata_o <= 32'h00000001;
-                            end else if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b1) begin
-                                reg_wdata_o <= 32'h00000000;
-                            end else begin
-                                if (reg1_rdata_i < reg2_rdata_i) begin
-                                    reg_wdata_o <= 32'h00000001;
-                                end else begin
-                                    reg_wdata_o <= 32'h00000000;
+                                    reg_wdata_o <= reg1_rdata_i - reg2_rdata_i;
                                 end
                             end
-                        end
-                        `INST_SLTU: begin
-                            jump_flag_o <= `JumpDisable;
-                            if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b1) begin
-                                if (reg1_rdata_i < reg2_rdata_i) begin
+                            `INST_SLL: begin
+                                jump_flag_o <= `JumpDisable;
+                                reg_wdata_o <= reg1_rdata_i << reg2_rdata_i[4:0];
+                            end
+                            `INST_SLT: begin
+                                jump_flag_o <= `JumpDisable;
+                                if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b1) begin
+                                    if (reg1_rdata_i < reg2_rdata_i) begin
+                                        reg_wdata_o <= 32'h00000001;
+                                    end else begin
+                                        reg_wdata_o <= 32'h00000000;
+                                    end
+                                end else if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b0) begin
                                     reg_wdata_o <= 32'h00000001;
-                                end else begin
+                                end else if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b1) begin
                                     reg_wdata_o <= 32'h00000000;
-                                end
-                            end else if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b0) begin
-                                reg_wdata_o <= 32'h00000000;
-                            end else if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b1) begin
-                                reg_wdata_o <= 32'h00000001;
-                            end else begin
-                                if (reg1_rdata_i < reg2_rdata_i) begin
-                                    reg_wdata_o <= 32'h00000001;
                                 end else begin
-                                    reg_wdata_o <= 32'h00000000;
+                                    if (reg1_rdata_i < reg2_rdata_i) begin
+                                        reg_wdata_o <= 32'h00000001;
+                                    end else begin
+                                        reg_wdata_o <= 32'h00000000;
+                                    end
                                 end
                             end
-                        end
-                        `INST_XOR: begin
-                            jump_flag_o <= `JumpDisable;
-                            reg_wdata_o <= reg1_rdata_i ^ reg2_rdata_i;
-                        end
-                        `INST_SR: begin
-                            jump_flag_o <= `JumpDisable;
-                            if (inst_i[30] == 1'b1) begin
-                                reg_wdata_o <= ({32{reg1_rdata_i[31]}} << (6'd32 - {1'b0, reg2_rdata_i[4:0]})) | (reg1_rdata_i >> reg2_rdata_i[4:0]);
-                            end else begin
-                                reg_wdata_o <= reg1_rdata_i >> reg2_rdata_i[4:0];
+                            `INST_SLTU: begin
+                                jump_flag_o <= `JumpDisable;
+                                if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b1) begin
+                                    if (reg1_rdata_i < reg2_rdata_i) begin
+                                        reg_wdata_o <= 32'h00000001;
+                                    end else begin
+                                        reg_wdata_o <= 32'h00000000;
+                                    end
+                                end else if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b0) begin
+                                    reg_wdata_o <= 32'h00000000;
+                                end else if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b1) begin
+                                    reg_wdata_o <= 32'h00000001;
+                                end else begin
+                                    if (reg1_rdata_i < reg2_rdata_i) begin
+                                        reg_wdata_o <= 32'h00000001;
+                                    end else begin
+                                        reg_wdata_o <= 32'h00000000;
+                                    end
+                                end
                             end
-                        end
-                        `INST_OR: begin
-                            jump_flag_o <= `JumpDisable;
-                            reg_wdata_o <= reg1_rdata_i | reg2_rdata_i;
-                        end
-                        `INST_AND: begin
-                            jump_flag_o <= `JumpDisable;
-                            reg_wdata_o <= reg1_rdata_i & reg2_rdata_i;
-                        end
-                    endcase
+                            `INST_XOR: begin
+                                jump_flag_o <= `JumpDisable;
+                                reg_wdata_o <= reg1_rdata_i ^ reg2_rdata_i;
+                            end
+                            `INST_SR: begin
+                                jump_flag_o <= `JumpDisable;
+                                if (inst_i[30] == 1'b1) begin
+                                    reg_wdata_o <= ({32{reg1_rdata_i[31]}} << (6'd32 - {1'b0, reg2_rdata_i[4:0]})) | (reg1_rdata_i >> reg2_rdata_i[4:0]);
+                                end else begin
+                                    reg_wdata_o <= reg1_rdata_i >> reg2_rdata_i[4:0];
+                                end
+                            end
+                            `INST_OR: begin
+                                jump_flag_o <= `JumpDisable;
+                                reg_wdata_o <= reg1_rdata_i | reg2_rdata_i;
+                            end
+                            `INST_AND: begin
+                                jump_flag_o <= `JumpDisable;
+                                reg_wdata_o <= reg1_rdata_i & reg2_rdata_i;
+                            end
+                        endcase
+                    end else if (funct7 == 7'b0000001) begin
+                        case (funct3)
+                            `INST_MUL: begin
+                                jump_flag_o <= `JumpDisable;
+                                reg_wdata_o <= mul_temp[31:0];
+                            end
+                            `INST_MULHU: begin
+                                jump_flag_o <= `JumpDisable;
+                                reg_wdata_o <= mul_temp[63:32];
+                            end
+                            `INST_MULH: begin
+                                jump_flag_o <= `JumpDisable;
+                                if ((reg1_rdata_i[31] == 1'b0) && (reg2_rdata_i[31] == 1'b0)) begin
+                                    reg_wdata_o <= mulh_temp[63:32];
+                                end else if ((reg1_rdata_i[31] == 1'b1) && (reg2_rdata_i[31] == 1'b1)) begin
+                                    reg_wdata_o <= mulh_temp[63:32];
+                                end else if ((reg1_rdata_i[31] == 1'b1) && (reg2_rdata_i[31] == 1'b0)) begin
+                                    reg_wdata_o <= mulh_temp_invert[63:32];
+                                end else begin
+                                    reg_wdata_o <= mulh_temp_invert[63:32];
+                                end
+                            end
+                            `INST_MULHSU: begin
+                                jump_flag_o <= `JumpDisable;
+                                if (reg1_rdata_i[31] == 1'b1) begin
+                                    reg_wdata_o <= mulhsu_temp_invert[63:32];
+                                end else begin
+                                    reg_wdata_o <= mulhsu_temp[63:32];
+                                end
+                            end
+                        endcase
+                    end
                 end
                 `INST_TYPE_L: begin
                     case (funct3)

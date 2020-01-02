@@ -55,8 +55,9 @@
 `define INST_SH     3'b001
 `define INST_SW     3'b010
 
+// R and M type inst
+`define INST_TYPE_R_M 7'b0110011
 // R type inst
-`define INST_TYPE_R 7'b0110011
 `define INST_ADD_SUB 3'b000
 `define INST_SLL    3'b001
 `define INST_SLT    3'b010
@@ -65,6 +66,11 @@
 `define INST_SR     3'b101
 `define INST_OR     3'b110
 `define INST_AND    3'b111
+// M type inst
+`define INST_MUL    3'b000
+`define INST_MULH   3'b001
+`define INST_MULHSU 3'b010
+`define INST_MULHU  3'b011
 
 // J type inst
 `define INST_JAL    7'b1101111
@@ -93,6 +99,7 @@
 // common regs
 `define RegAddrBus 4:0
 `define RegBus 31:0
+`define DoubleRegBus 63:0
 `define RegWidth 32
 `define RegNum 32        // reg count
 `define RegNumLog2 5
