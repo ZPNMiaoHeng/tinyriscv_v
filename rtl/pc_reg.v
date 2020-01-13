@@ -25,6 +25,9 @@ module pc_reg (
     input wire jump_flag_ex_i,
     input wire[`RegBus] jump_addr_ex_i,
 
+    input wire hold_flag_ex_i,
+    input wire[`RegBus] hold_addr_ex_i,
+
 	output reg[`SramAddrBus] pc_o,
 	output reg re_o
 
@@ -39,6 +42,9 @@ module pc_reg (
         end else if (jump_flag_ex_i == `JumpEnable) begin
             pc_o <= jump_addr_ex_i;
             offset <= jump_addr_ex_i + 4'h4;
+        end else if (hold_flag_ex_i == `HoldEnable) begin
+            pc_o <= hold_addr_ex_i;
+            offset <= hold_addr_ex_i;
         end else begin
             pc_o <= offset;
             offset <= offset + 4'h4;

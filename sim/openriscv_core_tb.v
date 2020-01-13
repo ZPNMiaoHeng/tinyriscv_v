@@ -53,7 +53,7 @@ module openriscv_core_tb;
 
     // sim timeout
     initial begin
-        #100000
+        #5000000
         $display("Time Out.");
         $finish;
     end

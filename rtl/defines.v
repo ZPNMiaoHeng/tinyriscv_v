@@ -29,6 +29,12 @@
 `define ChipDisable 1'b0
 `define JumpEnable 1'b1
 `define JumpDisable 1'b0
+`define DivResultNotReady 1'b0
+`define DivResultReady 1'b1
+`define DivStart 1'b1
+`define DivStop 1'b0
+`define HoldEnable 1'b1
+`define HoldDisable 1'b0
 
 // I type inst
 `define INST_TYPE_I 7'b0010011
@@ -71,6 +77,10 @@
 `define INST_MULH   3'b001
 `define INST_MULHSU 3'b010
 `define INST_MULHU  3'b011
+`define INST_DIV    3'b100
+`define INST_DIVU   3'b101
+`define INST_REM    3'b110
+`define INST_REMU   3'b111
 
 // J type inst
 `define INST_JAL    7'b1101111

@@ -53,6 +53,13 @@ module openriscv_core (
     wire[`SramAddrBus] ex_sram_waddr_o;
     wire ex_jump_flag_o;
     wire[`RegBus] ex_jump_addr_o;
+    wire[`RegBus] ex_div_dividend_o;
+    wire[`RegBus] ex_div_divisor_o;
+    wire ex_div_start_o;
+    wire ex_hold_flag_o;
+    wire[`RegBus] ex_hold_addr_o;
+    wire ex_reg_we_o;
+    wire[`RegAddrBus] ex_reg_waddr_o;
 
     // regs
     wire[`RegBus] regs_rdata1_o;
@@ -61,6 +68,10 @@ module openriscv_core (
     // sim_ram
     wire[`SramBus] ram_pc_rdata_o;
     wire[`SramBus] ram_ex_rdata_o;
+
+    // div
+    wire[`DoubleRegBus] div_result_o;
+    wire div_ready_o;
 
     sim_ram u_sim_ram(
         .clk(clk),
@@ -81,6 +92,8 @@ module openriscv_core (
         .rst(rst),
         .pc_o(pc_pc_o),
         .re_o(pc_re_o),
+        .hold_flag_ex_i(ex_hold_flag_o),
+        .hold_addr_ex_i(ex_hold_addr_o),
         .jump_flag_ex_i(ex_jump_flag_o),
         .jump_addr_ex_i(ex_jump_addr_o)
     );
@@ -88,8 +101,8 @@ module openriscv_core (
     regs u_regs(
         .clk(clk),
         .rst(rst),
-        .we(id_reg_we_o),
-        .waddr(id_reg_waddr_o),
+        .we(ex_reg_we_o),
+        .waddr(ex_reg_waddr_o),
         .wdata(ex_reg_wdata_o),
         .re1(id_reg1_re_o),
         .raddr1(id_reg1_raddr_o),
@@ -106,7 +119,8 @@ module openriscv_core (
         .inst_addr_i(pc_pc_o),
         .inst_o(if_inst_o),
         .inst_addr_o(if_inst_addr_o),
-        .jump_flag_ex_i(ex_jump_flag_o)
+        .jump_flag_ex_i(ex_jump_flag_o),
+        .hold_flag_ex_i(ex_hold_flag_o)
     );
 
     id u_id(
@@ -116,6 +130,7 @@ module openriscv_core (
         .inst_addr_o(id_inst_addr_o),
         .inst_addr_i(if_inst_addr_o),
         .jump_flag_ex_i(ex_jump_flag_o),
+        .hold_flag_ex_i(ex_hold_flag_o),
         .reg1_re_o(id_reg1_re_o),
         .reg1_raddr_o(id_reg1_raddr_o),
         .reg2_re_o(id_reg2_re_o),
@@ -134,15 +149,36 @@ module openriscv_core (
         .inst_i(id_inst_o),
         .inst_addr_i(id_inst_addr_o),
         .inst_valid_i(id_inst_valid_o),
+        .reg_we_i(id_reg_we_o),
+        .reg_waddr_i(id_reg_waddr_o),
         .reg1_rdata_i(regs_rdata1_o),
         .reg2_rdata_i(regs_rdata2_o),
         .reg_wdata_o(ex_reg_wdata_o),
+        .reg_we_o(ex_reg_we_o),
+        .reg_waddr_o(ex_reg_waddr_o),
         .sram_rdata_i(ram_ex_rdata_o),
         .sram_wdata_o(ex_sram_wdata_o),
         .sram_raddr_o(ex_sram_raddr_o),
         .sram_waddr_o(ex_sram_waddr_o),
+        .div_dividend_o(ex_div_dividend_o),
+        .div_divisor_o(ex_div_divisor_o),
+        .div_ready_i(div_ready_o),
+        .div_result_i(div_result_o),
+        .div_start_o(ex_div_start_o),
+        .hold_flag_o(ex_hold_flag_o),
+        .hold_addr_o(ex_hold_addr_o),
         .jump_flag_o(ex_jump_flag_o),
         .jump_addr_o(ex_jump_addr_o)
+    );
+
+    div u_div(
+        .clk(clk),
+        .rst(rst),
+        .dividend_i(ex_div_dividend_o),
+        .divisor_i(ex_div_divisor_o),
+        .start_i(ex_div_start_o),
+        .result_o(div_result_o),
+        .ready_o(div_ready_o)
     );
 
 endmodule

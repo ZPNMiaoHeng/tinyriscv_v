@@ -4,6 +4,7 @@
 
 rv32um_sc_tests = \
 	mul mulh mulhsu mulhu \
+	div divu rem remu
 
 
 rv32um_p_tests = $(addprefix rv32um-p-, $(rv32um_sc_tests))
