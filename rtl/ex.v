@@ -67,8 +67,8 @@ module ex (
 
     wire[31:0] sign_extend_tmp;
     wire[4:0] shift_bits;
-    reg[1:0] sram_raddr_index;
-    reg[1:0] sram_waddr_index;
+    wire[1:0] sram_raddr_index;
+    wire[1:0] sram_waddr_index;
     wire[`DoubleRegBus] mul_temp;
     wire[`DoubleRegBus] mulh_temp;
     wire[`DoubleRegBus] mulh_temp_invert;
@@ -97,14 +97,15 @@ module ex (
     assign mulhsu_temp_invert = ~mulhsu_temp + 1;
     assign mulh_temp_invert = ~mulh_temp + 1;
 
+    assign sram_raddr_index = ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) - ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 32'hfffffffc)) & 2'b11;
+    assign sram_waddr_index = ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]}) - (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]} & 32'hfffffffc)) & 2'b11;
+
 
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             sram_raddr_o <= `ZeroWord;
             jump_flag_o <= `JumpDisable;
             hold_flag_o <= `HoldDisable;
-            sram_raddr_index <= 2'b0;
-            sram_waddr_index <= 2'b0;
             div_starting <= `DivStop;
             is_jumping <= `False;
             div_reg_we <= `WriteDisable;
@@ -385,27 +386,47 @@ module ex (
                         `INST_LB: begin
                             jump_flag_o <= `JumpDisable;
                             sram_raddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]};
-                            sram_raddr_index <= ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) - ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 32'hfffffffc)) & 2'b11;
+                            if (sram_raddr_index == 2'b0)
+                                reg_wdata_o <= {{24{sram_rdata_i[7]}}, sram_rdata_i[7:0]};
+                            else if (sram_raddr_index == 2'b01)
+                                reg_wdata_o <= {{24{sram_rdata_i[15]}}, sram_rdata_i[15:8]};
+                            else if (sram_raddr_index == 2'b10)
+                                reg_wdata_o <= {{24{sram_rdata_i[23]}}, sram_rdata_i[23:16]};
+                            else
+                                reg_wdata_o <= {{24{sram_rdata_i[31]}}, sram_rdata_i[31:24]};
                         end
                         `INST_LH: begin
                             jump_flag_o <= `JumpDisable;
                             sram_raddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]};
-                            sram_raddr_index <= ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) - ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 32'hfffffffc)) & 2'b11;
+                            if (sram_raddr_index == 2'b0)
+                                reg_wdata_o <= {{16{sram_rdata_i[15]}}, sram_rdata_i[15:0]};
+                            else
+                                reg_wdata_o <= {{16{sram_rdata_i[31]}}, sram_rdata_i[31:16]};
                         end
                         `INST_LW: begin
                             jump_flag_o <= `JumpDisable;
                             sram_raddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]};
-                            sram_raddr_index <= ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) - ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 32'hfffffffc)) & 2'b11;
+                            reg_wdata_o <= sram_rdata_i;
                         end
                         `INST_LBU: begin
                             jump_flag_o <= `JumpDisable;
                             sram_raddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]};
-                            sram_raddr_index <= ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) - ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 32'hfffffffc)) & 2'b11;
+                            if (sram_raddr_index == 2'b0)
+                                reg_wdata_o <= {24'h0, sram_rdata_i[7:0]};
+                            else if (sram_raddr_index == 2'b01)
+                                reg_wdata_o <= {24'h0, sram_rdata_i[15:8]};
+                            else if (sram_raddr_index == 2'b10)
+                                reg_wdata_o <= {24'h0, sram_rdata_i[23:16]};
+                            else
+                                reg_wdata_o <= {24'h0, sram_rdata_i[31:24]};
                         end
                         `INST_LHU: begin
                             jump_flag_o <= `JumpDisable;
                             sram_raddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]};
-                            sram_raddr_index <= ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) - ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 32'hfffffffc)) & 2'b11;
+                            if (sram_raddr_index == 2'b0)
+                                reg_wdata_o <= {16'h0, sram_rdata_i[15:0]};
+                            else
+                                reg_wdata_o <= {16'h0, sram_rdata_i[31:16]};
                         end
                     endcase
                 end
@@ -415,13 +436,23 @@ module ex (
                             jump_flag_o <= `JumpDisable;
                             sram_waddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
                             sram_raddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
-                            sram_waddr_index <= ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]}) - (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]} & 32'hfffffffc)) & 2'b11;
+                            if (sram_waddr_index == 2'b00)
+                                sram_wdata_o <= {sram_rdata_i[31:8], reg2_rdata_i[7:0]};
+                            else if (sram_waddr_index == 2'b01)
+                                sram_wdata_o <= {sram_rdata_i[31:16], reg2_rdata_i[7:0], sram_rdata_i[7:0]};
+                            else if (sram_waddr_index == 2'b10)
+                                sram_wdata_o <= {sram_rdata_i[31:24], reg2_rdata_i[7:0], sram_rdata_i[15:0]};
+                            else
+                                sram_wdata_o <= {reg2_rdata_i[7:0], sram_rdata_i[23:0]};
                         end
                         `INST_SH: begin
                             jump_flag_o <= `JumpDisable;
                             sram_waddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
                             sram_raddr_o <= reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
-                            sram_waddr_index <= ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]}) - (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]} & 32'hfffffffc)) & 2'b11;
+                            if (sram_waddr_index == 2'b00)
+                                sram_wdata_o <= {sram_rdata_i[31:16], reg2_rdata_i[15:0]};
+                            else
+                                sram_wdata_o <= {reg2_rdata_i[15:0], sram_rdata_i[15:0]};
                         end
                         `INST_SW: begin
                             jump_flag_o <= `JumpDisable;
@@ -583,72 +614,6 @@ module ex (
                 end
                 default: begin
 
-                end
-            endcase
-        end
-    end
-
-    always @ (*) begin
-        if (inst_valid_i == `InstValid) begin
-            case (opcode)
-                `INST_TYPE_L: begin
-                    case (funct3)
-                        `INST_LB: begin
-                            if (sram_raddr_index == 2'b0)
-                                reg_wdata_o <= {{24{sram_rdata_i[7]}}, sram_rdata_i[7:0]};
-                            else if (sram_raddr_index == 2'b01)
-                                reg_wdata_o <= {{24{sram_rdata_i[15]}}, sram_rdata_i[15:8]};
-                            else if (sram_raddr_index == 2'b10)
-                                reg_wdata_o <= {{24{sram_rdata_i[23]}}, sram_rdata_i[23:16]};
-                            else
-                                reg_wdata_o <= {{24{sram_rdata_i[31]}}, sram_rdata_i[31:24]};
-                        end
-                        `INST_LH: begin
-                            if (sram_raddr_index == 2'b0)
-                                reg_wdata_o <= {{16{sram_rdata_i[15]}}, sram_rdata_i[15:0]};
-                            else
-                                reg_wdata_o <= {{16{sram_rdata_i[31]}}, sram_rdata_i[31:16]};
-                        end
-                        `INST_LW: begin
-                            reg_wdata_o <= sram_rdata_i;
-                        end
-                        `INST_LBU: begin
-                            if (sram_raddr_index == 2'b0)
-                                reg_wdata_o <= {24'h0, sram_rdata_i[7:0]};
-                            else if (sram_raddr_index == 2'b01)
-                                reg_wdata_o <= {24'h0, sram_rdata_i[15:8]};
-                            else if (sram_raddr_index == 2'b10)
-                                reg_wdata_o <= {24'h0, sram_rdata_i[23:16]};
-                            else
-                                reg_wdata_o <= {24'h0, sram_rdata_i[31:24]};
-                        end
-                        `INST_LHU: begin
-                            if (sram_raddr_index == 2'b0)
-                                reg_wdata_o <= {16'h0, sram_rdata_i[15:0]};
-                            else
-                                reg_wdata_o <= {16'h0, sram_rdata_i[31:16]};
-                        end
-                    endcase
-                end
-                `INST_TYPE_S: begin
-                    case (funct3)
-                        `INST_SB: begin
-                            if (sram_waddr_index == 2'b00)
-                                sram_wdata_o <= {sram_rdata_i[31:8], reg2_rdata_i[7:0]};
-                            else if (sram_waddr_index == 2'b01)
-                                sram_wdata_o <= {sram_rdata_i[31:16], reg2_rdata_i[7:0], sram_rdata_i[7:0]};
-                            else if (sram_waddr_index == 2'b10)
-                                sram_wdata_o <= {sram_rdata_i[31:24], reg2_rdata_i[7:0], sram_rdata_i[15:0]};
-                            else
-                                sram_wdata_o <= {reg2_rdata_i[7:0], sram_rdata_i[23:0]};
-                        end
-                        `INST_SH: begin
-                            if (sram_waddr_index == 2'b00)
-                                sram_wdata_o <= {sram_rdata_i[31:16], reg2_rdata_i[15:0]};
-                            else
-                                sram_wdata_o <= {reg2_rdata_i[15:0], sram_rdata_i[15:0]};
-                        end
-                    endcase
                 end
             endcase
         end
