@@ -118,6 +118,7 @@ module div (
                     if (start_i == `DivStart) begin
                         ready_o <= `DivResultReady;
                         result_o <= {div_remain, div_result};
+                        state <= STATE_IDLE;
                     end else begin
                         state <= STATE_IDLE;
                         ready_o <= `DivResultNotReady;
