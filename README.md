@@ -63,7 +63,7 @@ tinyriscv的整体框架如下：
 
 # 4.未来计划
 
-1. 在真实的FPGA平台(xilinx artix-7)上跑起来；
+1. 支持JTAG；
 2. ......
 
 # 5.更新记录
@@ -71,3 +71,5 @@ tinyriscv的整体框架如下：
 2020-01-02：支持RV32M的乘法指令。
 
 2020-01-13：支持RV32M的除法指令。
+
+2020-02-23：支持在Xilinx Artix-7平台上运行。详见[tinyriscv_vivado](https://gitee.com/liangkangnan/tinyriscv_vivado)。
