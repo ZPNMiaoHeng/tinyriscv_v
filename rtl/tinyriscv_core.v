@@ -16,13 +16,13 @@
 
 `include "defines.v"
 
-// CPU core module
-module openriscv_core (
+// CPU core top module
+module tinyriscv_core (
 
     input wire clk,
     input wire rst
 
-);
+    );
 
     // pc_reg
 	wire[`SramAddrBus] pc_pc_o;

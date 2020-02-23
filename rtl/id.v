@@ -16,7 +16,7 @@
 
 `include "defines.v"
 
-// identify module
+// identification module
 module id (
 
 	input wire clk,
@@ -43,7 +43,7 @@ module id (
     output reg sram_re_o,                    // ram read enable
     output reg sram_we_o                     // ram write enable
 
-);
+    );
 
     wire[6:0] opcode = inst_i[6:0];
     wire[2:0] funct3 = inst_i[14:12];

@@ -63,7 +63,7 @@ module ex (
     output reg jump_flag_o,                // if jump or not flag
     output reg[`RegBus] jump_addr_o        // jump dest addr
 
-);
+    );
 
     wire[31:0] sign_extend_tmp;
     wire[4:0] shift_bits;

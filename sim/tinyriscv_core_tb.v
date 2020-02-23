@@ -2,17 +2,17 @@
 
 `include "defines.v"
 
-// top module
-module openriscv_core_tb;
+// testbench module
+module tinyriscv_core_tb;
 
     reg clk;
     reg rst;
 
     always #10 clk = ~clk;     // 50MHz
 
-    wire[`RegBus] x3 = u_openriscv_core.u_regs.regs[3];
-    wire[`RegBus] x26 = u_openriscv_core.u_regs.regs[26];
-    wire[`RegBus] x27 = u_openriscv_core.u_regs.regs[27];
+    wire[`RegBus] x3 = u_tinyriscv_core.u_regs.regs[3];
+    wire[`RegBus] x26 = u_tinyriscv_core.u_regs.regs[26];
+    wire[`RegBus] x27 = u_tinyriscv_core.u_regs.regs[27];
 
     integer r;
     initial begin
@@ -46,7 +46,7 @@ module openriscv_core_tb;
             $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             $display("fail testnum = %2d", x3);
             for (r = 0; r < 32; r++)
-                $display("x%2d = 0x%x", r, u_openriscv_core.u_regs.regs[r]);
+                $display("x%2d = 0x%x", r, u_tinyriscv_core.u_regs.regs[r]);
         end
         $finish;
     end
@@ -60,16 +60,16 @@ module openriscv_core_tb;
 
     // read mem data
     initial begin
-        $readmemh ("inst.data", u_openriscv_core.u_sim_ram.ram);
+        $readmemh ("inst.data", u_tinyriscv_core.u_sim_ram.ram);
     end
 
-    // generate wave file, use by gtkwave
+    // generate wave file, used by gtkwave
     initial begin
-        $dumpfile("openriscv_core_tb.vcd");
-        $dumpvars(0, openriscv_core_tb);
+        $dumpfile("tinyriscv_core_tb.vcd");
+        $dumpvars(0, tinyriscv_core_tb);
     end
 
-    openriscv_core u_openriscv_core(
+    tinyriscv_core u_tinyriscv_core (
         .clk(clk),
         .rst(rst)
     );

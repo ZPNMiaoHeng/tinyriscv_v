@@ -34,10 +34,11 @@ module sim_ram (
     input wire[`SramAddrBus] ex_raddr_i, // ex read addr
     output reg[`SramBus] ex_rdata_o      // ex read data
 
-);
+    );
 
     reg[`SramBus] ram[0:`SramMemNum - 1];
 
+    // write mem
     always @ (posedge clk) begin
         if (rst == `RstDisable) begin
             if(we_i == `WriteEnable) begin
@@ -46,6 +47,7 @@ module sim_ram (
         end
     end
 
+    // read inst
     always @ (*) begin
         if(rst == `RstEnable) begin
             pc_rdata_o <= `ZeroWord;
@@ -58,6 +60,7 @@ module sim_ram (
         end
     end
 
+    // read mem
     always @ (*) begin
         if(rst == `RstEnable) begin
             ex_rdata_o <= `ZeroWord;

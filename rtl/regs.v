@@ -34,10 +34,11 @@ module regs (
     input wire[`RegAddrBus] raddr2, // reg2 read addr
     output reg[`RegBus] rdata2      // reg2 read data
 
-);
+    );
 
     reg[`RegBus] regs[0:`RegNum - 1];
 
+    // write reg
     always @ (posedge clk) begin
         if (rst == `RstDisable) begin
             if((we == `WriteEnable) && (waddr != `RegNumLog2'h0)) begin
@@ -46,6 +47,7 @@ module regs (
         end
     end
 
+    // read reg1
     always @ (*) begin
         if(rst == `RstEnable) begin
             rdata1 <= `ZeroWord;
@@ -58,6 +60,7 @@ module regs (
         end
     end
 
+    // read reg2
     always @ (*) begin
         if(rst == `RstEnable) begin
             rdata2 <= `ZeroWord;

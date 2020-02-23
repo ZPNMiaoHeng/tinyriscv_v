@@ -31,7 +31,7 @@ module if_id (
     output reg[`SramBus] inst_o,
     output reg[`SramAddrBus] inst_addr_o
 
-);
+    );
 
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin

@@ -31,7 +31,7 @@ module pc_reg (
 	output reg[`SramAddrBus] pc_o,
 	output reg re_o
 
-);
+    );
 
     reg[`SramAddrBus] offset;
 
