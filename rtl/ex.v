@@ -51,12 +51,12 @@ module ex (
     output reg[`RegAddrBus] reg_waddr_o,    // reg write addr
 
     // to div
-    output reg[`RegBus] div_dividend_o,
-    output reg[`RegBus] div_divisor_o,
+    output wire[`RegBus] div_dividend_o,
+    output wire[`RegBus] div_divisor_o,
     output reg div_start_o,
 
     // to pc_reg
-    output reg hold_flag_o,
+    output wire hold_flag_o,
     output reg[`RegBus] hold_addr_o,
 
     // to pc_reg
@@ -77,8 +77,6 @@ module ex (
     wire[`RegBus] op1_mul;
     wire[`RegBus] op2_mul;
     reg div_starting;
-    reg is_jumping;
-    reg div_reg_we;
     reg[4:0] div_rd_reg;
     reg[2:0] div_funct3;
     wire[6:0] opcode;
@@ -104,66 +102,54 @@ module ex (
     assign sram_raddr_index = ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) - ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 32'hfffffffc)) & 2'b11;
     assign sram_waddr_index = ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]}) - (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]} & 32'hfffffffc)) & 2'b11;
 
+    assign div_dividend_o = reg1_rdata_i;
+    assign div_divisor_o = reg2_rdata_i;
+    assign hold_flag_o = (div_starting == `DivStop) ? `HoldDisable : `HoldEnable;
 
-    always @ (*) begin
-        div_dividend_o <= reg1_rdata_i;
-        div_divisor_o <= reg2_rdata_i;
-    end
-
-    always @ (*) begin
-        reg_we_o <= reg_we_i | div_reg_we;
-    end
 
     always @ (*) begin
         if (rst == `RstEnable) begin
             sram_raddr_o <= `ZeroWord;
             jump_flag_o <= `JumpDisable;
-            hold_flag_o <= `HoldDisable;
             div_starting <= `DivStop;
-            is_jumping <= `False;
-            div_reg_we <= `WriteDisable;
             div_start_o <= `DivStop;
         end else begin
-            if ((is_jumping == `False) && (div_starting == `DivStart)) begin
+            if (div_starting == `DivStart) begin
                 if (div_ready_i == `DivResultReady) begin
                     case (div_funct3)
                         `INST_DIV: begin
-                            div_reg_we <= `WriteEnable;
+                            reg_we_o <= `WriteEnable;
                             reg_waddr_o <= div_rd_reg;
                             reg_wdata_o <= div_result_i[31:0];
                             div_starting <= `DivStop;
                             div_start_o <= `DivStop;
-                            hold_flag_o <= `HoldDisable;
                         end
                         `INST_DIVU: begin
-                            div_reg_we <= `WriteEnable;
+                            reg_we_o <= `WriteEnable;
                             reg_waddr_o <= div_rd_reg;
                             reg_wdata_o <= div_result_i[31:0];
                             div_starting <= `DivStop;
                             div_start_o <= `DivStop;
-                            hold_flag_o <= `HoldDisable;
                         end
                         `INST_REM: begin
-                            div_reg_we <= `WriteEnable;
+                            reg_we_o <= `WriteEnable;
                             reg_waddr_o <= div_rd_reg;
                             reg_wdata_o <= div_result_i[63:32];
                             div_starting <= `DivStop;
                             div_start_o <= `DivStop;
-                            hold_flag_o <= `HoldDisable;
                         end
                         `INST_REMU: begin
-                            div_reg_we <= `WriteEnable;
+                            reg_we_o <= `WriteEnable;
                             reg_waddr_o <= div_rd_reg;
                             reg_wdata_o <= div_result_i[63:32];
                             div_starting <= `DivStop;
                             div_start_o <= `DivStop;
-                            hold_flag_o <= `HoldDisable;
                         end
                     endcase
                 end
             end else if (inst_valid_i == `InstValid) begin
-                div_reg_we <= `WriteDisable;
                 reg_waddr_o <= reg_waddr_i;
+                reg_we_o <= reg_we_i;
                 case (opcode)
                     `INST_TYPE_I: begin
                         case (funct3)
@@ -345,7 +331,6 @@ module ex (
                                 end
                                 `INST_DIV: begin
                                     jump_flag_o <= `JumpDisable;
-                                    hold_flag_o <= `HoldEnable;
                                     div_start_o <= `DivStart;
                                     div_starting <= `DivStart;
                                     div_rd_reg <= rd;
@@ -354,7 +339,6 @@ module ex (
                                 end
                                 `INST_DIVU: begin
                                     jump_flag_o <= `JumpDisable;
-                                    hold_flag_o <= `HoldEnable;
                                     div_start_o <= `DivStart;
                                     div_starting <= `DivStart;
                                     div_rd_reg <= rd;
@@ -363,7 +347,6 @@ module ex (
                                 end
                                 `INST_REM: begin
                                     jump_flag_o <= `JumpDisable;
-                                    hold_flag_o <= `HoldEnable;
                                     div_start_o <= `DivStart;
                                     div_starting <= `DivStart;
                                     div_rd_reg <= rd;
@@ -372,7 +355,6 @@ module ex (
                                 end
                                 `INST_REMU: begin
                                     jump_flag_o <= `JumpDisable;
-                                    hold_flag_o <= `HoldEnable;
                                     div_start_o <= `DivStart;
                                     div_starting <= `DivStart;
                                     div_rd_reg <= rd;
@@ -467,7 +449,6 @@ module ex (
                             `INST_BEQ: begin
                                 if (reg1_rdata_i == reg2_rdata_i) begin
                                     jump_flag_o <= `JumpEnable;
-                                    is_jumping <= `True;
                                     jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                 end else begin
                                     jump_flag_o <= `JumpDisable;
@@ -476,7 +457,6 @@ module ex (
                             `INST_BNE: begin
                                 if (reg1_rdata_i != reg2_rdata_i) begin
                                     jump_flag_o <= `JumpEnable;
-                                    is_jumping <= `True;
                                     jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                 end else begin
                                     jump_flag_o <= `JumpDisable;
@@ -485,14 +465,12 @@ module ex (
                             `INST_BLT: begin
                                 if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b0) begin
                                     jump_flag_o <= `JumpEnable;
-                                    is_jumping <= `True;
                                     jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                 end else if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b1) begin
                                     if (reg1_rdata_i >= reg2_rdata_i) begin
                                         jump_flag_o <= `JumpDisable;
                                     end else begin
                                         jump_flag_o <= `JumpEnable;
-                                        is_jumping <= `True;
                                         jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                     end
                                 end else if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b0) begin
@@ -500,7 +478,6 @@ module ex (
                                         jump_flag_o <= `JumpDisable;
                                     end else begin
                                         jump_flag_o <= `JumpEnable;
-                                        is_jumping <= `True;
                                         jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                     end
                                 end else begin
@@ -510,14 +487,12 @@ module ex (
                             `INST_BGE: begin
                                 if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b1) begin
                                     jump_flag_o <= `JumpEnable;
-                                    is_jumping <= `True;
                                     jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                 end else if (reg1_rdata_i[31] == 1'b1 && reg2_rdata_i[31] == 1'b1) begin
                                     if (reg1_rdata_i < reg2_rdata_i) begin
                                         jump_flag_o <= `JumpDisable;
                                     end else begin
                                         jump_flag_o <= `JumpEnable;
-                                        is_jumping <= `True;
                                         jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                     end
                                 end else if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b0) begin
@@ -525,7 +500,6 @@ module ex (
                                         jump_flag_o <= `JumpDisable;
                                     end else begin
                                         jump_flag_o <= `JumpEnable;
-                                        is_jumping <= `True;
                                         jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                     end
                                 end else begin
@@ -540,7 +514,6 @@ module ex (
                                         jump_flag_o <= `JumpDisable;
                                     end else begin
                                         jump_flag_o <= `JumpEnable;
-                                        is_jumping <= `True;
                                         jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                     end
                                 end else if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b0) begin
@@ -548,12 +521,10 @@ module ex (
                                         jump_flag_o <= `JumpDisable;
                                     end else begin
                                         jump_flag_o <= `JumpEnable;
-                                        is_jumping <= `True;
                                         jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                     end
                                 end else begin
                                     jump_flag_o <= `JumpEnable;
-                                    is_jumping <= `True;
                                     jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                 end
                             end
@@ -565,7 +536,6 @@ module ex (
                                         jump_flag_o <= `JumpDisable;
                                     end else begin
                                         jump_flag_o <= `JumpEnable;
-                                        is_jumping <= `True;
                                         jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                     end
                                 end else if (reg1_rdata_i[31] == 1'b0 && reg2_rdata_i[31] == 1'b0) begin
@@ -573,12 +543,10 @@ module ex (
                                         jump_flag_o <= `JumpDisable;
                                     end else begin
                                         jump_flag_o <= `JumpEnable;
-                                        is_jumping <= `True;
                                         jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                     end
                                 end else begin
                                     jump_flag_o <= `JumpEnable;
-                                    is_jumping <= `True;
                                     jump_addr_o <= inst_addr_i + {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
                                 end
                             end
@@ -586,13 +554,11 @@ module ex (
                     end
                     `INST_JAL: begin
                         jump_flag_o <= `JumpEnable;
-                        is_jumping <= `True;
                         jump_addr_o <= inst_addr_i + {{12{inst_i[31]}}, inst_i[19:12], inst_i[20], inst_i[30:21], 1'b0};
                         reg_wdata_o <= inst_addr_i + 4'h4;
                     end
                     `INST_JALR: begin
                         jump_flag_o <= `JumpEnable;
-                        is_jumping <= `True;
                         jump_addr_o <= (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & (32'hfffffffe);
                         reg_wdata_o <= inst_addr_i + 4'h4;
                     end
@@ -606,11 +572,9 @@ module ex (
                     end
                     `INST_NOP: begin
                         jump_flag_o <= `JumpDisable;
-                        is_jumping <= `False;
                     end
                     `INST_FENCE: begin
                         jump_flag_o <= `JumpEnable;
-                        is_jumping <= `True;
                         jump_addr_o <= inst_addr_i + 4'h4;
                     end
                     default: begin
