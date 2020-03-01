@@ -26,6 +26,12 @@ module sim_ram (
     input wire[`SramAddrBus] waddr_i,    // write addr
     input wire[`SramBus] wdata_i,        // write data
 
+    input wire dm_we_i,                  // dm write enable
+    input wire[`SramAddrBus] dm_addr_i,  // dm write or read addr
+    input wire[`SramBus] dm_wdata_i,     // dm write data
+
+    output reg[`SramBus] dm_rdata_o,     // dm read data
+
     input wire pc_re_i,                  // pc read enable
     input wire[`SramAddrBus] pc_raddr_i, // pc read addr
     output reg[`SramBus] pc_rdata_o,     // pc read data
@@ -37,37 +43,60 @@ module sim_ram (
     );
 
     reg[`SramBus] ram[0:`SramMemNum - 1];
+    reg[`SramBus] rom[0:`SramMemNum - 1];
 
-    // write mem
+    // ex write mem
     always @ (posedge clk) begin
         if (rst == `RstDisable) begin
-            if(we_i == `WriteEnable) begin
+            if (we_i == `WriteEnable) begin
                 ram[waddr_i[13:2]] <= wdata_i;
             end
         end
     end
 
-    // read inst
-    always @ (*) begin
-        if(rst == `RstEnable) begin
-            pc_rdata_o <= `ZeroWord;
-        end else if((pc_raddr_i == waddr_i) && (pc_re_i == `ReadEnable)) begin
-            pc_rdata_o <= wdata_i;
-        end else if(pc_re_i == `ReadEnable) begin
-            pc_rdata_o <= ram[pc_raddr_i >> 2];
-        end else begin
-            pc_rdata_o <= `ZeroWord;
+    // dm write rom
+    always @ (posedge clk) begin
+        if (rst == `RstDisable) begin
+            if (dm_we_i == `WriteEnable) begin
+                rom[dm_addr_i[13:2]] <= dm_wdata_i;
+            end
         end
     end
 
-    // read mem
+    // pc read inst
     always @ (*) begin
-        if(rst == `RstEnable) begin
+        if (rst == `RstEnable) begin
+            pc_rdata_o <= `ZeroWord;
+        end else if ((pc_raddr_i == waddr_i) && (pc_re_i == `ReadEnable)) begin
+            pc_rdata_o <= wdata_i;
+        end else if (pc_re_i == `ReadEnable) begin
+            if (pc_raddr_i < (`SramMemNum - 1)) begin
+                pc_rdata_o <= rom[pc_raddr_i >> 2];
+            end else begin
+                pc_rdata_o <= `INST_NOP;
+            end
+        end else begin
+            pc_rdata_o <= `INST_NOP;
+        end
+    end
+
+    // ex read mem
+    always @ (*) begin
+        if (rst == `RstEnable) begin
             ex_rdata_o <= `ZeroWord;
-        end else if(ex_re_i == `ReadEnable) begin
+        end else if (ex_re_i == `ReadEnable) begin
             ex_rdata_o <= ram[ex_raddr_i[13:2]];
         end else begin
             ex_rdata_o <= `ZeroWord;
+        end
+    end
+
+    // dm read rom
+    always @ (*) begin
+        if (rst == `RstEnable) begin
+            dm_rdata_o <= `ZeroWord;
+        end else begin
+            dm_rdata_o <= rom[dm_addr_i[13:2]];
         end
     end
 

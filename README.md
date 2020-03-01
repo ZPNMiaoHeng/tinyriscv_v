@@ -12,10 +12,11 @@
 
 本项目实现的是一个微RISC-V处理器核(tinyriscv)，用verilog语言编写，只求以最简单、最通俗易懂的方式实现RISC-V指令的功能，因此没有特意去对代码做任何的优化，因此你会看到里面写的代码有很多冗余的地方。tinyriscv处理器核有以下特点：
 
-1. 实现了RV32I指令集，通过riscv的RV32I指令兼容性测试，支持以下指令：add addi and andi auipc beq bge bgeu blt bltu bne fence\_i jal jalr lb lbu lh lhu lw lui or ori sb sh sw sll slli slt slti sltiu sltu sra srai srl srli sub xor xori；
+1. 支持RV32I指令集，通过riscv的RV32I指令兼容性测试，支持以下指令：add addi and andi auipc beq bge bgeu blt bltu bne fence\_i jal jalr lb lbu lh lhu lw lui or ori sb sh sw sll slli slt slti sltiu sltu sra srai srl srli sub xor xori；
 2. 支持RV32M指令集：mul mulh mulhu mulhsu div divu rem remu；
-3. 采用三级流水线，即取指，译码、访存、执行，回写；
+3. 采用三级流水线(二级变长)，即取指，译码、访存、执行，回写；
 4. 可以运行简单的c语言程序；
+5. 支持JTAG，可以通过openocd读写内存(下载程序)；
 
 项目中的各目录说明：
 
@@ -23,7 +24,7 @@
 
 **sim**：该目录包含仿真的顶层testbench代码和批处理bat文件；
 
-**tests**：该目录包含测试程序源码，其中example目录为c语言程序例程源码，isa目录为RV32I指令测试源码；
+**tests**：该目录包含测试程序源码，其中example目录为c语言程序例程源码，isa目录为RV32指令测试源码；
 
 **tools**：该目录包含编译汇编和c语言程序所需GNU工具链和将二进制文件转成仿真所需的mem格式文件的工具BinToMem。BinToMem\_CLI.exe需要在cmd窗口下执行，BinToMem\_GUI.exe提供图形界面，双击即可运行；
 
@@ -31,7 +32,7 @@
 
 tinyriscv的整体框架如下：
 
-![tinyriscv整体框架](./pic/arch.png)
+![tinyriscv整体框架](./pic/arch.jpg)
 
 # 3.如何使用
 
@@ -53,7 +54,7 @@ tinyriscv的整体框架如下：
 
 下面以add指令为例，说明如何使用本项目。
 
-打开cmd窗口，进入到sim目录，执行以下命令：
+打开CMD窗口，进入到sim目录，执行以下命令：
 
 ```sim_new_nowave.bat ..\tests\isa\generated\rv32ui-p-add.bin inst.data```
 
@@ -63,7 +64,7 @@ tinyriscv的整体框架如下：
 
 # 4.未来计划
 
-1. 支持JTAG；
+1. 支持中断；
 2. ......
 
 # 5.更新记录
@@ -73,3 +74,5 @@ tinyriscv的整体框架如下：
 2020-01-13：支持RV32M的除法指令。
 
 2020-02-23：支持在Xilinx Artix-7平台上运行。详见[tinyriscv_vivado](https://gitee.com/liangkangnan/tinyriscv_vivado)。
+
+2020-03-01：支持JTAG，配合openocd可进行内存读写。

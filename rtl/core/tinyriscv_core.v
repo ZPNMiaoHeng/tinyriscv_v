@@ -20,7 +20,17 @@
 module tinyriscv_core (
 
     input wire clk,
-    input wire rst
+    input wire rst,
+
+    output reg over,
+    output reg succ,
+
+    output wire halt_signal,
+
+    input wire jtag_TCK,
+    input wire jtag_TMS,
+    input wire jtag_TDI,
+    output wire jtag_TDO
 
     );
 
@@ -68,10 +78,47 @@ module tinyriscv_core (
     // sim_ram
     wire[`SramBus] ram_pc_rdata_o;
     wire[`SramBus] ram_ex_rdata_o;
+    wire[`SramBus] ram_dm_rdata_o;
 
     // div
     wire[`DoubleRegBus] div_result_o;
     wire div_ready_o;
+
+    // jtag
+    wire jtag_halt_req;
+    wire jtag_reset_req;
+    reg jtag_rst;
+    reg[2:0] jtag_rst_cnt;
+    wire jtag_mem_we;
+    wire[31:0] jtag_mem_addr;
+    wire[31:0] jtag_mem_wdata;
+
+    assign halt_signal = jtag_halt_req;
+
+    always @ (posedge clk) begin
+        if (!rst) begin
+            over <= 1'b1;
+            succ <= 1'b1;
+        end else begin
+            over <= ~u_regs.regs[26];  // when = 1, run over
+            succ <= ~u_regs.regs[27];  // when = 1, succ
+        end
+    end
+
+    // jtag module reset logic
+    always @ (posedge clk) begin
+        if (rst == `RstEnable) begin
+            jtag_rst <= 1'b1;
+            jtag_rst_cnt <= 3'h0;
+        end else begin
+            if (jtag_rst_cnt < 3'h5) begin
+                jtag_rst <= ~jtag_rst;
+                jtag_rst_cnt <= jtag_rst_cnt + 1'b1;
+            end else begin
+                jtag_rst <= 1'b1;
+            end
+        end
+    end
 
     sim_ram u_sim_ram(
         .clk(clk),
@@ -79,6 +126,10 @@ module tinyriscv_core (
         .we_i(id_sram_we_o),
         .waddr_i(ex_sram_waddr_o),
         .wdata_i(ex_sram_wdata_o),
+        .dm_we_i(jtag_mem_we),
+        .dm_addr_i(jtag_mem_addr),
+        .dm_wdata_i(jtag_mem_wdata),
+        .dm_rdata_o(ram_dm_rdata_o),
         .pc_re_i(pc_re_o),
         .pc_raddr_i(pc_pc_o),
         .pc_rdata_o(ram_pc_rdata_o),
@@ -94,6 +145,8 @@ module tinyriscv_core (
         .re_o(pc_re_o),
         .hold_flag_ex_i(ex_hold_flag_o),
         .hold_addr_ex_i(ex_hold_addr_o),
+        .dm_halt_req_i(jtag_halt_req),
+        .dm_reset_req_i(jtag_reset_req),
         .jump_flag_ex_i(ex_jump_flag_o),
         .jump_addr_ex_i(ex_jump_addr_o)
     );
@@ -120,7 +173,8 @@ module tinyriscv_core (
         .inst_o(if_inst_o),
         .inst_addr_o(if_inst_addr_o),
         .jump_flag_ex_i(ex_jump_flag_o),
-        .hold_flag_ex_i(ex_hold_flag_o)
+        .hold_flag_ex_i(ex_hold_flag_o),
+        .dm_halt_req_i(jtag_halt_req)
     );
 
     id u_id(
@@ -131,6 +185,7 @@ module tinyriscv_core (
         .inst_addr_i(if_inst_addr_o),
         .jump_flag_ex_i(ex_jump_flag_o),
         .hold_flag_ex_i(ex_hold_flag_o),
+        .halt_flag_dm_i(jtag_halt_req),
         .reg1_re_o(id_reg1_re_o),
         .reg1_raddr_o(id_reg1_raddr_o),
         .reg2_re_o(id_reg2_re_o),
@@ -179,6 +234,24 @@ module tinyriscv_core (
         .start_i(ex_div_start_o),
         .result_o(div_result_o),
         .ready_o(div_ready_o)
+    );
+
+    jtag_top u_jtag_top(
+        .jtag_rst_n(jtag_rst),
+        .jtag_pin_TCK(jtag_TCK),
+        .jtag_pin_TMS(jtag_TMS),
+        .jtag_pin_TDI(jtag_TDI),
+        .jtag_pin_TDO(jtag_TDO),
+        .reg_we(),
+        .reg_addr(),
+        .reg_wdata(),
+        .reg_rdata(),
+        .mem_we(jtag_mem_we),
+        .mem_addr(jtag_mem_addr),
+        .mem_wdata(jtag_mem_wdata),
+        .mem_rdata(ram_dm_rdata_o),
+        .halt_req(jtag_halt_req),
+        .reset_req(jtag_reset_req)
     );
 
 endmodule
