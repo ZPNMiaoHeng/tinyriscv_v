@@ -71,7 +71,7 @@ tinyriscv的整体框架如下：
 
 2020-01-02：支持RV32M的乘法指令。
 
-2020-01-13：支持RV32M的除法指令。
+2020-01-13：支持RV32M的除法指令。其C语言实现详见[div](https://gitee.com/liangkangnan/div)。
 
 2020-02-23：支持在Xilinx Artix-7平台上运行。详见[tinyriscv_vivado](https://gitee.com/liangkangnan/tinyriscv_vivado)。
 
