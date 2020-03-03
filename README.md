@@ -4,7 +4,7 @@
 
 本人对RISC-V很感兴趣，很看好RISC-V的发展前景，觉得RISC-V就是CPU界中的Linux。由于RISC-V是这两年才开始迅速发展的，因此关于RISC-V的学习参考资料目前还很少，特别是适合入门的资料，因此学习起来进度很缓慢，于是萌生了自己从零开始写RISC-V处理器核的想法。
 
-本人是一名FPGA小白，为了快速入门、深入掌握RISC-V，我开始了学习FPGA和verilog的&quot;艰难&quot;历程。我工作的内容是和嵌入式软件相关的，平时根本不会接触到FPGA，也不会用到RISC-V，因此只能用业余时间来学习RISC-V，在经过断断续续学习FPGA和verilog一个多月后，总算有点成果了，也即本项目。
+本人是一名FPGA小白，为了快速入门、深入掌握RISC-V，我开始了学习FPGA和verilog的&quot;艰难&quot;历程。我工作的内容是和嵌入式软件相关的，平时根本不会接触到FPGA，也不会用到RISC-V，因此只能用业余时间来学习RISC-V。
 
 网上有不少关于RISC-V的开源项目，但是大多都写得很&quot;高深&quot;，对于我这种小白来说学习起来是非常吃力的，不太适合入门。本项目目前的代码量非常少，是很简单易懂的，对于想入门RISC-V的同学来说是一个很好的参考，希望能吸引更多的同学能够参与到RISC-V的学习中来，促进RISC-V的发展，如果能起到抛砖引玉的作用的话那就更好了，也许说是砖的话或者有点夸大了，但哪怕是起到一颗沙子的作用，也就足矣了。
 
@@ -16,7 +16,7 @@
 2. 支持RV32M指令集：mul mulh mulhu mulhsu div divu rem remu；
 3. 采用三级流水线(二级变长)，即取指，译码、访存、执行，回写；
 4. 可以运行简单的c语言程序；
-5. 支持JTAG，可以通过openocd读写内存(下载程序)；
+5. 支持JTAG，可以通过openocd读写内存(在线更新程序)；
 
 项目中的各目录说明：
 
@@ -46,11 +46,11 @@ tinyriscv的整体框架如下：
 
 2. 安装GNU工具链
 
-可以在通过百度云下载(链接: https://pan.baidu.com/s/1bYgslKxHMjtiZtIPsB2caQ 提取码: 9n3c)，下载完成后将压缩包解压到本项目的tools目录下。
+可以通过百度网盘下载(链接: https://pan.baidu.com/s/1bYgslKxHMjtiZtIPsB2caQ 提取码: 9n3c)，下载完成后将压缩包解压到本项目的tools目录下。
 
 3. 安装make工具
 
-可以通过百度云下载(链接: https://pan.baidu.com/s/1nFaUIwv171PDXuF7TziDFg 提取码: 9ntc)，下载完成后直接解压，然后将make所在的路径添加到环境变量里。
+可以通过百度网盘下载(链接: https://pan.baidu.com/s/1nFaUIwv171PDXuF7TziDFg 提取码: 9ntc)，下载完成后直接解压，然后将make所在的路径添加到环境变量里。
 
 下面以add指令为例，说明如何使用本项目。
 
