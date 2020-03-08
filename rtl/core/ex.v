@@ -40,6 +40,9 @@ module ex (
     input wire div_ready_i,
     input wire[`DoubleRegBus] div_result_i,
 
+    // from perips
+    input wire int_sig_i,
+
     // to sram
     output reg[`SramBus] sram_wdata_o,      // ram write data
     output reg[`SramAddrBus] sram_raddr_o,  // ram read addr
@@ -58,6 +61,10 @@ module ex (
     // to pc_reg
     output wire hold_flag_o,
     output reg[`RegBus] hold_addr_o,
+
+    // to pc_reg
+    output reg int_flag_o,
+    output reg[`RegBus] int_addr_o,
 
     // to pc_reg
     output reg jump_flag_o,                // if jump or not flag
@@ -83,6 +90,8 @@ module ex (
     wire[2:0] funct3;
     wire[6:0] funct7;
     wire[4:0] rd;
+    reg[`SramAddrBus] saved_addr;
+    reg in_interrupt_context;
 
     assign opcode = inst_i[6:0];
     assign funct3 = inst_i[14:12];
@@ -106,6 +115,28 @@ module ex (
     assign div_divisor_o = reg2_rdata_i;
     assign hold_flag_o = (div_starting == `DivStop) ? `HoldDisable : `HoldEnable;
 
+
+    // handle interrupt signal
+    always @ (*) begin
+        if (rst == `RstEnable) begin
+            int_flag_o <= 1'b0;
+            in_interrupt_context <= 1'b0;
+            saved_addr <= `ZeroWord;
+        end else if (int_sig_i == 1'b1 && in_interrupt_context == 1'b0) begin
+            int_flag_o <= 1'b1;
+            int_addr_o <= 32'h4;
+            saved_addr <= inst_addr_i + 4'h4;
+            in_interrupt_context <= 1'b1;
+        end else begin
+            if (inst_i == `INST_MRET) begin
+                int_flag_o <= 1'b1;
+                int_addr_o <= saved_addr;
+                in_interrupt_context <= 1'b0;
+            end else if (inst_i == `INST_NOP) begin
+                int_flag_o <= 1'b0;
+            end
+        end
+    end
 
     always @ (*) begin
         if (rst == `RstEnable) begin

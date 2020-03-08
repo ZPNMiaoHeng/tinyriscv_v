@@ -1,0 +1,132 @@
+
+timer_int:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	0080006f          	j	8 <_reset_handler>
+   4:	0200006f          	j	24 <_timer_handler>
+
+00000008 <_reset_handler>:
+   8:	00001117          	auipc	sp,0x1
+   c:	ff810113          	addi	sp,sp,-8 # 1000 <__stack_size>
+  10:	00000d13          	li	s10,0
+  14:	00000d93          	li	s11,0
+  18:	054000ef          	jal	ra,6c <main>
+  1c:	00100d13          	li	s10,1
+
+00000020 <loop>:
+  20:	0000006f          	j	20 <loop>
+
+00000024 <_timer_handler>:
+  24:	0c8000ef          	jal	ra,ec <TIMER_IRQHandler>
+  28:	30200073          	mret
+
+0000002c <set_test_pass>:
+  2c:	ff010113          	addi	sp,sp,-16
+  30:	00812623          	sw	s0,12(sp)
+  34:	01010413          	addi	s0,sp,16
+  38:	00100d93          	li	s11,1
+  3c:	00000013          	nop
+  40:	00c12403          	lw	s0,12(sp)
+  44:	01010113          	addi	sp,sp,16
+  48:	00008067          	ret
+
+0000004c <set_test_fail>:
+  4c:	ff010113          	addi	sp,sp,-16
+  50:	00812623          	sw	s0,12(sp)
+  54:	01010413          	addi	s0,sp,16
+  58:	00000d93          	li	s11,0
+  5c:	00000013          	nop
+  60:	00c12403          	lw	s0,12(sp)
+  64:	01010113          	addi	sp,sp,16
+  68:	00008067          	ret
+
+0000006c <main>:
+  6c:	ff010113          	addi	sp,sp,-16
+  70:	00112623          	sw	ra,12(sp)
+  74:	00812423          	sw	s0,8(sp)
+  78:	01010413          	addi	s0,sp,16
+  7c:	00001797          	auipc	a5,0x1
+  80:	f8478793          	addi	a5,a5,-124 # 1000 <__stack_size>
+  84:	0007a023          	sw	zero,0(a5)
+  88:	100007b7          	lui	a5,0x10000
+  8c:	00878793          	addi	a5,a5,8 # 10000008 <__stack_size+0xffff008>
+  90:	1f400713          	li	a4,500
+  94:	00e7a023          	sw	a4,0(a5)
+  98:	100007b7          	lui	a5,0x10000
+  9c:	00700713          	li	a4,7
+  a0:	00e7a023          	sw	a4,0(a5) # 10000000 <__stack_size+0xffff000>
+  a4:	00001797          	auipc	a5,0x1
+  a8:	f5c78793          	addi	a5,a5,-164 # 1000 <__stack_size>
+  ac:	0007a703          	lw	a4,0(a5)
+  b0:	00500793          	li	a5,5
+  b4:	fef718e3          	bne	a4,a5,a4 <main+0x38>
+  b8:	100007b7          	lui	a5,0x10000
+  bc:	0007a023          	sw	zero,0(a5) # 10000000 <__stack_size+0xffff000>
+  c0:	00001797          	auipc	a5,0x1
+  c4:	f4078793          	addi	a5,a5,-192 # 1000 <__stack_size>
+  c8:	0007a023          	sw	zero,0(a5)
+  cc:	f61ff0ef          	jal	ra,2c <set_test_pass>
+  d0:	00000013          	nop
+  d4:	00000793          	li	a5,0
+  d8:	00078513          	mv	a0,a5
+  dc:	00c12083          	lw	ra,12(sp)
+  e0:	00812403          	lw	s0,8(sp)
+  e4:	01010113          	addi	sp,sp,16
+  e8:	00008067          	ret
+
+000000ec <TIMER_IRQHandler>:
+  ec:	ff010113          	addi	sp,sp,-16
+  f0:	00812623          	sw	s0,12(sp)
+  f4:	01010413          	addi	s0,sp,16
+  f8:	100007b7          	lui	a5,0x10000
+  fc:	00700713          	li	a4,7
+ 100:	00e7a023          	sw	a4,0(a5) # 10000000 <__stack_size+0xffff000>
+ 104:	00001797          	auipc	a5,0x1
+ 108:	efc78793          	addi	a5,a5,-260 # 1000 <__stack_size>
+ 10c:	0007a783          	lw	a5,0(a5)
+ 110:	00178713          	addi	a4,a5,1
+ 114:	00001797          	auipc	a5,0x1
+ 118:	eec78793          	addi	a5,a5,-276 # 1000 <__stack_size>
+ 11c:	00e7a023          	sw	a4,0(a5)
+ 120:	00000013          	nop
+ 124:	00c12403          	lw	s0,12(sp)
+ 128:	01010113          	addi	sp,sp,16
+ 12c:	00008067          	ret
+
+Disassembly of section .bss:
+
+00001000 <_end>:
+    1000:	0000                	unimp
+	...
+
+Disassembly of section .comment:
+
+00000000 <.comment>:
+   0:	3a434347          	fmsub.d	ft6,ft6,ft4,ft7,rmm
+   4:	2820                	fld	fs0,80(s0)
+   6:	20554e47          	fmsub.s	ft8,fa0,ft5,ft4,rmm
+   a:	434d                	li	t1,19
+   c:	2055                	jal	b0 <main+0x44>
+   e:	6345                	lui	t1,0x11
+  10:	696c                	flw	fa1,84(a0)
+  12:	7370                	flw	fa2,100(a4)
+  14:	2065                	jal	bc <main+0x50>
+  16:	4952                	lw	s2,20(sp)
+  18:	562d4353          	0x562d4353
+  1c:	4520                	lw	s0,72(a0)
+  1e:	626d                	lui	tp,0x1b
+  20:	6465                	lui	s0,0x19
+  22:	6564                	flw	fs1,76(a0)
+  24:	2064                	fld	fs1,192(s0)
+  26:	2c434347          	0x2c434347
+  2a:	3620                	fld	fs0,104(a2)
+  2c:	2d34                	fld	fa3,88(a0)
+  2e:	6962                	flw	fs2,24(sp)
+  30:	2974                	fld	fa3,208(a0)
+  32:	3820                	fld	fs0,112(s0)
+  34:	322e                	fld	ft4,232(sp)
+  36:	302e                	fld	ft0,232(sp)
+	...

@@ -2,7 +2,7 @@
 RISCV_ARCH := rv32i
 RISCV_ABI := ilp32
 
-RISCV_PATH := ../../tools/gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64/
+RISCV_PATH := ../../../tools/gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64/
 
 CFLAGS += -march=$(RISCV_ARCH)
 CFLAGS += -mabi=$(RISCV_ABI)
@@ -20,6 +20,6 @@ RISCV_READELF := $(abspath $(RISCV_PATH)/bin/riscv-none-embed-readelf)
 
 .PHONY: all
 all:
-	$(RISCV_GCC) $(CFLAGS) reset.S main.c -Tlink.ld -o example
-	$(RISCV_OBJCOPY) -O binary example example.bin
-	$(RISCV_OBJDUMP) --disassemble-all example > example.dump
+	$(RISCV_GCC) $(CFLAGS) start.S main.c -Tlink.ld -o timer_int
+	$(RISCV_OBJCOPY) -O binary timer_int timer_int.bin
+	$(RISCV_OBJDUMP) --disassemble-all timer_int > timer_int.dump

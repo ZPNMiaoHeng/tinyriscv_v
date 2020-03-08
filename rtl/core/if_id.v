@@ -27,6 +27,7 @@ module if_id (
 
     input wire jump_flag_ex_i,
     input wire hold_flag_ex_i,
+    input wire int_flag_ex_i,
     input wire dm_halt_req_i,
 
     output reg[`SramBus] inst_o,
@@ -39,6 +40,9 @@ module if_id (
             inst_o <= `ZeroWord;
             inst_addr_o <= `ZeroWord;
         end else if (dm_halt_req_i == 1'b1) begin
+            inst_o <= `INST_NOP;
+            inst_addr_o <= `ZeroWord;
+        end else if (int_flag_ex_i == 1'b1) begin
             inst_o <= `INST_NOP;
             inst_addr_o <= `ZeroWord;
         end else if (jump_flag_ex_i == `JumpEnable) begin

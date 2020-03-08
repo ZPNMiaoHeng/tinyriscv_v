@@ -63,6 +63,8 @@ module tinyriscv_core (
     wire[`SramAddrBus] ex_sram_waddr_o;
     wire ex_jump_flag_o;
     wire[`RegBus] ex_jump_addr_o;
+    wire ex_int_flag_o;
+    wire[`RegBus] ex_int_addr_o;
     wire[`RegBus] ex_div_dividend_o;
     wire[`RegBus] ex_div_divisor_o;
     wire ex_div_start_o;
@@ -79,10 +81,15 @@ module tinyriscv_core (
     wire[`SramBus] ram_pc_rdata_o;
     wire[`SramBus] ram_ex_rdata_o;
     wire[`SramBus] ram_dm_rdata_o;
+    wire ram_we_o;
 
     // div
     wire[`DoubleRegBus] div_result_o;
     wire div_ready_o;
+
+    // timer
+    wire timer_int_o;
+    wire[`SramBus] timer_rdata_o;
 
     // jtag
     wire jtag_halt_req;
@@ -135,7 +142,9 @@ module tinyriscv_core (
         .pc_rdata_o(ram_pc_rdata_o),
         .ex_re_i(id_sram_re_o),
         .ex_raddr_i(ex_sram_raddr_o),
-        .ex_rdata_o(ram_ex_rdata_o)
+        .ex_rdata_o(ram_ex_rdata_o),
+        .we_o(ram_we_o),
+        .rdata_i(timer_rdata_o)
     );
 
     pc_reg u_pc_reg(
@@ -145,6 +154,8 @@ module tinyriscv_core (
         .re_o(pc_re_o),
         .hold_flag_ex_i(ex_hold_flag_o),
         .hold_addr_ex_i(ex_hold_addr_o),
+        .int_flag_ex_i(ex_int_flag_o),
+        .int_addr_ex_i(ex_int_addr_o),
         .dm_halt_req_i(jtag_halt_req),
         .dm_reset_req_i(jtag_reset_req),
         .jump_flag_ex_i(ex_jump_flag_o),
@@ -174,6 +185,7 @@ module tinyriscv_core (
         .inst_addr_o(if_inst_addr_o),
         .jump_flag_ex_i(ex_jump_flag_o),
         .hold_flag_ex_i(ex_hold_flag_o),
+        .int_flag_ex_i(ex_int_flag_o),
         .dm_halt_req_i(jtag_halt_req)
     );
 
@@ -185,6 +197,7 @@ module tinyriscv_core (
         .inst_addr_i(if_inst_addr_o),
         .jump_flag_ex_i(ex_jump_flag_o),
         .hold_flag_ex_i(ex_hold_flag_o),
+        .int_flag_ex_i(ex_int_flag_o),
         .halt_flag_dm_i(jtag_halt_req),
         .reg1_re_o(id_reg1_re_o),
         .reg1_raddr_o(id_reg1_raddr_o),
@@ -223,7 +236,10 @@ module tinyriscv_core (
         .hold_flag_o(ex_hold_flag_o),
         .hold_addr_o(ex_hold_addr_o),
         .jump_flag_o(ex_jump_flag_o),
-        .jump_addr_o(ex_jump_addr_o)
+        .jump_addr_o(ex_jump_addr_o),
+        .int_sig_i(timer_int_o),
+        .int_flag_o(ex_int_flag_o),
+        .int_addr_o(ex_int_addr_o)
     );
 
     div u_div(
@@ -252,6 +268,17 @@ module tinyriscv_core (
         .mem_rdata(ram_dm_rdata_o),
         .halt_req(jtag_halt_req),
         .reset_req(jtag_reset_req)
+    );
+
+    timer u_timer(
+        .clk(clk),
+        .rst(rst),
+        .wdata(ex_sram_wdata_o),
+        .waddr(ex_sram_waddr_o),
+        .raddr(ex_sram_raddr_o),
+        .rdata(timer_rdata_o),
+        .we(ram_we_o),
+        .int_sig(timer_int_o)
     );
 
 endmodule

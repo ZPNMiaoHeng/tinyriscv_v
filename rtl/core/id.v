@@ -25,6 +25,7 @@ module id (
     input wire[`SramAddrBus] inst_addr_i,    // inst addr
     input wire jump_flag_ex_i,
     input wire hold_flag_ex_i,
+    input wire int_flag_ex_i,
     input wire halt_flag_dm_i,
 
     // to regs
@@ -64,6 +65,11 @@ module id (
             sram_re_o <= `ReadDisable;
             inst_valid_o <= `InstInvalid;
         end else if (halt_flag_dm_i == 1'b1) begin
+            inst_valid_o <= `InstValid;
+            sram_we_o <= `WriteDisable;
+            reg_we_o <= `WriteDisable;
+            inst_o <= `INST_NOP;
+        end else if (int_flag_ex_i == 1'b1 && inst_i != `INST_NOP) begin
             inst_valid_o <= `InstValid;
             sram_we_o <= `WriteDisable;
             reg_we_o <= `WriteDisable;

@@ -89,6 +89,7 @@
 `define INST_LUI    7'b0110111
 `define INST_AUIPC  7'b0010111
 `define INST_NOP    32'h00000001
+`define INST_MRET   32'h30200073
 
 `define INST_FENCE  7'b0001111
 
