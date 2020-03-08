@@ -1,1 +1,1 @@
-a simple c program which can run on tinyriscv.
+Simple c program which add  from 1 to 100.
