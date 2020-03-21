@@ -76,6 +76,6 @@ tinyriscv的整体框架如下：
 
 2020-02-23：支持在Xilinx Artix-7平台上运行。详见[tinyriscv_vivado](https://gitee.com/liangkangnan/tinyriscv_vivado)。
 
-2020-03-01：支持JTAG，配合openocd可进行内存读写。JTAG文档参考[深入浅出RISC-V调试](https://gitee.com/liangkangnan/deep_in_riscv_debug)。
+2020-03-01：支持JTAG，配合openocd可进行内存读写。JTAG文档参考[深入浅出RISC-V调试](https://liangkangnan.gitee.io/2020/03/21/深入浅出RISC-V调试/)。
 
 2020-03-08：支持中断，为此增加了timer模块来验证。
