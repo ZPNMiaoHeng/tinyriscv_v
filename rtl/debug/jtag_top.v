@@ -15,7 +15,7 @@
  */
 
 
-module jtag_top (
+module jtag_top(
 
     input wire jtag_rst_n,
 
@@ -24,17 +24,18 @@ module jtag_top (
     input wire jtag_pin_TDI,
     output wire jtag_pin_TDO,
 
-    output wire reg_we,
-    output wire[4:0] reg_addr,
-    output wire[31:0] reg_wdata,
-    input wire[31:0] reg_rdata,
-    output wire mem_we,
-    output wire[31:0] mem_addr,
-    output wire[31:0] mem_wdata,
-    input wire[31:0] mem_rdata,
+    output wire reg_we_o,
+    output wire[4:0] reg_addr_o,
+    output wire[31:0] reg_wdata_o,
+    input wire[31:0] reg_rdata_i,
+    output wire mem_we_o,
+    output wire[31:0] mem_addr_o,
+    output wire[31:0] mem_wdata_o,
+    input wire[31:0] mem_rdata_i,
+    output wire op_req_o,
 
-    output wire halt_req,
-    output wire reset_req
+    output wire halt_req_o,
+    output wire reset_req_o
 
     );
 
@@ -53,7 +54,7 @@ module jtag_top (
     wire[DM_RESP_BITS - 1:0] dm_resp_data;
 
 
-    jtag_driver u_jtag_driver (
+    jtag_driver u_jtag_driver(
         .rst_n(jtag_rst_n),
         .jtag_TCK(jtag_pin_TCK),
         .jtag_TDI(jtag_pin_TDI),
@@ -65,23 +66,24 @@ module jtag_top (
         .dtm_req_data(dtm_req_data)
     );
 
-    jtag_dm u_jtag_dm (
+    jtag_dm u_jtag_dm(
         .clk(jtag_pin_TCK),
         .rst_n(jtag_rst_n),
         .dtm_req_valid(dtm_req_valid),
         .dtm_req_data(dtm_req_data),
         .dm_is_busy(dm_is_busy),
         .dm_resp_data(dm_resp_data),
-        .dm_reg_we(reg_we),
-        .dm_reg_addr(reg_addr),
-        .dm_reg_wdata(reg_wdata),
-        .dm_reg_rdata(reg_rdata),
-        .dm_mem_we(mem_we),
-        .dm_mem_addr(mem_addr),
-        .dm_mem_wdata(mem_wdata),
-        .dm_mem_rdata(mem_rdata),
-        .dm_halt_req(halt_req),
-        .dm_reset_req(reset_req)
+        .dm_reg_we(reg_we_o),
+        .dm_reg_addr(reg_addr_o),
+        .dm_reg_wdata(reg_wdata_o),
+        .dm_reg_rdata(reg_rdata_i),
+        .dm_mem_we(mem_we_o),
+        .dm_mem_addr(mem_addr_o),
+        .dm_mem_wdata(mem_wdata_o),
+        .dm_mem_rdata(mem_rdata_i),
+        .dm_op_req(op_req_o),
+        .dm_halt_req(halt_req_o),
+        .dm_reset_req(reset_req_o)
     );
 
 endmodule

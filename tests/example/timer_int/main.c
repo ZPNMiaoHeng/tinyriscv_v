@@ -1,16 +1,16 @@
 #include <stdint.h>
 
 
-// Timer regs
-#define TIMER_BASE   (0x10000000)
-#define TIMER_CTRL   (TIMER_BASE + (0x00))
-#define TIMER_COUNT  (TIMER_BASE + (0x04))
-#define TIMER_VALUE  (TIMER_BASE + (0x08))
+// Timer0 regs
+#define TIMER0_BASE   (0x20000000)
+#define TIMER0_CTRL   (TIMER0_BASE + (0x00))
+#define TIMER0_COUNT  (TIMER0_BASE + (0x04))
+#define TIMER0_VALUE  (TIMER0_BASE + (0x08))
 
-#define TIMER_REG(addr) (*((volatile uint32_t *)addr))
+#define TIMER0_REG(addr) (*((volatile uint32_t *)addr))
 
 
-static uint32_t ms_count;
+static uint32_t count;
 
 
 static void set_test_pass()
@@ -26,15 +26,15 @@ static void set_test_fail()
 
 int main()
 {
-    ms_count = 0;
+    count = 0;
 
-    TIMER_REG(TIMER_VALUE) = 500;     // 10us period
-    TIMER_REG(TIMER_CTRL) = 0x07;     // enable interrupt and start timer
+    TIMER0_REG(TIMER0_VALUE) = 500;     // 10us period
+    TIMER0_REG(TIMER0_CTRL) = 0x07;     // enable interrupt and start timer
 
     while (1) {
-        if (ms_count == 5) {
-            TIMER_REG(TIMER_CTRL) = 0x00;
-            ms_count = 0;
+        if (count == 10) {
+            TIMER0_REG(TIMER0_CTRL) = 0x00;
+            count = 0;
             // TODO: do something
             set_test_pass();
             break;
@@ -44,9 +44,9 @@ int main()
     return 0;
 }
 
-void TIMER_IRQHandler()
+void TIMER0_IRQHandler()
 {
-    TIMER_REG(TIMER_CTRL) = 0x07; // clear int pending
+    TIMER0_REG(TIMER0_CTRL) = 0x07; // clear int pending
 
-    ms_count++;
+    count++;
 }

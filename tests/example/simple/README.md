@@ -1,1 +1,1 @@
-Simple c program which add  from 1 to 100.
+加减乘除运算例程。

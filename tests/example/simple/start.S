@@ -1,18 +1,42 @@
-    .section .text;
-    .align  2;
+    .section .init;
     .globl _start;
-
-    .weak  TIMER_IRQHandler
+    .type _start,@function
 
 
 _start:
     j _reset_handler
-    j _timer_handler
 
 _reset_handler:
-    la sp, _sp
+.option push
+.option norelax
+	la gp, __global_pointer$
+.option pop
+	la sp, _sp
     li x26, 0x00
     li x27, 0x00
+
+	/* Load data section */
+	la a0, _data_lma
+	la a1, _data
+	la a2, _edata
+	bgeu a1, a2, 2f
+1:
+	lw t0, (a0)
+	sw t0, (a1)
+	addi a0, a0, 4
+	addi a1, a1, 4
+	bltu a1, a2, 1b
+2:
+
+	/* Clear bss section */
+	la a0, __bss_start
+	la a1, _end
+	bgeu a0, a1, 2f
+1:
+	sw zero, (a0)
+	addi a0, a0, 4
+	bltu a0, a1, 1b
+2:
 
     call main
 
@@ -20,7 +44,3 @@ _reset_handler:
 
 loop:
     j loop
-
-_timer_handler:
-    call TIMER_IRQHandler
-    ret

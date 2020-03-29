@@ -24,7 +24,7 @@
 `define DTM_OP_WRITE      2'b10
 
 
-module jtag_dm (
+module jtag_dm(
 
     clk,
     rst_n,
@@ -42,6 +42,7 @@ module jtag_dm (
     dm_mem_addr,
     dm_mem_wdata,
     dm_mem_rdata,
+    dm_op_req,
 
     dm_halt_req,
     dm_reset_req
@@ -70,6 +71,7 @@ module jtag_dm (
     output reg[31:0] dm_mem_addr;
     output reg[31:0] dm_mem_wdata;
     input wire[31:0] dm_mem_rdata;
+    output reg dm_op_req;
     output reg dm_halt_req;
     output reg dm_reset_req;
 
@@ -123,6 +125,7 @@ module jtag_dm (
             dm_reg_addr <= 5'h0;
             is_halted <= 1'b0;
             is_reseted <= 1'b0;
+            dm_op_req <= 1'b0;
         end else begin
             if (state == STATE_IDLE) begin
                 dm_mem_we <= 1'b0;
@@ -134,6 +137,9 @@ module jtag_dm (
                     address <= dtm_req_data[DTM_REQ_BITS - 1:DMI_DATA_BITS + DMI_OP_BITS];
                     req_data <= dtm_req_data;
                     dm_is_busy <= 1'b1;
+                    dm_op_req <= 1'b1;
+                end else begin
+                    dm_op_req <= 1'b0;
                 end
             end else begin
                 case (op)
@@ -204,7 +210,7 @@ module jtag_dm (
                                     dmstatus <= 32'h400982;  // not halted, all running
                                     hartinfo <= 32'h0;
                                     sbcs <= 32'h20040404;
-                                    abstractcs <=32'h1000003;
+                                    abstractcs <= 32'h1000003;
                                     dmcontrol <= data;
                                     dm_halt_req <= 1'b0;
                                     dm_reset_req <= 1'b0;

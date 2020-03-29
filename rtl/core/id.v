@@ -17,33 +17,35 @@
 `include "defines.v"
 
 // identification module
-module id (
+module id(
 
-	input wire clk,
 	input wire rst,
-	input wire[`SramBus] inst_i,             // inst content
-    input wire[`SramAddrBus] inst_addr_i,    // inst addr
-    input wire jump_flag_ex_i,
-    input wire hold_flag_ex_i,
-    input wire int_flag_ex_i,
-    input wire halt_flag_dm_i,
+
+    // from if_id
+	input wire[`InstBus] inst_i,             // inst content
+    input wire[`InstAddrBus] inst_addr_i,    // inst addr
+
+    // from regs
+    input wire[`RegBus] reg1_rdata_i,       // reg1 read data
+    input wire[`RegBus] reg2_rdata_i,       // reg2 read data
+
+    // from ex
+    input wire ex_jump_flag_i,
+    input wire[`INT_BUS] ex_int_flag_i,
 
     // to regs
-    output reg reg1_re_o,                    // reg1 read enable
     output reg[`RegAddrBus] reg1_raddr_o,    // reg1 read addr
-    output reg reg2_re_o,                    // reg2 read enable
     output reg[`RegAddrBus] reg2_raddr_o,    // reg2 read addr
-    output reg reg_we_o,                     // reg write enable
-    output reg[`RegAddrBus] reg_waddr_o,     // reg write addr
+
+    output wire mem_req_o,
 
     // to ex
-    output reg[`SramBus] inst_o,
-    output reg inst_valid_o,                 // inst is valid flag
-    output reg[`SramAddrBus] inst_addr_o,
-
-    // to sram
-    output reg sram_re_o,                    // ram read enable
-    output reg sram_we_o                     // ram write enable
+    output reg[`InstBus] inst_o,
+    output reg[`InstAddrBus] inst_addr_o,
+    output reg[`RegBus] reg1_rdata_o,        // reg1 read data
+    output reg[`RegBus] reg2_rdata_o,        // reg2 read data
+    output reg reg_we_o,                     // reg write enable
+    output reg[`RegAddrBus] reg_waddr_o      // reg write addr
 
     );
 
@@ -54,109 +56,85 @@ module id (
     wire[4:0] rs1 = inst_i[19:15];
     wire[4:0] rs2 = inst_i[24:20];
 
+    reg mem_req;
 
-    always @ (posedge clk) begin
+    assign mem_req_o = ((mem_req == `RIB_REQ) && (ex_jump_flag_i == `JumpDisable) && (ex_int_flag_i == `INT_NONE));
+
+
+    always @ (*) begin
         if (rst == `RstEnable) begin
-            inst_o <= `ZeroWord;
-            reg_we_o <= `WriteDisable;
-            sram_we_o <= `WriteDisable;
-            reg1_re_o <= `ReadDisable;
-            reg2_re_o <= `ReadDisable;
-            sram_re_o <= `ReadDisable;
-            inst_valid_o <= `InstInvalid;
-        end else if (halt_flag_dm_i == 1'b1) begin
-            inst_valid_o <= `InstValid;
-            sram_we_o <= `WriteDisable;
-            reg_we_o <= `WriteDisable;
+            reg1_raddr_o <= `ZeroWord;
+            reg2_raddr_o <= `ZeroWord;
             inst_o <= `INST_NOP;
-        end else if (int_flag_ex_i == 1'b1 && inst_i != `INST_NOP) begin
-            inst_valid_o <= `InstValid;
-            sram_we_o <= `WriteDisable;
+            inst_addr_o <= `ZeroWord;
+            reg1_rdata_o <= `ZeroWord;
+            reg2_rdata_o <= `ZeroWord;
             reg_we_o <= `WriteDisable;
-            inst_o <= `INST_NOP;
-        end else if (jump_flag_ex_i == `JumpEnable && inst_i != `INST_NOP) begin
-            inst_valid_o <= `InstValid;
-            sram_we_o <= `WriteDisable;
-            reg_we_o <= `WriteDisable;
-            inst_o <= `INST_NOP;
-        end else if (hold_flag_ex_i == `HoldEnable) begin
-            inst_valid_o <= `InstValid;
-            sram_we_o <= `WriteDisable;
-            reg_we_o <= `WriteDisable;
-            inst_o <= `INST_NOP;
+            reg_waddr_o <= `ZeroWord;
+            mem_req <= `RIB_NREQ;
         end else begin
             inst_o <= inst_i;
             inst_addr_o <= inst_addr_i;
+            reg1_rdata_o <= reg1_rdata_i;
+            reg2_rdata_o <= reg2_rdata_i;
+            mem_req <= `RIB_NREQ;
 
             case (opcode)
                 `INST_TYPE_I: begin
                     case (funct3)
                         `INST_ADDI: begin
-                            inst_valid_o <= `InstValid;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            sram_we_o <= `WriteDisable;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                         `INST_SLTI: begin
-                            inst_valid_o <= `InstValid;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            sram_we_o <= `WriteDisable;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                         `INST_SLTIU: begin
-                            inst_valid_o <= `InstValid;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            sram_we_o <= `WriteDisable;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                         `INST_XORI: begin
-                            inst_valid_o <= `InstValid;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            sram_we_o <= `WriteDisable;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                         `INST_ORI: begin
-                            inst_valid_o <= `InstValid;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            sram_we_o <= `WriteDisable;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                         `INST_ANDI: begin
-                            inst_valid_o <= `InstValid;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            sram_we_o <= `WriteDisable;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                         `INST_SLLI: begin
-                            inst_valid_o <= `InstValid;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            sram_we_o <= `WriteDisable;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                         `INST_SRI: begin
-                            inst_valid_o <= `InstValid;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            sram_we_o <= `WriteDisable;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                         default: begin
-                            inst_valid_o <= `InstInvalid;
+                            reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
+                            reg1_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroWord;
                         end
                     endcase
                 end
@@ -164,366 +142,287 @@ module id (
                     if ((funct7 == 7'b0000000) || (funct7 == 7'b0100000)) begin
                         case (funct3)
                             `INST_ADD_SUB: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_SLL: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_SLT: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_SLTU: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_XOR: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_SR: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_OR: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_AND: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             default: begin
-                                inst_valid_o <= `InstInvalid;
+                                reg_we_o <= `WriteDisable;
+                                reg_waddr_o <= `ZeroWord;
+                                reg1_raddr_o <= `ZeroWord;
+                                reg2_raddr_o <= `ZeroWord;
                             end
                         endcase
                     end else if (funct7 == 7'b0000001) begin
                         case (funct3)
                             `INST_MUL: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_MULHU: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_MULH: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_MULHSU: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteEnable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_DIV: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteDisable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_DIVU: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteDisable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_REM: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteDisable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             `INST_REMU: begin
-                                inst_valid_o <= `InstValid;
                                 reg_we_o <= `WriteDisable;
                                 reg_waddr_o <= rd;
-                                reg1_re_o <= `ReadEnable;
                                 reg1_raddr_o <= rs1;
-                                reg2_re_o <= `ReadEnable;
                                 reg2_raddr_o <= rs2;
-                                sram_we_o <= `WriteDisable;
                             end
                             default: begin
-                                inst_valid_o <= `InstInvalid;
+                                reg_we_o <= `WriteDisable;
+                                reg_waddr_o <= `ZeroWord;
+                                reg1_raddr_o <= `ZeroWord;
+                                reg2_raddr_o <= `ZeroWord;
                             end
                         endcase
+                    end else begin
+                        reg_we_o <= `WriteDisable;
+                        reg_waddr_o <= `ZeroWord;
+                        reg1_raddr_o <= `ZeroWord;
+                        reg2_raddr_o <= `ZeroWord;
                     end
                 end
                 `INST_TYPE_L: begin
                     case (funct3)
                         `INST_LB: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
+                            reg2_raddr_o <= `ZeroWord;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            sram_re_o <= `ReadEnable;
-                            sram_we_o <= `WriteDisable;
+                            mem_req <= `RIB_REQ;
                         end
                         `INST_LH: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
+                            reg2_raddr_o <= `ZeroWord;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            sram_re_o <= `ReadEnable;
-                            sram_we_o <= `WriteDisable;
+                            mem_req <= `RIB_REQ;
                         end
                         `INST_LW: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
+                            reg2_raddr_o <= `ZeroWord;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            sram_re_o <= `ReadEnable;
-                            sram_we_o <= `WriteDisable;
+                            mem_req <= `RIB_REQ;
                         end
                         `INST_LBU: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
+                            reg2_raddr_o <= `ZeroWord;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            sram_re_o <= `ReadEnable;
-                            sram_we_o <= `WriteDisable;
+                            mem_req <= `RIB_REQ;
                         end
                         `INST_LHU: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
+                            reg2_raddr_o <= `ZeroWord;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
-                            sram_re_o <= `ReadEnable;
-                            sram_we_o <= `WriteDisable;
+                            mem_req <= `RIB_REQ;
                         end
                         default: begin
-                            inst_valid_o <= `InstInvalid;
+                            reg1_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroWord;
+                            reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                     endcase
                 end
                 `INST_TYPE_S: begin
                     case (funct3)
                         `INST_SB: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            reg2_re_o <= `ReadEnable;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteEnable;
-                            sram_re_o <= `ReadEnable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
+                            mem_req <= `RIB_REQ;
                         end
                         `INST_SH: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            reg2_re_o <= `ReadEnable;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteEnable;
-                            sram_re_o <= `ReadEnable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
+                            mem_req <= `RIB_REQ;
                         end
                         `INST_SW: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
-                            reg2_re_o <= `ReadEnable;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteEnable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
+                            mem_req <= `RIB_REQ;
                         end
                         default: begin
-                            inst_valid_o <= `InstInvalid;
+                            reg1_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroWord;
+                            reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                     endcase
                 end
                 `INST_TYPE_B: begin
                     case (funct3)
                         `INST_BEQ: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
-                            reg2_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteDisable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                         `INST_BNE: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
-                            reg2_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteDisable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                         `INST_BLT: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
-                            reg2_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteDisable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                         `INST_BGE: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
-                            reg2_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteDisable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                         `INST_BLTU: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
-                            reg2_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteDisable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                         `INST_BGEU: begin
-                            inst_valid_o <= `InstValid;
-                            reg1_re_o <= `ReadEnable;
-                            reg2_re_o <= `ReadEnable;
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
-                            sram_we_o <= `WriteDisable;
                             reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                         default: begin
-                            inst_valid_o <= `InstInvalid;
+                            reg1_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroWord;
+                            reg_we_o <= `WriteDisable;
+                            reg_waddr_o <= `ZeroWord;
                         end
                     endcase
                 end
                 `INST_JAL: begin
-                    inst_valid_o <= `InstValid;
-                    sram_we_o <= `WriteDisable;
                     reg_we_o <= `WriteEnable;
                     reg_waddr_o <= rd;
+                    reg1_raddr_o <= `ZeroWord;
+                    reg2_raddr_o <= `ZeroWord;
                 end
                 `INST_JALR: begin
-                    inst_valid_o <= `InstValid;
-                    sram_we_o <= `WriteDisable;
                     reg_we_o <= `WriteEnable;
-					reg1_re_o <= `ReadEnable;
 					reg1_raddr_o <= rs1;
+                    reg2_raddr_o <= `ZeroWord;
                     reg_waddr_o <= rd;
                 end
                 `INST_LUI: begin
-                    inst_valid_o <= `InstValid;
-                    sram_we_o <= `WriteDisable;
                     reg_we_o <= `WriteEnable;
                     reg_waddr_o <= rd;
+                    reg1_raddr_o <= `ZeroWord;
+                    reg2_raddr_o <= `ZeroWord;
                 end
                 `INST_AUIPC: begin
-                    inst_valid_o <= `InstValid;
-                    sram_we_o <= `WriteDisable;
                     reg_we_o <= `WriteEnable;
                     reg_waddr_o <= rd;
+                    reg1_raddr_o <= `ZeroWord;
+                    reg2_raddr_o <= `ZeroWord;
                 end
                 `INST_NOP: begin
-                    inst_valid_o <= `InstValid;
-                    sram_we_o <= `WriteDisable;
                     reg_we_o <= `WriteDisable;
+                    reg_waddr_o <= `ZeroWord;
+                    reg1_raddr_o <= `ZeroWord;
+                    reg2_raddr_o <= `ZeroWord;
                 end
                 `INST_FENCE: begin
-                    inst_valid_o <= `InstValid;
-                    sram_we_o <= `WriteDisable;
                     reg_we_o <= `WriteDisable;
+                    reg_waddr_o <= `ZeroWord;
+                    reg1_raddr_o <= `ZeroWord;
+                    reg2_raddr_o <= `ZeroWord;
                 end
                 default: begin
-                    inst_valid_o <= `InstInvalid;
-                    sram_we_o <= `WriteDisable;
                     reg_we_o <= `WriteDisable;
+                    reg_waddr_o <= `ZeroWord;
+                    reg1_raddr_o <= `ZeroWord;
+                    reg2_raddr_o <= `ZeroWord;
                 end
             endcase
         end

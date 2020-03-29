@@ -17,38 +17,26 @@
 `include "defines.v"
 
 // inst fetch module
-module if_id (
+module if_id(
 
     input wire clk,
     input wire rst,
 
-    input wire[`SramBus] inst_i,            // inst content
-    input wire[`SramAddrBus] inst_addr_i,   // inst addr
+    input wire[`InstBus] inst_i,            // inst content
+    input wire[`InstAddrBus] inst_addr_i,   // inst addr
 
-    input wire jump_flag_ex_i,
-    input wire hold_flag_ex_i,
-    input wire int_flag_ex_i,
-    input wire dm_halt_req_i,
+    input wire[`Hold_Flag_Bus] hold_flag_i,
 
-    output reg[`SramBus] inst_o,
-    output reg[`SramAddrBus] inst_addr_o
+    output reg[`InstBus] inst_o,
+    output reg[`InstAddrBus] inst_addr_o
 
     );
 
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
-            inst_o <= `ZeroWord;
-            inst_addr_o <= `ZeroWord;
-        end else if (dm_halt_req_i == 1'b1) begin
             inst_o <= `INST_NOP;
             inst_addr_o <= `ZeroWord;
-        end else if (int_flag_ex_i == 1'b1) begin
-            inst_o <= `INST_NOP;
-            inst_addr_o <= `ZeroWord;
-        end else if (jump_flag_ex_i == `JumpEnable) begin
-            inst_o <= `INST_NOP;
-            inst_addr_o <= `ZeroWord;
-        end else if (hold_flag_ex_i == `HoldEnable) begin
+        end else if (hold_flag_i >= `Hold_If) begin
             inst_o <= `INST_NOP;
             inst_addr_o <= `ZeroWord;
         end else begin

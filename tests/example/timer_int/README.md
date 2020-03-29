@@ -1,1 +1,1 @@
-Simple c program which can verify interrupt function.
+定时器中断例程。

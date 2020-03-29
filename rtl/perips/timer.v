@@ -14,63 +14,72 @@
  limitations under the License.                                          
  */
 
+`include "defines.v"
+
 
 // 32 bits count up timer module
-module timer (
+module timer(
 
     input wire clk,
     input wire rst,
 
-    input wire[31:0] wdata,
-    input wire[31:0] waddr,
-    input wire[31:0] raddr,
-    input wire we,
+    input wire[31:0] data_i,
+    input wire[31:0] addr_i,
+    input wire we_i,
+    input wire req_i,
 
-    output reg[31:0] rdata,
-    output wire int_sig
+    output reg[31:0] data_o,
+    output wire int_sig_o,
+    output reg ack_o
 
     );
 
-    // timer expired value
-    // addr: 0x10000008
-    reg[31:0] timer_value;
-
-    // timer current count, read only
-    // addr: 0x10000004
-    reg[31:0] timer_count;
+    localparam ctrl_reg = 32'h00;
+    localparam count_reg = 32'h04;
+    localparam value_reg = 32'h08;
 
     // [0]: timer enable
     // [1]: timer int enable
     // [2]: timer int pending, write 1 to clear it
-    // addr: 0x10000000
+    // addr offset: 0x00
     reg[31:0] timer_ctrl;
 
+    // timer current count, read only
+    // addr offset: 0x04
+    reg[31:0] timer_count;
 
-    assign int_sig = ((timer_ctrl[0] == 1'b1) && (timer_ctrl[1] == 1'b1) && (timer_ctrl[2] == 1'b1)) ? 1'b1 : 1'b0;
+    // timer expired value
+    // addr offset: 0x08
+    reg[31:0] timer_value;
+
+
+    assign int_sig_o = ((timer_ctrl[0] == 1'b1) && (timer_ctrl[1] == 1'b1) && (timer_ctrl[2] == 1'b1)) ? `INT_ASSERT : `INT_DEASSERT;
+
 
     // write timer regs
     always @ (posedge clk) begin
-        if (rst == 1'b0) begin
-            timer_count <= 32'h0;
-            timer_value <= 32'h0;
-            timer_ctrl <= 32'h0;
+        if (rst == `RstEnable) begin
+            timer_count <= `ZeroWord;
+            timer_value <= `ZeroWord;
+            timer_ctrl <= `ZeroWord;
+            ack_o <= `RIB_ACK;
         end else begin
             if (timer_ctrl[0] == 1'b1) begin
                 timer_count <= timer_count + 1'b1;
                 if (timer_count == timer_value) begin
                     timer_ctrl[2] <= 1'b1;
-                    timer_count <= 32'h0;
+                    timer_count <= `ZeroWord;
                 end
             end
-            if (we == 1'b1) begin
-                if (waddr == 32'h10000008) begin
-                    timer_value <= wdata;
-                end else if (waddr == 32'h10000000) begin
-                    if (wdata[2] == 1'b0) begin
-                        timer_ctrl <= wdata;
+            if (we_i == `WriteEnable) begin
+                if (addr_i == value_reg) begin
+                    timer_value <= data_i;
+                end else if (addr_i == ctrl_reg) begin
+                    if (data_i[2] == 1'b0) begin
+                        timer_ctrl <= {data_i[31:3], timer_ctrl[2], data_i[1:0]};
                     // write 1 to clear pending
                     end else begin
-                        timer_ctrl <= {wdata[31:3], 1'b0, wdata[1:0]};
+                        timer_ctrl <= {data_i[31:3], 1'b0, data_i[1:0]};
                     end
                 end
             end
@@ -79,18 +88,23 @@ module timer (
 
     // read timer regs
     always @ (*) begin
-        if (rst == 1'b0) begin
-            rdata <= 32'h0;
+        if (rst == `RstEnable) begin
+            data_o <= `ZeroWord;
         end else begin
-            if (raddr == 32'h10000008) begin
-                rdata <= timer_value;
-            end else if (raddr == 32'h10000000) begin
-                rdata <= timer_ctrl;
-            end else if (raddr == 32'h10000004) begin
-                rdata <= timer_count;
-            end else begin
-                rdata <= 32'h0;
-            end
+            case (addr_i)
+                value_reg: begin
+                    data_o <= timer_value;
+                end
+                ctrl_reg: begin
+                    data_o <= timer_ctrl;
+                end
+                count_reg: begin
+                    data_o <= timer_count;
+                end
+                default: begin
+                    data_o <= `ZeroWord;
+                end
+            endcase
         end
     end
 

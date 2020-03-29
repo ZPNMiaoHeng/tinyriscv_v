@@ -20,7 +20,7 @@
 `define DTM_REQ_INVALID   1'b0
 
 
-module jtag_driver (
+module jtag_driver(
 
     rst_n,
 

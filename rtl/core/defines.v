@@ -14,6 +14,8 @@
  limitations under the License.                                          
  */
 
+`define CpuResetAddr 32'h00000000
+
 `define RstEnable 1'b0
 `define RstDisable 1'b1
 `define ZeroWord 32'h00000000
@@ -21,8 +23,6 @@
 `define WriteDisable 1'b0
 `define ReadEnable 1'b1
 `define ReadDisable 1'b0
-`define InstValid 1'b1
-`define InstInvalid 1'b0
 `define True 1'b1
 `define False 1'b0
 `define ChipEnable 1'b1
@@ -35,6 +35,26 @@
 `define DivStop 1'b0
 `define HoldEnable 1'b1
 `define HoldDisable 1'b0
+`define Stop 1'b1
+`define NoStop 1'b0
+`define RIB_ACK 1'b1
+`define RIB_NACK 1'b0
+`define RIB_REQ 1'b1
+`define RIB_NREQ 1'b0
+`define INT_ASSERT 1'b1
+`define INT_DEASSERT 1'b0
+
+`define INT_BUS 7:0
+`define INT_NONE 8'h0
+`define INT_RET 8'hff
+`define INT_TIMER0 8'b00000001
+`define INT_TIMER0_ENTRY_ADDR 32'h4
+
+`define Hold_Flag_Bus   2:0
+`define Hold_None 3'b000
+`define Hold_Pc   3'b001
+`define Hold_If   3'b010
+`define Hold_Id   3'b011
 
 // I type inst
 `define INST_TYPE_I 7'b0010011
@@ -90,6 +110,7 @@
 `define INST_AUIPC  7'b0010111
 `define INST_NOP    32'h00000001
 `define INST_MRET   32'h30200073
+`define INST_RET    32'h00008067
 
 `define INST_FENCE  7'b0001111
 
@@ -102,15 +123,19 @@
 `define INST_BLTU   3'b110
 `define INST_BGEU   3'b111
 
-// SIM RAM
-`define SramMemNum 2048   // memory depth(how many words)
-`define SramBus 31:0
-`define SramAddrBus 31:0
+`define RomNum 2048  // rom depth(how many words)
+
+`define MemNum 2048  // memory depth(how many words)
+`define MemBus 31:0
+`define MemAddrBus 31:0
+
+`define InstBus 31:0
+`define InstAddrBus 31:0
 
 // common regs
 `define RegAddrBus 4:0
 `define RegBus 31:0
 `define DoubleRegBus 63:0
 `define RegWidth 32
-`define RegNum 32        // reg count
+`define RegNum 32        // reg num
 `define RegNumLog2 5

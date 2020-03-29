@@ -1,5 +1,5 @@
 
-RISCV_ARCH := rv32i
+RISCV_ARCH := rv32im
 RISCV_ABI := ilp32
 
 RISCV_PATH := ../../../tools/gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64/

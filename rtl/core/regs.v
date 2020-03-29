@@ -17,22 +17,26 @@
 `include "defines.v"
 
 // common reg module
-module regs (
+module regs(
 
     input wire clk,
     input wire rst,
 
-    input wire we,                  // reg write enable
-    input wire[`RegAddrBus] waddr,  // reg write addr
-    input wire[`RegBus] wdata,      // reg write data
+    input wire we_i,                  // reg write enable
+    input wire[`RegAddrBus] waddr_i,  // reg write addr
+    input wire[`RegBus] wdata_i,      // reg write data
 
-    input wire re1,                 // reg1 read enable
-    input wire[`RegAddrBus] raddr1, // reg1 read addr
-    output reg[`RegBus] rdata1,     // reg1 read data
+    input wire jtag_we_i,                 // reg write enable
+    input wire[`RegAddrBus] jtag_addr_i,  // reg write addr
+    input wire[`RegBus] jtag_data_i,      // reg write data
 
-    input wire re2,                 // reg2 read enable
-    input wire[`RegAddrBus] raddr2, // reg2 read addr
-    output reg[`RegBus] rdata2      // reg2 read data
+    input wire[`RegAddrBus] raddr1_i, // reg1 read addr
+    output reg[`RegBus] rdata1_o,     // reg1 read data
+
+    input wire[`RegAddrBus] raddr2_i, // reg2 read addr
+    output reg[`RegBus] rdata2_o,     // reg2 read data
+
+    output reg[`RegBus] jtag_data_o
 
     );
 
@@ -41,35 +45,48 @@ module regs (
     // write reg
     always @ (posedge clk) begin
         if (rst == `RstDisable) begin
-            if((we == `WriteEnable) && (waddr != `RegNumLog2'h0)) begin
-                regs[waddr] <= wdata;
+            if ((we_i == `WriteEnable) && (waddr_i != `RegNumLog2'h0)) begin
+                regs[waddr_i] <= wdata_i;
+            end else if ((jtag_we_i == `WriteEnable) && (jtag_addr_i != `RegNumLog2'h0)) begin
+                regs[jtag_addr_i] <= jtag_data_i;
             end
         end
     end
 
     // read reg1
     always @ (*) begin
-        if(rst == `RstEnable) begin
-            rdata1 <= `ZeroWord;
-        end else if(raddr1 == `RegNumLog2'h0) begin
-            rdata1 <= `ZeroWord;
-        end else if(re1 == `ReadEnable) begin
-            rdata1 <= regs[raddr1];
+        if (rst == `RstEnable) begin
+            rdata1_o <= `ZeroWord;
+        end else if (raddr1_i == `RegNumLog2'h0) begin
+            rdata1_o <= `ZeroWord;
+        end else if (raddr1_i == waddr_i && we_i == `WriteEnable) begin
+            rdata1_o <= wdata_i;
         end else begin
-            rdata1 <= `ZeroWord;
+            rdata1_o <= regs[raddr1_i];
         end
     end
 
     // read reg2
     always @ (*) begin
-        if(rst == `RstEnable) begin
-            rdata2 <= `ZeroWord;
-        end else if(raddr2 == `RegNumLog2'h0) begin
-            rdata2 <= `ZeroWord;
-        end else if(re2 == `ReadEnable) begin
-            rdata2 <= regs[raddr2];
+        if (rst == `RstEnable) begin
+            rdata2_o <= `ZeroWord;
+        end else if (raddr2_i == `RegNumLog2'h0) begin
+            rdata2_o <= `ZeroWord;
+        end else if (raddr2_i == waddr_i && we_i == `WriteEnable) begin
+            rdata2_o <= wdata_i;
         end else begin
-            rdata2 <= `ZeroWord;
+            rdata2_o <= regs[raddr2_i];
+        end
+    end
+
+    // jtag read reg
+    always @ (*) begin
+        if (rst == `RstEnable) begin
+            jtag_data_o <= `ZeroWord;
+        end else if (jtag_addr_i == `RegNumLog2'h0) begin
+            jtag_data_o <= `ZeroWord;
+        end else begin
+            jtag_data_o <= regs[jtag_addr_i];
         end
     end
 
