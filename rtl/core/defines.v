@@ -123,6 +123,15 @@
 `define INST_BLTU   3'b110
 `define INST_BGEU   3'b111
 
+// CSR inst
+`define INST_CSR    7'b1110011
+`define INST_CSRRW  3'b001
+`define INST_CSRRS  3'b010
+`define INST_CSRRC  3'b011
+`define INST_CSRRWI 3'b101
+`define INST_CSRRSI 3'b110
+`define INST_CSRRCI 3'b111
+
 `define RomNum 2048  // rom depth(how many words)
 
 `define MemNum 2048  // memory depth(how many words)

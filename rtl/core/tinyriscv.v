@@ -61,6 +61,10 @@ module tinyriscv(
     wire[`RegBus] id_reg2_rdata_o;
     wire id_reg_we_o;
     wire[`RegAddrBus] id_reg_waddr_o;
+    wire[`MemAddrBus] id_csr_raddr_o;
+    wire id_csr_we_o;
+    wire[`RegBus] id_csr_rdata_o;
+    wire[`MemAddrBus] id_csr_waddr_o;
 
     // id_ex
     wire[`InstBus] ie_inst_o;
@@ -69,6 +73,9 @@ module tinyriscv(
     wire[`RegAddrBus] ie_reg_waddr_o;
     wire[`RegBus] ie_reg1_rdata_o;
     wire[`RegBus] ie_reg2_rdata_o;
+    wire ie_csr_we_o;
+    wire[`MemAddrBus] ie_csr_waddr_o;
+    wire[`RegBus] ie_csr_rdata_o;
 
     // ex
     wire[`MemBus] ex_mem_wdata_o;
@@ -92,10 +99,16 @@ module tinyriscv(
     wire ex_clint_we_o;
     wire[`RegAddrBus] ex_clint_addr_o;
     wire[`RegBus] ex_clint_data_o;
+    wire[`RegBus] ex_csr_wdata_o;
+    wire ex_csr_we_o;
+    wire[`MemAddrBus] ex_csr_waddr_o;
 
     // regs
     wire[`RegBus] regs_rdata1_o;
     wire[`RegBus] regs_rdata2_o;
+
+    // csr reg
+    wire[`RegBus] csr_data_o;
 
     // ctrl
     wire[`Hold_Flag_Bus] ctrl_hold_flag_o;
@@ -161,6 +174,16 @@ module tinyriscv(
         .jtag_data_o(jtag_reg_data_o)
     );
 
+    csr_reg u_csr_reg(
+        .clk(clk),
+        .rst(rst),
+        .we_i(ex_csr_we_o),
+        .raddr_i(id_csr_raddr_o),
+        .waddr_i(ex_csr_waddr_o),
+        .data_i(ex_csr_wdata_o),
+        .data_o(csr_data_o)
+    );
+
     if_id u_if_id(
         .clk(clk),
         .rst(rst),
@@ -187,7 +210,12 @@ module tinyriscv(
         .reg1_rdata_o(id_reg1_rdata_o),
         .reg2_rdata_o(id_reg2_rdata_o),
         .reg_we_o(id_reg_we_o),
-        .reg_waddr_o(id_reg_waddr_o)
+        .reg_waddr_o(id_reg_waddr_o),
+        .csr_rdata_i(csr_data_o),
+        .csr_raddr_o(id_csr_raddr_o),
+        .csr_we_o(id_csr_we_o),
+        .csr_rdata_o(id_csr_rdata_o),
+        .csr_waddr_o(id_csr_waddr_o)
     );
 
     id_ex u_id_ex(
@@ -205,7 +233,13 @@ module tinyriscv(
         .reg_we_o(ie_reg_we_o),
         .reg_waddr_o(ie_reg_waddr_o),
         .reg1_rdata_o(ie_reg1_rdata_o),
-        .reg2_rdata_o(ie_reg2_rdata_o)
+        .reg2_rdata_o(ie_reg2_rdata_o),
+        .csr_we_i(id_csr_we_o),
+        .csr_waddr_i(id_csr_waddr_o),
+        .csr_rdata_i(id_csr_rdata_o),
+        .csr_we_o(ie_csr_we_o),
+        .csr_waddr_o(ie_csr_waddr_o),
+        .csr_rdata_o(ie_csr_rdata_o)
     );
 
     ex u_ex(
@@ -244,7 +278,13 @@ module tinyriscv(
         .div_dividend_o(ex_div_dividend_o),
         .div_divisor_o(ex_div_divisor_o),
         .div_op_o(ex_div_op_o),
-        .div_reg_waddr_o(ex_div_reg_waddr_o)
+        .div_reg_waddr_o(ex_div_reg_waddr_o),
+        .csr_we_i(ie_csr_we_o),
+        .csr_waddr_i(ie_csr_waddr_o),
+        .csr_rdata_i(ie_csr_rdata_o),
+        .csr_wdata_o(ex_csr_wdata_o),
+        .csr_we_o(ex_csr_we_o),
+        .csr_waddr_o(ex_csr_waddr_o)
     );
 
     div u_div(

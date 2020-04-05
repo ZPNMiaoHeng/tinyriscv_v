@@ -28,6 +28,9 @@ module id_ex(
     input wire[`RegAddrBus] reg_waddr_i,
     input wire[`RegBus] reg1_rdata_i,       // reg1 read data
     input wire[`RegBus] reg2_rdata_i,       // reg2 read data
+    input wire csr_we_i,
+    input wire[`MemAddrBus] csr_waddr_i,
+    input wire[`RegBus] csr_rdata_i,
 
     input wire[`Hold_Flag_Bus] hold_flag_i,
 
@@ -36,7 +39,10 @@ module id_ex(
     output reg reg_we_o,
     output reg[`RegAddrBus] reg_waddr_o,
     output reg[`RegBus] reg1_rdata_o,       // reg1 read data
-    output reg[`RegBus] reg2_rdata_o        // reg2 read data
+    output reg[`RegBus] reg2_rdata_o,       // reg2 read data
+    output reg csr_we_o,
+    output reg[`MemAddrBus] csr_waddr_o,
+    output reg[`RegBus] csr_rdata_o
 
     );
 
@@ -48,6 +54,9 @@ module id_ex(
             reg_waddr_o <= `ZeroWord;
             reg1_rdata_o <= `ZeroWord;
             reg2_rdata_o <= `ZeroWord;
+            csr_we_o <= `WriteDisable;
+            csr_waddr_o <= `ZeroWord;
+            csr_rdata_o <= `ZeroWord;
         end else begin
             if (hold_flag_i >= `Hold_Id) begin
                 inst_o <= `INST_NOP;
@@ -56,6 +65,9 @@ module id_ex(
                 reg_waddr_o <= `ZeroWord;
                 reg1_rdata_o <= `ZeroWord;
                 reg2_rdata_o <= `ZeroWord;
+                csr_we_o <= `WriteDisable;
+                csr_waddr_o <= `ZeroWord;
+                csr_rdata_o <= `ZeroWord;
             end else begin
                 inst_o <= inst_i;
                 inst_addr_o <= inst_addr_i;
@@ -63,6 +75,9 @@ module id_ex(
                 reg_waddr_o <= reg_waddr_i;
                 reg1_rdata_o <= reg1_rdata_i;
                 reg2_rdata_o <= reg2_rdata_i;
+                csr_we_o <= csr_we_i;
+                csr_waddr_o <= csr_waddr_i;
+                csr_rdata_o <= csr_rdata_i;
             end
         end
     end

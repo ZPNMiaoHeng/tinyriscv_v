@@ -28,6 +28,9 @@ module ex(
     input wire[`RegAddrBus] reg_waddr_i,
     input wire[`RegBus] reg1_rdata_i,       // reg1 read data
     input wire[`RegBus] reg2_rdata_i,       // reg2 read data
+    input wire csr_we_i,
+    input wire[`MemAddrBus] csr_waddr_i,
+    input wire[`RegBus] csr_rdata_i,
 
     // from mem
     input wire[`MemBus] mem_rdata_i,      // mem read data
@@ -56,6 +59,11 @@ module ex(
     output wire[`RegBus] reg_wdata_o,        // reg write data
     output wire reg_we_o,                    // reg write enable
     output wire[`RegAddrBus] reg_waddr_o,    // reg write addr
+
+    // to csr reg
+    output reg[`RegBus] csr_wdata_o,        // reg write data
+    output wire csr_we_o,                    // reg write enable
+    output wire[`MemAddrBus] csr_waddr_o,
 
     // to div
     output reg div_start_o,
@@ -90,6 +98,7 @@ module ex(
     wire[2:0] funct3;
     wire[6:0] funct7;
     wire[4:0] rd;
+    wire[4:0] uimm;
     reg[`RegBus] reg_wdata;
     reg reg_we;
     reg[`RegAddrBus] reg_waddr;
@@ -107,6 +116,7 @@ module ex(
     assign funct3 = inst_i[14:12];
     assign funct7 = inst_i[31:25];
     assign rd = inst_i[11:7];
+    assign uimm = inst_i[19:15];
 
     assign sign_extend_tmp = {{20{inst_i[31]}}, inst_i[31:20]};
     assign shift_bits = inst_i[24:20];
@@ -124,6 +134,9 @@ module ex(
     assign hold_flag_o = hold_flag || div_hold_flag;
     assign jump_flag_o = jump_flag || div_jump_flag;
     assign jump_addr_o = jump_addr | div_jump_addr;
+
+    assign csr_we_o = csr_we_i;
+    assign csr_waddr_o = csr_waddr_i;
 
 
     // handle interrupt
@@ -307,10 +320,12 @@ module ex(
             reg_wdata <= `ZeroWord;
             reg_we <= `WriteDisable;
             reg_waddr <= `ZeroWord;
+            csr_wdata_o <= `ZeroWord;
         end else begin
             reg_we <= reg_we_i;
             reg_waddr <= reg_waddr_i;
             mem_req_o <= `RIB_NREQ;
+            csr_wdata_o <= `ZeroWord;
 
             case (opcode)
                 `INST_TYPE_I: begin
@@ -1072,6 +1087,51 @@ module ex(
                     reg_wdata <= `ZeroWord;
                     jump_flag <= `JumpEnable;
                     jump_addr <= inst_addr_i + 4'h4;
+                end
+                `INST_CSR: begin
+                    jump_flag <= `JumpDisable;
+                    hold_flag <= `HoldDisable;
+                    jump_addr <= `ZeroWord;
+                    mem_wdata_o <= `ZeroWord;
+                    mem_raddr_o <= `ZeroWord;
+                    mem_waddr_o <= `ZeroWord;
+                    mem_we_o <= `WriteDisable;
+                    case (funct3)
+                        `INST_CSRRW: begin
+                            csr_wdata_o <= reg1_rdata_i;
+                            reg_wdata <= csr_rdata_i;
+                        end
+                        `INST_CSRRS: begin
+                            csr_wdata_o <= reg1_rdata_i | csr_rdata_i;
+                            reg_wdata <= csr_rdata_i;
+                        end
+                        `INST_CSRRC: begin
+                            csr_wdata_o <= csr_rdata_i & (~reg1_rdata_i);
+                            reg_wdata <= csr_rdata_i;
+                        end
+                        `INST_CSRRWI: begin
+                            csr_wdata_o <= {27'h0, uimm};
+                            reg_wdata <= csr_rdata_i;
+                        end
+                        `INST_CSRRSI: begin
+                            csr_wdata_o <= {27'h0, uimm} | csr_rdata_i;
+                            reg_wdata <= csr_rdata_i;
+                        end
+                        `INST_CSRRCI: begin
+                            csr_wdata_o <= (~{27'h0, uimm}) & csr_rdata_i;
+                            reg_wdata <= csr_rdata_i;
+                        end
+                        default: begin
+                            jump_flag <= `JumpDisable;
+                            hold_flag <= `HoldDisable;
+                            jump_addr <= `ZeroWord;
+                            mem_wdata_o <= `ZeroWord;
+                            mem_raddr_o <= `ZeroWord;
+                            mem_waddr_o <= `ZeroWord;
+                            mem_we_o <= `WriteDisable;
+                            reg_wdata <= `ZeroWord;
+                        end
+                    endcase
                 end
                 default: begin
                     jump_flag <= `JumpDisable;
