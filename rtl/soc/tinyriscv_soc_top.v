@@ -27,6 +27,9 @@ module tinyriscv_soc_top(
 
     output wire halted_ind,
 
+    output wire tx_pin,
+    output wire io_pin,
+
     input wire jtag_TCK,
     input wire jtag_TMS,
     input wire jtag_TDI,
@@ -82,6 +85,22 @@ module tinyriscv_soc_top(
     wire s2_ack_i;
     wire s2_req_o;
     wire s2_we_o;
+
+    // slave 3 interface
+    wire[`MemAddrBus] s3_addr_o;
+    wire[`MemBus] s3_data_o;
+    wire[`MemBus] s3_data_i;
+    wire s3_ack_i;
+    wire s3_req_o;
+    wire s3_we_o;
+
+    // slave 4 interface
+    wire[`MemAddrBus] s4_addr_o;
+    wire[`MemBus] s4_data_o;
+    wire[`MemBus] s4_data_i;
+    wire s4_ack_i;
+    wire s4_req_o;
+    wire s4_we_o;
 
     // rib
     wire rib_hold_flag_o;
@@ -177,6 +196,30 @@ module tinyriscv_soc_top(
         .ack_o(s2_ack_i)
     );
 
+    uart_tx uart_tx_0(
+        .clk(clk),
+        .rst(rst),
+        .we_i(s3_we_o),
+        .req_i(s3_req_o),
+        .addr_i(s3_addr_o),
+        .data_i(s3_data_o),
+        .data_o(s3_data_i),
+        .ack_o(s3_ack_i),
+        .tx_pin(tx_pin)
+    );
+
+    gpio gpio_0(
+        .clk(clk),
+        .rst(rst),
+        .we_i(s4_we_o),
+        .req_i(s4_req_o),
+        .addr_i(s4_addr_o),
+        .data_i(s4_data_o),
+        .data_o(s4_data_i),
+        .ack_o(s4_ack_i),
+        .io_pin(io_pin)
+    );
+
     rib u_rib(
         .clk(clk),
         .rst(rst),
@@ -228,6 +271,22 @@ module tinyriscv_soc_top(
         .s2_ack_i(s2_ack_i),
         .s2_req_o(s2_req_o),
         .s2_we_o(s2_we_o),
+
+        // slave 3 interface
+        .s3_addr_o(s3_addr_o),
+        .s3_data_o(s3_data_o),
+        .s3_data_i(s3_data_i),
+        .s3_ack_i(s3_ack_i),
+        .s3_req_o(s3_req_o),
+        .s3_we_o(s3_we_o),
+
+        // slave 4 interface
+        .s4_addr_o(s4_addr_o),
+        .s4_data_o(s4_data_o),
+        .s4_data_i(s4_data_i),
+        .s4_ack_i(s4_ack_i),
+        .s4_req_o(s4_req_o),
+        .s4_we_o(s4_we_o),
 
         .hold_flag_o(rib_hold_flag_o)
     );

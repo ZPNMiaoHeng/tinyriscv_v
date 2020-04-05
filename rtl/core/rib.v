@@ -71,6 +71,22 @@ module rib(
     output reg s2_req_o,
     output reg s2_we_o,
 
+    // slave 3 interface
+    output reg[`MemAddrBus] s3_addr_o,
+    output reg[`MemBus] s3_data_o,
+    input wire[`MemBus] s3_data_i,
+    input wire s3_ack_i,
+    output reg s3_req_o,
+    output reg s3_we_o,
+
+    // slave 4 interface
+    output reg[`MemAddrBus] s4_addr_o,
+    output reg[`MemBus] s4_data_o,
+    input wire[`MemBus] s4_data_i,
+    input wire s4_ack_i,
+    output reg s4_req_o,
+    output reg s4_we_o,
+
     output reg hold_flag_o
 
     );
@@ -79,6 +95,8 @@ module rib(
     parameter [3:0]slave_0 = 4'b0000;
     parameter [3:0]slave_1 = 4'b0001;
     parameter [3:0]slave_2 = 4'b0010;
+    parameter [3:0]slave_3 = 4'b0011;
+    parameter [3:0]slave_4 = 4'b0100;
 
     parameter [1:0]grant0 = 2'h0;
     parameter [1:0]grant1 = 2'h1;
@@ -166,15 +184,23 @@ module rib(
             s0_addr_o <= `ZeroWord;
             s1_addr_o <= `ZeroWord;
             s2_addr_o <= `ZeroWord;
+            s3_addr_o <= `ZeroWord;
+            s4_addr_o <= `ZeroWord;
             s0_data_o <= `ZeroWord;
             s1_data_o <= `ZeroWord;
             s2_data_o <= `ZeroWord;
+            s3_data_o <= `ZeroWord;
+            s4_data_o <= `ZeroWord;
             s0_req_o <= `RIB_NREQ;
             s1_req_o <= `RIB_NREQ;
             s2_req_o <= `RIB_NREQ;
+            s3_req_o <= `RIB_NREQ;
+            s4_req_o <= `RIB_NREQ;
             s0_we_o <= `WriteDisable;
             s1_we_o <= `WriteDisable;
             s2_we_o <= `WriteDisable;
+            s3_we_o <= `WriteDisable;
+            s4_we_o <= `WriteDisable;
         end else begin
             m0_ack_o <= `RIB_NACK;
             m1_ack_o <= `RIB_NACK;
@@ -186,15 +212,23 @@ module rib(
             s0_addr_o <= `ZeroWord;
             s1_addr_o <= `ZeroWord;
             s2_addr_o <= `ZeroWord;
+            s3_addr_o <= `ZeroWord;
+            s4_addr_o <= `ZeroWord;
             s0_data_o <= `ZeroWord;
             s1_data_o <= `ZeroWord;
             s2_data_o <= `ZeroWord;
+            s3_data_o <= `ZeroWord;
+            s4_data_o <= `ZeroWord;
             s0_req_o <= `RIB_NREQ;
             s1_req_o <= `RIB_NREQ;
             s2_req_o <= `RIB_NREQ;
+            s3_req_o <= `RIB_NREQ;
+            s4_req_o <= `RIB_NREQ;
             s0_we_o <= `WriteDisable;
             s1_we_o <= `WriteDisable;
             s2_we_o <= `WriteDisable;
+            s3_we_o <= `WriteDisable;
+            s4_we_o <= `WriteDisable;
 
             case (grant)
                 grant0: begin
@@ -222,6 +256,22 @@ module rib(
                             s2_data_o <= m0_data_i;
                             m0_ack_o <= s2_ack_i;
                             m0_data_o <= s2_data_i;
+                        end
+                        slave_3: begin
+                            s3_req_o <= m0_req_i;
+                            s3_we_o <= m0_we_i;
+                            s3_addr_o <= {{4'h0}, {m0_addr_i[27:0]}};
+                            s3_data_o <= m0_data_i;
+                            m0_ack_o <= s3_ack_i;
+                            m0_data_o <= s3_data_i;
+                        end
+                        slave_4: begin
+                            s4_req_o <= m0_req_i;
+                            s4_we_o <= m0_we_i;
+                            s4_addr_o <= {{4'h0}, {m0_addr_i[27:0]}};
+                            s4_data_o <= m0_data_i;
+                            m0_ack_o <= s4_ack_i;
+                            m0_data_o <= s4_data_i;
                         end
                         default: begin
 
@@ -254,6 +304,22 @@ module rib(
                             m1_ack_o <= s2_ack_i;
                             m1_data_o <= s2_data_i;
                         end
+                        slave_3: begin
+                            s3_req_o <= m1_req_i;
+                            s3_we_o <= m1_we_i;
+                            s3_addr_o <= {{4'h0}, {m1_addr_i[27:0]}};
+                            s3_data_o <= m1_data_i;
+                            m1_ack_o <= s3_ack_i;
+                            m1_data_o <= s3_data_i;
+                        end
+                        slave_4: begin
+                            s4_req_o <= m1_req_i;
+                            s4_we_o <= m1_we_i;
+                            s4_addr_o <= {{4'h0}, {m1_addr_i[27:0]}};
+                            s4_data_o <= m1_data_i;
+                            m1_ack_o <= s4_ack_i;
+                            m1_data_o <= s4_data_i;
+                        end
                         default: begin
 
                         end
@@ -284,6 +350,22 @@ module rib(
                             s2_data_o <= m2_data_i;
                             m2_ack_o <= s2_ack_i;
                             m2_data_o <= s2_data_i;
+                        end
+                        slave_3: begin
+                            s3_req_o <= m2_req_i;
+                            s3_we_o <= m2_we_i;
+                            s3_addr_o <= {{4'h0}, {m2_addr_i[27:0]}};
+                            s3_data_o <= m2_data_i;
+                            m2_ack_o <= s3_ack_i;
+                            m2_data_o <= s3_data_i;
+                        end
+                        slave_4: begin
+                            s4_req_o <= m2_req_i;
+                            s4_we_o <= m2_we_i;
+                            s4_addr_o <= {{4'h0}, {m2_addr_i[27:0]}};
+                            s4_data_o <= m2_data_i;
+                            m2_ack_o <= s4_ack_i;
+                            m2_data_o <= s4_data_i;
                         end
                         default: begin
 
