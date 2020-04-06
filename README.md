@@ -25,7 +25,7 @@
 
 **sim**：该目录包含仿真的顶层testbench代码和批处理bat文件；
 
-**tests**：该目录包含测试程序源码，其中example目录为c语言程序例程源码，isa目录为RV32指令测试源码；
+**tests**：该目录包含测试程序源码，其中example目录为C语言程序例程源码，isa目录为RV32指令测试源码；
 
 **tools**：该目录包含编译汇编和c语言程序所需GNU工具链和将二进制文件转成仿真所需的mem格式文件的工具BinToMem。BinToMem\_CLI.exe需要在cmd窗口下执行，BinToMem\_GUI.exe提供图形界面，双击即可运行；
 
@@ -34,6 +34,10 @@
 tinyriscv的整体框架如下：
 
 ![tinyriscv整体框架](./pic/arch.jpg)
+
+tinyriscv目前外挂了5个外设，每个外设的空间大小为256MB，地址空间分配如下图所示：
+
+<img src="./pic/addr_alloc.jpg" alt="地址空间分配" style="zoom:70%;" />
 
 # 3.如何使用
 
