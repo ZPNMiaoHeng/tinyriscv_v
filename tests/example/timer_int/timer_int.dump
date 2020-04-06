@@ -6,176 +6,162 @@ Disassembly of section .init:
 
 00000000 <_start>:
    0:	0080006f          	j	8 <_reset_handler>
-   4:	06c0006f          	j	70 <_timer0_handler>
+   4:	0600006f          	j	64 <_timer0_handler>
 
 00000008 <_reset_handler>:
    8:	10000197          	auipc	gp,0x10000
    c:	7f818193          	addi	gp,gp,2040 # 10000800 <__global_pointer$>
   10:	00018113          	mv	sp,gp
-  14:	00000d13          	li	s10,0
-  18:	00000d93          	li	s11,0
-  1c:	26c00513          	li	a0,620
-  20:	10000597          	auipc	a1,0x10000
-  24:	fe058593          	addi	a1,a1,-32 # 10000000 <_data>
-  28:	10000617          	auipc	a2,0x10000
-  2c:	fd860613          	addi	a2,a2,-40 # 10000000 <_data>
-  30:	00c5fc63          	bgeu	a1,a2,48 <_reset_handler+0x40>
-  34:	00052283          	lw	t0,0(a0)
-  38:	0055a023          	sw	t0,0(a1)
-  3c:	00450513          	addi	a0,a0,4
-  40:	00458593          	addi	a1,a1,4
-  44:	fec5e8e3          	bltu	a1,a2,34 <_reset_handler+0x2c>
-  48:	10000517          	auipc	a0,0x10000
-  4c:	fb850513          	addi	a0,a0,-72 # 10000000 <_data>
-  50:	80818593          	addi	a1,gp,-2040 # 10000008 <_end>
-  54:	00b57863          	bgeu	a0,a1,64 <_reset_handler+0x5c>
-  58:	00052023          	sw	zero,0(a0)
-  5c:	00450513          	addi	a0,a0,4
-  60:	feb56ce3          	bltu	a0,a1,58 <_reset_handler+0x50>
-  64:	144000ef          	jal	ra,1a8 <main>
-  68:	00100d13          	li	s10,1
+  14:	24400513          	li	a0,580
+  18:	10000597          	auipc	a1,0x10000
+  1c:	fe858593          	addi	a1,a1,-24 # 10000000 <_data>
+  20:	10000617          	auipc	a2,0x10000
+  24:	fe060613          	addi	a2,a2,-32 # 10000000 <_data>
+  28:	00c5fc63          	bgeu	a1,a2,40 <_reset_handler+0x38>
+  2c:	00052283          	lw	t0,0(a0)
+  30:	0055a023          	sw	t0,0(a1)
+  34:	00450513          	addi	a0,a0,4
+  38:	00458593          	addi	a1,a1,4
+  3c:	fec5e8e3          	bltu	a1,a2,2c <_reset_handler+0x24>
+  40:	10000517          	auipc	a0,0x10000
+  44:	fc050513          	addi	a0,a0,-64 # 10000000 <_data>
+  48:	80818593          	addi	a1,gp,-2040 # 10000008 <_end>
+  4c:	00b57863          	bgeu	a0,a1,5c <_reset_handler+0x54>
+  50:	00052023          	sw	zero,0(a0)
+  54:	00450513          	addi	a0,a0,4
+  58:	feb56ce3          	bltu	a0,a1,50 <_reset_handler+0x48>
+  5c:	110000ef          	jal	ra,16c <main>
 
-0000006c <loop>:
-  6c:	0000006f          	j	6c <loop>
+00000060 <loop>:
+  60:	0000006f          	j	60 <loop>
 
-00000070 <_timer0_handler>:
-  70:	f8010113          	addi	sp,sp,-128
-  74:	00112223          	sw	ra,4(sp)
-  78:	00212423          	sw	sp,8(sp)
-  7c:	00312623          	sw	gp,12(sp)
-  80:	00412823          	sw	tp,16(sp)
-  84:	00512a23          	sw	t0,20(sp)
-  88:	00612c23          	sw	t1,24(sp)
-  8c:	00712e23          	sw	t2,28(sp)
-  90:	02812023          	sw	s0,32(sp)
-  94:	02912223          	sw	s1,36(sp)
-  98:	02a12423          	sw	a0,40(sp)
-  9c:	02b12623          	sw	a1,44(sp)
-  a0:	02c12823          	sw	a2,48(sp)
-  a4:	02d12a23          	sw	a3,52(sp)
-  a8:	02e12c23          	sw	a4,56(sp)
-  ac:	02f12e23          	sw	a5,60(sp)
-  b0:	05012023          	sw	a6,64(sp)
-  b4:	05112223          	sw	a7,68(sp)
-  b8:	05212423          	sw	s2,72(sp)
-  bc:	05312623          	sw	s3,76(sp)
-  c0:	05412823          	sw	s4,80(sp)
-  c4:	05512a23          	sw	s5,84(sp)
-  c8:	05612c23          	sw	s6,88(sp)
-  cc:	05712e23          	sw	s7,92(sp)
-  d0:	07812023          	sw	s8,96(sp)
-  d4:	07912223          	sw	s9,100(sp)
-  d8:	07c12823          	sw	t3,112(sp)
-  dc:	07d12a23          	sw	t4,116(sp)
-  e0:	07e12c23          	sw	t5,120(sp)
-  e4:	07f12e23          	sw	t6,124(sp)
-  e8:	140000ef          	jal	ra,228 <TIMER0_IRQHandler>
-  ec:	00412083          	lw	ra,4(sp)
-  f0:	00812103          	lw	sp,8(sp)
-  f4:	00c12183          	lw	gp,12(sp)
-  f8:	01012203          	lw	tp,16(sp)
-  fc:	01412283          	lw	t0,20(sp)
- 100:	01812303          	lw	t1,24(sp)
- 104:	01c12383          	lw	t2,28(sp)
- 108:	02012403          	lw	s0,32(sp)
- 10c:	02412483          	lw	s1,36(sp)
- 110:	02812503          	lw	a0,40(sp)
- 114:	02c12583          	lw	a1,44(sp)
- 118:	03012603          	lw	a2,48(sp)
- 11c:	03412683          	lw	a3,52(sp)
- 120:	03812703          	lw	a4,56(sp)
- 124:	03c12783          	lw	a5,60(sp)
- 128:	04012803          	lw	a6,64(sp)
- 12c:	04412883          	lw	a7,68(sp)
- 130:	04812903          	lw	s2,72(sp)
- 134:	04c12983          	lw	s3,76(sp)
- 138:	05012a03          	lw	s4,80(sp)
- 13c:	05412a83          	lw	s5,84(sp)
- 140:	05812b03          	lw	s6,88(sp)
- 144:	05c12b83          	lw	s7,92(sp)
- 148:	06012c03          	lw	s8,96(sp)
- 14c:	06412c83          	lw	s9,100(sp)
- 150:	07012e03          	lw	t3,112(sp)
- 154:	07412e83          	lw	t4,116(sp)
- 158:	07812f03          	lw	t5,120(sp)
- 15c:	07c12f83          	lw	t6,124(sp)
- 160:	08010113          	addi	sp,sp,128
- 164:	30200073          	mret
+00000064 <_timer0_handler>:
+  64:	f8010113          	addi	sp,sp,-128
+  68:	00112223          	sw	ra,4(sp)
+  6c:	00212423          	sw	sp,8(sp)
+  70:	00312623          	sw	gp,12(sp)
+  74:	00412823          	sw	tp,16(sp)
+  78:	00512a23          	sw	t0,20(sp)
+  7c:	00612c23          	sw	t1,24(sp)
+  80:	00712e23          	sw	t2,28(sp)
+  84:	02812023          	sw	s0,32(sp)
+  88:	02912223          	sw	s1,36(sp)
+  8c:	02a12423          	sw	a0,40(sp)
+  90:	02b12623          	sw	a1,44(sp)
+  94:	02c12823          	sw	a2,48(sp)
+  98:	02d12a23          	sw	a3,52(sp)
+  9c:	02e12c23          	sw	a4,56(sp)
+  a0:	02f12e23          	sw	a5,60(sp)
+  a4:	05012023          	sw	a6,64(sp)
+  a8:	05112223          	sw	a7,68(sp)
+  ac:	05212423          	sw	s2,72(sp)
+  b0:	05312623          	sw	s3,76(sp)
+  b4:	05412823          	sw	s4,80(sp)
+  b8:	05512a23          	sw	s5,84(sp)
+  bc:	05612c23          	sw	s6,88(sp)
+  c0:	05712e23          	sw	s7,92(sp)
+  c4:	07812023          	sw	s8,96(sp)
+  c8:	07912223          	sw	s9,100(sp)
+  cc:	07a12423          	sw	s10,104(sp)
+  d0:	07b12623          	sw	s11,108(sp)
+  d4:	07c12823          	sw	t3,112(sp)
+  d8:	07d12a23          	sw	t4,116(sp)
+  dc:	07e12c23          	sw	t5,120(sp)
+  e0:	07f12e23          	sw	t6,124(sp)
+  e4:	110000ef          	jal	ra,1f4 <TIMER0_IRQHandler>
+  e8:	00412083          	lw	ra,4(sp)
+  ec:	00812103          	lw	sp,8(sp)
+  f0:	00c12183          	lw	gp,12(sp)
+  f4:	01012203          	lw	tp,16(sp)
+  f8:	01412283          	lw	t0,20(sp)
+  fc:	01812303          	lw	t1,24(sp)
+ 100:	01c12383          	lw	t2,28(sp)
+ 104:	02012403          	lw	s0,32(sp)
+ 108:	02412483          	lw	s1,36(sp)
+ 10c:	02812503          	lw	a0,40(sp)
+ 110:	02c12583          	lw	a1,44(sp)
+ 114:	03012603          	lw	a2,48(sp)
+ 118:	03412683          	lw	a3,52(sp)
+ 11c:	03812703          	lw	a4,56(sp)
+ 120:	03c12783          	lw	a5,60(sp)
+ 124:	04012803          	lw	a6,64(sp)
+ 128:	04412883          	lw	a7,68(sp)
+ 12c:	04812903          	lw	s2,72(sp)
+ 130:	04c12983          	lw	s3,76(sp)
+ 134:	05012a03          	lw	s4,80(sp)
+ 138:	05412a83          	lw	s5,84(sp)
+ 13c:	05812b03          	lw	s6,88(sp)
+ 140:	05c12b83          	lw	s7,92(sp)
+ 144:	06012c03          	lw	s8,96(sp)
+ 148:	06412c83          	lw	s9,100(sp)
+ 14c:	06812d03          	lw	s10,104(sp)
+ 150:	06c12d83          	lw	s11,108(sp)
+ 154:	07012e03          	lw	t3,112(sp)
+ 158:	07412e83          	lw	t4,116(sp)
+ 15c:	07812f03          	lw	t5,120(sp)
+ 160:	07c12f83          	lw	t6,124(sp)
+ 164:	08010113          	addi	sp,sp,128
+ 168:	30200073          	mret
 
 Disassembly of section .text:
 
-00000168 <set_test_pass>:
- 168:	ff010113          	addi	sp,sp,-16
- 16c:	00812623          	sw	s0,12(sp)
- 170:	01010413          	addi	s0,sp,16
- 174:	00100d93          	li	s11,1
- 178:	00000013          	nop
- 17c:	00c12403          	lw	s0,12(sp)
- 180:	01010113          	addi	sp,sp,16
- 184:	00008067          	ret
+0000016c <main>:
+ 16c:	ff010113          	addi	sp,sp,-16
+ 170:	00812623          	sw	s0,12(sp)
+ 174:	01010413          	addi	s0,sp,16
+ 178:	10000797          	auipc	a5,0x10000
+ 17c:	e8878793          	addi	a5,a5,-376 # 10000000 <_data>
+ 180:	0007a023          	sw	zero,0(a5)
+ 184:	200007b7          	lui	a5,0x20000
+ 188:	00878793          	addi	a5,a5,8 # 20000008 <__global_pointer$+0xffff808>
+ 18c:	0000c737          	lui	a4,0xc
+ 190:	35070713          	addi	a4,a4,848 # c350 <__stack_size+0xbf50>
+ 194:	00e7a023          	sw	a4,0(a5)
+ 198:	200007b7          	lui	a5,0x20000
+ 19c:	00700713          	li	a4,7
+ 1a0:	00e7a023          	sw	a4,0(a5) # 20000000 <__global_pointer$+0xffff800>
+ 1a4:	400007b7          	lui	a5,0x40000
+ 1a8:	00478793          	addi	a5,a5,4 # 40000004 <__global_pointer$+0x2ffff804>
+ 1ac:	00100713          	li	a4,1
+ 1b0:	00e7a023          	sw	a4,0(a5)
+ 1b4:	10000797          	auipc	a5,0x10000
+ 1b8:	e4c78793          	addi	a5,a5,-436 # 10000000 <_data>
+ 1bc:	0007a703          	lw	a4,0(a5)
+ 1c0:	1f300793          	li	a5,499
+ 1c4:	fee7f8e3          	bgeu	a5,a4,1b4 <main+0x48>
+ 1c8:	10000797          	auipc	a5,0x10000
+ 1cc:	e3878793          	addi	a5,a5,-456 # 10000000 <_data>
+ 1d0:	0007a023          	sw	zero,0(a5)
+ 1d4:	400007b7          	lui	a5,0x40000
+ 1d8:	00478793          	addi	a5,a5,4 # 40000004 <__global_pointer$+0x2ffff804>
+ 1dc:	0007a703          	lw	a4,0(a5)
+ 1e0:	400007b7          	lui	a5,0x40000
+ 1e4:	00478793          	addi	a5,a5,4 # 40000004 <__global_pointer$+0x2ffff804>
+ 1e8:	00174713          	xori	a4,a4,1
+ 1ec:	00e7a023          	sw	a4,0(a5)
+ 1f0:	fc5ff06f          	j	1b4 <main+0x48>
 
-00000188 <set_test_fail>:
- 188:	ff010113          	addi	sp,sp,-16
- 18c:	00812623          	sw	s0,12(sp)
- 190:	01010413          	addi	s0,sp,16
- 194:	00000d93          	li	s11,0
- 198:	00000013          	nop
- 19c:	00c12403          	lw	s0,12(sp)
- 1a0:	01010113          	addi	sp,sp,16
- 1a4:	00008067          	ret
-
-000001a8 <main>:
- 1a8:	ff010113          	addi	sp,sp,-16
- 1ac:	00112623          	sw	ra,12(sp)
- 1b0:	00812423          	sw	s0,8(sp)
- 1b4:	01010413          	addi	s0,sp,16
- 1b8:	10000797          	auipc	a5,0x10000
- 1bc:	e4878793          	addi	a5,a5,-440 # 10000000 <_data>
- 1c0:	0007a023          	sw	zero,0(a5)
- 1c4:	200007b7          	lui	a5,0x20000
- 1c8:	00878793          	addi	a5,a5,8 # 20000008 <__global_pointer$+0xffff808>
- 1cc:	1f400713          	li	a4,500
- 1d0:	00e7a023          	sw	a4,0(a5)
- 1d4:	200007b7          	lui	a5,0x20000
- 1d8:	00700713          	li	a4,7
- 1dc:	00e7a023          	sw	a4,0(a5) # 20000000 <__global_pointer$+0xffff800>
- 1e0:	10000797          	auipc	a5,0x10000
- 1e4:	e2078793          	addi	a5,a5,-480 # 10000000 <_data>
- 1e8:	0007a703          	lw	a4,0(a5)
- 1ec:	00a00793          	li	a5,10
- 1f0:	fef718e3          	bne	a4,a5,1e0 <main+0x38>
- 1f4:	200007b7          	lui	a5,0x20000
- 1f8:	0007a023          	sw	zero,0(a5) # 20000000 <__global_pointer$+0xffff800>
- 1fc:	10000797          	auipc	a5,0x10000
- 200:	e0478793          	addi	a5,a5,-508 # 10000000 <_data>
- 204:	0007a023          	sw	zero,0(a5)
- 208:	f61ff0ef          	jal	ra,168 <set_test_pass>
- 20c:	00000013          	nop
- 210:	00000793          	li	a5,0
- 214:	00078513          	mv	a0,a5
- 218:	00c12083          	lw	ra,12(sp)
- 21c:	00812403          	lw	s0,8(sp)
- 220:	01010113          	addi	sp,sp,16
- 224:	00008067          	ret
-
-00000228 <TIMER0_IRQHandler>:
- 228:	ff010113          	addi	sp,sp,-16
- 22c:	00812623          	sw	s0,12(sp)
- 230:	01010413          	addi	s0,sp,16
- 234:	200007b7          	lui	a5,0x20000
- 238:	00700713          	li	a4,7
- 23c:	00e7a023          	sw	a4,0(a5) # 20000000 <__global_pointer$+0xffff800>
- 240:	10000797          	auipc	a5,0x10000
- 244:	dc078793          	addi	a5,a5,-576 # 10000000 <_data>
- 248:	0007a783          	lw	a5,0(a5)
- 24c:	00178713          	addi	a4,a5,1
- 250:	10000797          	auipc	a5,0x10000
- 254:	db078793          	addi	a5,a5,-592 # 10000000 <_data>
- 258:	00e7a023          	sw	a4,0(a5)
- 25c:	00000013          	nop
- 260:	00c12403          	lw	s0,12(sp)
- 264:	01010113          	addi	sp,sp,16
- 268:	00008067          	ret
+000001f4 <TIMER0_IRQHandler>:
+ 1f4:	ff010113          	addi	sp,sp,-16
+ 1f8:	00812623          	sw	s0,12(sp)
+ 1fc:	01010413          	addi	s0,sp,16
+ 200:	200007b7          	lui	a5,0x20000
+ 204:	00700713          	li	a4,7
+ 208:	00e7a023          	sw	a4,0(a5) # 20000000 <__global_pointer$+0xffff800>
+ 20c:	10000797          	auipc	a5,0x10000
+ 210:	df478793          	addi	a5,a5,-524 # 10000000 <_data>
+ 214:	0007a783          	lw	a5,0(a5)
+ 218:	00178713          	addi	a4,a5,1
+ 21c:	10000797          	auipc	a5,0x10000
+ 220:	de478793          	addi	a5,a5,-540 # 10000000 <_data>
+ 224:	00e7a023          	sw	a4,0(a5)
+ 228:	400007b7          	lui	a5,0x40000
+ 22c:	00478793          	addi	a5,a5,4 # 40000004 <__global_pointer$+0x2ffff804>
+ 230:	0007a023          	sw	zero,0(a5)
+ 234:	00000013          	nop
+ 238:	00c12403          	lw	s0,12(sp)
+ 23c:	01010113          	addi	sp,sp,16
+ 240:	00008067          	ret
 
 Disassembly of section .bss:
 
@@ -195,11 +181,11 @@ Disassembly of section .comment:
    4:	2820                	fld	fs0,80(s0)
    6:	20554e47          	fmsub.s	ft8,fa0,ft5,ft4,rmm
    a:	434d                	li	t1,19
-   c:	2055                	jal	b0 <_timer0_handler+0x40>
+   c:	2055                	jal	b0 <_timer0_handler+0x4c>
    e:	6345                	lui	t1,0x11
   10:	696c                	flw	fa1,84(a0)
   12:	7370                	flw	fa2,100(a4)
-  14:	2065                	jal	bc <_timer0_handler+0x4c>
+  14:	2065                	jal	bc <_timer0_handler+0x58>
   16:	4952                	lw	s2,20(sp)
   18:	562d4353          	0x562d4353
   1c:	4520                	lw	s0,72(a0)

@@ -1,43 +1,25 @@
 #include <stdint.h>
 
-
-// Timer0 regs
-#define TIMER0_BASE   (0x20000000)
-#define TIMER0_CTRL   (TIMER0_BASE + (0x00))
-#define TIMER0_COUNT  (TIMER0_BASE + (0x04))
-#define TIMER0_VALUE  (TIMER0_BASE + (0x08))
-
-#define TIMER0_REG(addr) (*((volatile uint32_t *)addr))
+#include "../include/timer.h"
+#include "../include/gpio.h"
 
 
 static uint32_t count;
-
-
-static void set_test_pass()
-{
-    asm("li x27, 0x01");
-}
-
-static void set_test_fail()
-{
-    asm("li x27, 0x00");
-}
 
 
 int main()
 {
     count = 0;
 
-    TIMER0_REG(TIMER0_VALUE) = 500;     // 10us period
+    TIMER0_REG(TIMER0_VALUE) = 50000;   // 1ms period
     TIMER0_REG(TIMER0_CTRL) = 0x07;     // enable interrupt and start timer
 
+    GPIO_REG(GPIO_DATA) = 0x1;
+
     while (1) {
-        if (count == 10) {
-            TIMER0_REG(TIMER0_CTRL) = 0x00;
+        if (count >= 500) {
             count = 0;
-            // TODO: do something
-            set_test_pass();
-            break;
+            GPIO_REG(GPIO_DATA) ^= 0x1;
         }
     }
 

@@ -1,20 +1,10 @@
 #include <stdint.h>
 
-
-// GPIO regs
-#define GPIO_BASE      (0x40000000)
-#define GPIO_DATA      (GPIO_BASE + (0x04))
-
-
-#define GPIO_REG(addr) (*((volatile uint32_t *)addr))
+#include "../include/gpio.h"
+#include "../include/utils.h"
 
 
 #define MS(ms) (ms * 50000)
-
-
-#define read_csr(reg) ({ unsigned long __tmp; \
-  asm volatile ("csrr %0, " #reg : "=r"(__tmp)); \
-  __tmp; })
 
 
 

@@ -18,8 +18,6 @@ _reset_handler:
 	la gp, __global_pointer$
 .option pop
 	la sp, _sp
-    li x26, 0x00
-    li x27, 0x00
 
 	/* Load data section */
 	la a0, _data_lma
@@ -45,8 +43,6 @@ _reset_handler:
 2:
 
     call main
-
-    li x26, 0x01
 
 loop:
     j loop
@@ -79,8 +75,8 @@ _timer0_handler:
     STORE x23, 23*REGBYTES(sp)
     STORE x24, 24*REGBYTES(sp)
     STORE x25, 25*REGBYTES(sp)
-    #STORE x26, 26*REGBYTES(sp)
-    #STORE x27, 27*REGBYTES(sp)
+    STORE x26, 26*REGBYTES(sp)
+    STORE x27, 27*REGBYTES(sp)
     STORE x28, 28*REGBYTES(sp)
     STORE x29, 29*REGBYTES(sp)
     STORE x30, 30*REGBYTES(sp)
@@ -113,8 +109,8 @@ _timer0_handler:
     LOAD x23, 23*REGBYTES(sp)
     LOAD x24, 24*REGBYTES(sp)
     LOAD x25, 25*REGBYTES(sp)
-    #LOAD x26, 26*REGBYTES(sp)
-    #LOAD x27, 27*REGBYTES(sp)
+    LOAD x26, 26*REGBYTES(sp)
+    LOAD x27, 27*REGBYTES(sp)
     LOAD x28, 28*REGBYTES(sp)
     LOAD x29, 29*REGBYTES(sp)
     LOAD x30, 30*REGBYTES(sp)
