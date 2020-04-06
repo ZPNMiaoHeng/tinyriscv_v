@@ -108,6 +108,7 @@ module jtag_dm(
     localparam SBADDRESS0 = 6'h39;
     localparam SBDATA0 = 6'h3C;
     localparam COMMAND = 6'h17;
+    localparam DPC = 16'h7b1;
 
     localparam OP_SUCC = 2'b00;
 
@@ -130,6 +131,7 @@ module jtag_dm(
             if (state == STATE_IDLE) begin
                 dm_mem_we <= 1'b0;
                 dm_reg_we <= 1'b0;
+                dm_reset_req <= 1'b0;
                 if (dtm_req_valid == `DTM_REQ_VALID) begin
                     state <= STATE_EX;
                     op <= dtm_req_data[DMI_OP_BITS - 1:0];
@@ -271,6 +273,12 @@ module jtag_dm(
                                             if (data[16] == 1'b0) begin
                                                 if (data[15:0] == DCSR) begin
                                                     data0 <= dcsr;
+                                                end
+                                            // write
+                                            end else begin
+                                                // when write dpc, we reset cpu here
+                                                if (data[15:0] == DPC) begin
+                                                    dm_reset_req <= 1'b1;
                                                 end
                                             end
                                         end
