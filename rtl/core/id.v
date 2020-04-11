@@ -34,7 +34,6 @@ module id(
 
     // from ex
     input wire ex_jump_flag_i,
-    input wire[`INT_BUS] ex_int_flag_i,
 
     // to regs
     output reg[`RegAddrBus] reg1_raddr_o,    // reg1 read addr
@@ -67,7 +66,7 @@ module id(
 
     reg mem_req;
 
-    assign mem_req_o = ((mem_req == `RIB_REQ) && (ex_jump_flag_i == `JumpDisable) && (ex_int_flag_i == `INT_NONE));
+    assign mem_req_o = ((mem_req == `RIB_REQ) && (ex_jump_flag_i == `JumpDisable));
 
 
     always @ (*) begin

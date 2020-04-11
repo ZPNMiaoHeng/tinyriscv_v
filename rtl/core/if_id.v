@@ -38,7 +38,7 @@ module if_id(
             inst_addr_o <= `ZeroWord;
         end else if (hold_flag_i >= `Hold_If) begin
             inst_o <= `INST_NOP;
-            inst_addr_o <= `ZeroWord;
+            inst_addr_o <= inst_addr_i;
         end else begin
             inst_o <= inst_i;
             inst_addr_o <= inst_addr_i;

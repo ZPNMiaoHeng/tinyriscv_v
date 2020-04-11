@@ -94,11 +94,6 @@ module tinyriscv(
     wire[`RegBus] ex_div_divisor_o;
     wire[2:0] ex_div_op_o;
     wire[`RegAddrBus] ex_div_reg_waddr_o;
-    wire[`INT_BUS] ex_int_flag_o;
-    wire[`InstAddrBus] ex_int_return_addr_o;
-    wire ex_clint_we_o;
-    wire[`RegAddrBus] ex_clint_addr_o;
-    wire[`RegBus] ex_clint_data_o;
     wire[`RegBus] ex_csr_wdata_o;
     wire ex_csr_we_o;
     wire[`MemAddrBus] ex_csr_waddr_o;
@@ -109,6 +104,7 @@ module tinyriscv(
 
     // csr reg
     wire[`RegBus] csr_data_o;
+    wire[`RegBus] csr_clint_data_o;
 
     // ctrl
     wire[`Hold_Flag_Bus] ctrl_hold_flag_o;
@@ -123,7 +119,12 @@ module tinyriscv(
     wire[`RegAddrBus] div_reg_waddr_o;
 
     // clint
+    wire clint_we_o;
+    wire[`MemAddrBus] clint_waddr_o;
+    wire[`MemAddrBus] clint_raddr_o;
     wire[`RegBus] clint_data_o;
+    wire[`InstAddrBus] clint_int_addr_o;
+    wire clint_int_assert_o;
 
 
     assign rib_ex_addr_o = (ex_mem_we_o == `WriteEnable)? ex_mem_waddr_o: ex_mem_raddr_o;
@@ -151,8 +152,6 @@ module tinyriscv(
         .hold_flag_ex_i(ex_hold_flag_o),
         .hold_flag_rib_i(rib_hold_flag_i),
         .hold_flag_o(ctrl_hold_flag_o),
-        .int_flag_i(ex_int_flag_o),
-        .int_return_addr_i(ex_int_return_addr_o),
         .jump_flag_o(ctrl_jump_flag_o),
         .jump_addr_o(ctrl_jump_addr_o),
         .jtag_halt_flag_i(jtag_halt_flag_i)
@@ -181,7 +180,12 @@ module tinyriscv(
         .raddr_i(id_csr_raddr_o),
         .waddr_i(ex_csr_waddr_o),
         .data_i(ex_csr_wdata_o),
-        .data_o(csr_data_o)
+        .data_o(csr_data_o),
+        .clint_we_i(clint_we_o),
+        .clint_raddr_i(clint_raddr_o),
+        .clint_waddr_i(clint_waddr_o),
+        .clint_data_i(clint_data_o),
+        .clint_data_o(csr_clint_data_o)
     );
 
     if_id u_if_id(
@@ -201,7 +205,6 @@ module tinyriscv(
         .reg1_rdata_i(regs_rdata1_o),
         .reg2_rdata_i(regs_rdata2_o),
         .ex_jump_flag_i(ex_jump_flag_o),
-        .ex_int_flag_i(ex_int_flag_o),
         .reg1_raddr_o(id_reg1_raddr_o),
         .reg2_raddr_o(id_reg2_raddr_o),
         .mem_req_o(id_mem_req_o),
@@ -259,16 +262,11 @@ module tinyriscv(
         .reg_wdata_o(ex_reg_wdata_o),
         .reg_we_o(ex_reg_we_o),
         .reg_waddr_o(ex_reg_waddr_o),
-        .clint_we_o(ex_clint_we_o),
-        .clint_addr_o(ex_clint_addr_o),
-        .clint_data_o(ex_clint_data_o),
-        .clint_data_i(clint_data_o),
-        .int_return_addr_o(ex_int_return_addr_o),
         .hold_flag_o(ex_hold_flag_o),
         .jump_flag_o(ex_jump_flag_o),
         .jump_addr_o(ex_jump_addr_o),
-        .int_flag_i(int_i),
-        .int_flag_o(ex_int_flag_o),
+        .int_assert_i(clint_int_assert_o),
+        .int_addr_i(clint_int_addr_o),
         .div_ready_i(div_ready_o),
         .div_result_i(div_result_o),
         .div_busy_i(div_busy_o),
@@ -305,10 +303,17 @@ module tinyriscv(
     clint u_clint(
         .clk(clk),
         .rst(rst),
-        .we_i(ex_clint_we_o),
-        .addr_i(ex_clint_addr_o),
-        .data_i(ex_clint_data_o),
-        .data_o(clint_data_o)
+        .int_flag_i(int_i),
+        .inst_i(id_inst_o),
+        .inst_addr_i(id_inst_addr_o),
+        .hold_flag_i(ctrl_hold_flag_o),
+        .data_i(csr_clint_data_o),
+        .we_o(clint_we_o),
+        .waddr_o(clint_waddr_o),
+        .raddr_o(clint_raddr_o),
+        .data_o(clint_data_o),
+        .int_addr_o(clint_int_addr_o),
+        .int_assert_o(clint_int_assert_o)
     );
 
 endmodule

@@ -132,6 +132,12 @@
 `define INST_CSRRSI 3'b110
 `define INST_CSRRCI 3'b111
 
+// CSR reg addr
+`define CSR_CYCLE   12'hc00
+`define CSR_CYCLEH  12'hc80
+`define CSR_MTVEC   12'h305
+`define CSR_MCAUSE  12'h342
+
 `define RomNum 2048  // rom depth(how many words)
 
 `define MemNum 2048  // memory depth(how many words)

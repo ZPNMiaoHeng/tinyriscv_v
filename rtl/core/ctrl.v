@@ -25,8 +25,6 @@ module ctrl(
     input wire hold_flag_ex_i,
     input wire hold_flag_rib_i,
     input wire jtag_halt_flag_i,
-    input wire[`INT_BUS] int_flag_i,
-    input wire[`InstAddrBus] int_return_addr_i,
 
     output reg[`Hold_Flag_Bus] hold_flag_o,
     output reg jump_flag_o,
@@ -44,15 +42,7 @@ module ctrl(
             jump_addr_o <= jump_addr_i;
             jump_flag_o <= jump_flag_i;
             hold_flag_o <= `Hold_None;
-            if (int_flag_i == `INT_TIMER0) begin
-                jump_addr_o <= `INT_TIMER0_ENTRY_ADDR;
-                jump_flag_o <= `JumpEnable;
-                hold_flag_o <= `Hold_Id;
-            end else if (int_flag_i == `INT_RET) begin
-                jump_addr_o <= int_return_addr_i;
-                jump_flag_o <= `JumpEnable;
-                hold_flag_o <= `Hold_Id;
-            end else if (jump_flag_i == `JumpEnable || hold_flag_ex_i == `HoldEnable) begin
+            if (jump_flag_i == `JumpEnable || hold_flag_ex_i == `HoldEnable) begin
                 hold_flag_o <= `Hold_Id;
             end else if (hold_flag_rib_i == `HoldEnable) begin
                 hold_flag_o <= `Hold_Pc;

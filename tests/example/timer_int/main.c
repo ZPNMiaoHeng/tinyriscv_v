@@ -2,33 +2,62 @@
 
 #include "../include/timer.h"
 #include "../include/gpio.h"
+#include "../include/utils.h"
 
 
-static uint32_t count;
+static volatile uint32_t count;
+static volatile uint8_t int_flag;
 
 
 int main()
 {
     count = 0;
+    int_flag = 0;
 
-    TIMER0_REG(TIMER0_VALUE) = 50000;   // 1ms period
+#ifdef SIMULATION
+    TIMER0_REG(TIMER0_VALUE) = 500;     // 10us period
+    TIMER0_REG(TIMER0_CTRL) = 0x07;     // enable interrupt and start timer
+
+    while (1) {
+        if (int_flag) {
+            TIMER0_REG(TIMER0_CTRL) |= (1 << 0);  // restart timer
+            int_flag = 0;
+            count++;
+            if (count == 2) {
+                TIMER0_REG(TIMER0_CTRL) = 0x00;   // stop timer
+                count = 0;
+                // TODO: do something
+                set_test_pass();
+                break;
+            }
+        }
+    }
+#else
+    TIMER0_REG(TIMER0_VALUE) = 500000;  // 10ms period
     TIMER0_REG(TIMER0_CTRL) = 0x07;     // enable interrupt and start timer
 
     GPIO_REG(GPIO_DATA) = 0x1;
 
     while (1) {
-        if (count >= 500) {
-            count = 0;
-            GPIO_REG(GPIO_DATA) ^= 0x1;
+        if (int_flag) {
+            TIMER0_REG(TIMER0_CTRL) |= (1 << 0);  // restart timer
+            int_flag = 0;
+            count++;
+            // 500ms
+            if (count == 50) {
+                count = 0;
+                GPIO_REG(GPIO_DATA) ^= 0x1; // toggle led
+            }
         }
     }
+#endif
 
     return 0;
 }
 
-void TIMER0_IRQHandler()
+void timer0_irq_handler()
 {
-    TIMER0_REG(TIMER0_CTRL) = 0x07; // clear int pending
+    TIMER0_REG(TIMER0_CTRL) |= (1 << 2);  // clear int pending
 
-    count++;
+    int_flag = 1;
 }

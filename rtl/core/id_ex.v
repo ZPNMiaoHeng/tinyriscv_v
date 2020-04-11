@@ -60,7 +60,7 @@ module id_ex(
         end else begin
             if (hold_flag_i >= `Hold_Id) begin
                 inst_o <= `INST_NOP;
-                inst_addr_o <= `ZeroWord;
+                inst_addr_o <= inst_addr_i;
                 reg_we_o <= `WriteDisable;
                 reg_waddr_o <= `ZeroWord;
                 reg1_rdata_o <= `ZeroWord;

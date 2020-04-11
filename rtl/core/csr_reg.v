@@ -27,22 +27,62 @@ module csr_reg(
     input wire[`MemAddrBus] waddr_i,
     input wire[`RegBus] data_i,
 
+    input wire clint_we_i,
+    input wire[`MemAddrBus] clint_raddr_i,
+    input wire[`MemAddrBus] clint_waddr_i,
+    input wire[`RegBus] clint_data_i,
+
+    output reg[`RegBus] clint_data_o,
     output reg[`RegBus] data_o
 
     );
 
 
-    localparam CSR_CYCLE  = 12'hc00;
-    localparam CSR_CYCLEH = 12'hc80;
+    reg[`DoubleRegBus] cycle;
+    reg[`RegBus] mtvec;
+    reg[`RegBus] mcause;
 
-    reg[63:0] cycle;
 
-
+    // cycle counter
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
-            cycle <= 64'h0;
+            cycle <= {`ZeroWord, `ZeroWord};
         end else begin
             cycle <= cycle + 1'b1;
+        end
+    end
+
+    // write reg
+    always @ (posedge clk) begin
+        if (rst == `RstEnable) begin
+            mtvec <= `ZeroWord;
+            mcause <= `ZeroWord;
+        end else begin
+            if (we_i == `WriteEnable) begin
+                case (waddr_i[11:0])
+                    `CSR_MTVEC: begin
+                        mtvec <= data_i;
+                    end
+                    `CSR_MCAUSE: begin
+                        mcause <= data_i;
+                    end
+                    default: begin
+
+                    end
+                endcase
+            end else if (clint_we_i == `WriteEnable) begin
+                case (clint_waddr_i[11:0])
+                    `CSR_MTVEC: begin
+                        mtvec <= clint_data_i;
+                    end
+                    `CSR_MCAUSE: begin
+                        mcause <= clint_data_i;
+                    end
+                    default: begin
+
+                    end
+                endcase
+            end
         end
     end
 
@@ -52,14 +92,45 @@ module csr_reg(
             data_o <= `ZeroWord;
         end else begin
             case (raddr_i[11:0])
-                CSR_CYCLE: begin
+                `CSR_CYCLE: begin
                     data_o <= cycle[31:0];
                 end
-                CSR_CYCLEH: begin
+                `CSR_CYCLEH: begin
                     data_o <= cycle[63:32];
+                end
+                `CSR_MTVEC: begin
+                    data_o <= mtvec;
+                end
+                `CSR_MCAUSE: begin
+                    data_o <= mcause;
                 end
                 default: begin
                     data_o <= `ZeroWord;
+                end
+            endcase
+        end
+    end
+
+    // read reg
+    always @ (*) begin
+        if (rst == `RstEnable) begin
+            clint_data_o <= `ZeroWord;
+        end else begin
+            case (clint_raddr_i[11:0])
+                `CSR_CYCLE: begin
+                    clint_data_o <= cycle[31:0];
+                end
+                `CSR_CYCLEH: begin
+                    clint_data_o <= cycle[63:32];
+                end
+                `CSR_MTVEC: begin
+                    clint_data_o <= mtvec;
+                end
+                `CSR_MCAUSE: begin
+                    clint_data_o <= mcause;
+                end
+                default: begin
+                    clint_data_o <= `ZeroWord;
                 end
             endcase
         end

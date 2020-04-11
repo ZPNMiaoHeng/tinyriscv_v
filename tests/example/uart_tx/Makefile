@@ -1,9 +1,18 @@
+RISCV_ARCH := rv32im
+RISCV_ABI := ilp32
+
+
+TARGET = uart_tx
+
+
+#CFLAGS += -DSIMULATION
+#CFLAGS += -O2
+#ASM_SRCS +=
+#LDFLAGS +=
+#INCLUDES += -I.
+
+C_SRCS := \
+	main.c \
+
 
 include ../common.mk
-
-
-.PHONY: all
-all:
-	$(RISCV_GCC) $(CFLAGS) ../start.S main.c xprintf.c -T ../link.lds -o uart_tx
-	$(RISCV_OBJCOPY) -O binary uart_tx uart_tx.bin
-	$(RISCV_OBJDUMP) --disassemble-all uart_tx > uart_tx.dump

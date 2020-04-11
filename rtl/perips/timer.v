@@ -34,9 +34,9 @@ module timer(
 
     );
 
-    localparam ctrl_reg = 32'h00;
-    localparam count_reg = 32'h04;
-    localparam value_reg = 32'h08;
+    localparam REG_CTRL = 4'h0;
+    localparam REG_COUNT = 4'h4;
+    localparam REG_VALUE = 4'h8;
 
     // [0]: timer enable
     // [1]: timer int enable
@@ -53,28 +53,16 @@ module timer(
     reg[31:0] timer_value;
 
 
-    assign int_sig_o = ((timer_ctrl[0] == 1'b1) && (timer_ctrl[1] == 1'b1) && (timer_ctrl[2] == 1'b1)) ? `INT_ASSERT : `INT_DEASSERT;
+    assign int_sig_o = (timer_ctrl[2:1] == 3'h3)? `INT_ASSERT: `INT_DEASSERT;
 
 
-    // write timer regs
+    // write ctrl reg
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
-            timer_count <= `ZeroWord;
-            timer_value <= `ZeroWord;
             timer_ctrl <= `ZeroWord;
-            ack_o <= `RIB_ACK;
         end else begin
-            if (timer_ctrl[0] == 1'b1) begin
-                timer_count <= timer_count + 1'b1;
-                if (timer_count == timer_value) begin
-                    timer_ctrl[2] <= 1'b1;
-                    timer_count <= `ZeroWord;
-                end
-            end
             if (we_i == `WriteEnable) begin
-                if (addr_i == value_reg) begin
-                    timer_value <= data_i;
-                end else if (addr_i == ctrl_reg) begin
+                if (addr_i[3:0] == REG_CTRL) begin
                     if (data_i[2] == 1'b0) begin
                         timer_ctrl <= {data_i[31:3], timer_ctrl[2], data_i[1:0]};
                     // write 1 to clear pending
@@ -82,6 +70,41 @@ module timer(
                         timer_ctrl <= {data_i[31:3], 1'b0, data_i[1:0]};
                     end
                 end
+            end else begin
+                // generate int pending
+                if (timer_count >= timer_value && timer_value > 32'h0) begin
+                    timer_ctrl[2] <= 1'b1;
+                    timer_ctrl[0] <= 1'b0;
+                end
+            end
+        end
+    end
+
+    // write value reg
+    always @ (posedge clk) begin
+        if (rst == `RstEnable) begin
+            timer_value <= `ZeroWord;
+        end else begin
+            if (we_i == `WriteEnable) begin
+                if (addr_i[3:0] == REG_VALUE) begin
+                    timer_value <= data_i;
+                end
+            end
+        end
+    end
+
+    // counter
+    always @ (posedge clk) begin
+        if (rst == `RstEnable) begin
+            timer_count <= `ZeroWord;
+        end else begin
+            if (timer_ctrl[0] == 1'b1 && timer_value > 32'h0) begin
+                timer_count <= timer_count + 1'b1;
+                //if (timer_count == timer_value) begin
+                //    timer_count <= `ZeroWord;
+                //end
+            end else begin
+                timer_count <= `ZeroWord;
             end
         end
     end
@@ -91,14 +114,14 @@ module timer(
         if (rst == `RstEnable) begin
             data_o <= `ZeroWord;
         end else begin
-            case (addr_i)
-                value_reg: begin
+            case (addr_i[3:0])
+                REG_VALUE: begin
                     data_o <= timer_value;
                 end
-                ctrl_reg: begin
+                REG_CTRL: begin
                     data_o <= timer_ctrl;
                 end
-                count_reg: begin
+                REG_COUNT: begin
                     data_o <= timer_count;
                 end
                 default: begin

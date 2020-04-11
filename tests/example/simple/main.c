@@ -1,17 +1,10 @@
-
-static void set_test_pass()
-{
-    asm("li x27, 0x01");
-}
-
-static void set_test_fail()
-{
-    asm("li x27, 0x00");
-}
+#include <stdint.h>
+#include "../include/utils.h"
 
 
 int mul = 3;
 int div = 3;
+
 
 int main()
 {
@@ -19,8 +12,6 @@ int main()
     int sum;
 
     mul = 6;
-    //div = 3;
-
     sum = 0;
 
     // sum = 5050
