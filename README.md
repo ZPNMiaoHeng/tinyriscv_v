@@ -39,6 +39,16 @@ tinyriscv目前外挂了5个外设，每个外设的空间大小为256MB，地�
 
 <img src="./pic/addr_alloc.jpg" alt="地址空间分配" style="zoom:70%;" />
 
+目前tinyriscv在Xilinx Artix-7 35T FPGA平台上执行CoreMark跑分程序的结果如下图所示：
+
+![tinyriscv跑分](./pic/tinyriscv_coremark.png)
+
+可知，tinyriscv的跑分成绩为2.5。选了几款其他MCU的跑分结果如下图所示：
+
+![其他MCU跑分结果](./pic/other_coremark.png)
+
+更多MCU的跑分结果，可以到[coremark](https://www.eembc.org/coremark/scores.php)官网查询。
+
 # 3.如何使用
 
 本项目运行在windows平台，编译仿真工具使用的是iverilog和vpp，波形查看工具使用的是gtkwave。
