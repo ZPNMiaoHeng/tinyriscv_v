@@ -10,7 +10,7 @@
 
 # 2.介绍
 
-本项目实现的是一个小型RISC-V处理器核(tinyriscv)，采用verilog语言编写。tinyriscv有以下特点：
+本项目实现的是一个单核32位的小型RISC-V处理器核(tinyriscv)，采用verilog语言编写。tinyriscv有以下特点：
 
 1. 支持RV32IM指令集，通过RISC-V指令兼容性测试；
 3. 采用三级流水线，即取指，译码，执行；
@@ -39,17 +39,21 @@ tinyriscv目前外挂了5个外设，每个外设的空间大小为256MB，地�
 
 <img src="./pic/addr_alloc.jpg" alt="地址空间分配" style="zoom:70%;" />
 
-目前tinyriscv在Xilinx Artix-7 35T FPGA平台上执行CoreMark跑分程序的结果如下图所示：
+# 3.CoreMark测试
+
+目前tinyriscv在Xilinx Artix-7 35T FPGA平台上运行CoreMark跑分程序的结果如下图所示：
 
 ![tinyriscv跑分](./pic/tinyriscv_coremark.png)
 
-可知，tinyriscv的跑分成绩为2.5。选了几款其他MCU的跑分结果如下图所示：
+可知，tinyriscv的跑分成绩为2.4。此成绩是基于指令在rom存储和数据在ram存储的情况下得出的，如果指令和数据都在ram的话跑分上3.0问题应该不大。
+
+选了几款其他MCU的跑分结果如下图所示：
 
 ![其他MCU跑分结果](./pic/other_coremark.png)
 
 更多MCU的跑分结果，可以到[coremark](https://www.eembc.org/coremark/scores.php)官网查询。
 
-# 3.如何使用
+# 4.如何使用
 
 本项目运行在windows平台，编译仿真工具使用的是iverilog和vpp，波形查看工具使用的是gtkwave。
 
@@ -77,14 +81,14 @@ tinyriscv目前外挂了5个外设，每个外设的空间大小为256MB，地�
 
 ![](./pic/test_output.png)
 
-# 4.未来计划
+# 5.未来计划
 
 1. 完善代码注释；
 2. 写设计文档；
 3. 支持FreeRTOS；
 4. ......
 
-# 5.更新记录
+# 6.更新记录
 
 2020-04-11：增加CoreMark跑分例程和跑分成绩；
 
