@@ -9,4 +9,6 @@
 
 #define UART0_REG(addr) (*((volatile uint32_t *)addr))
 
+void uart_init();
+
 #endif
