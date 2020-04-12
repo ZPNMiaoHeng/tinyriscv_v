@@ -5,20 +5,11 @@
 
 
 
-static void uart_putc(uint8_t c)
-{
-    while (UART0_REG(UART0_STATUS) & 0x1);
-    UART0_REG(UART0_TXDATA) = c;
-}
-
-
 int main()
 {
-    UART0_REG(UART0_CTRL) = 0x1;
+    uart_init();
 
-    xdev_out(uart_putc);
-
-    xprintf("%d hello world\n", 1);
+    xprintf("hello world\n");
 
     while (1);
 }
