@@ -14,11 +14,12 @@
  limitations under the License.                                          
  */
 
-`define CpuResetAddr 32'h00000000
+`define CpuResetAddr 32'h0
 
 `define RstEnable 1'b0
 `define RstDisable 1'b1
-`define ZeroWord 32'h00000000
+`define ZeroWord 32'h0
+`define ZeroReg 5'h0
 `define WriteEnable 1'b1
 `define WriteDisable 1'b0
 `define ReadEnable 1'b1
@@ -137,6 +138,7 @@
 `define CSR_CYCLEH  12'hc80
 `define CSR_MTVEC   12'h305
 `define CSR_MCAUSE  12'h342
+`define CSR_MEPC    12'h341
 
 `define RomNum 2048  // rom depth(how many words)
 

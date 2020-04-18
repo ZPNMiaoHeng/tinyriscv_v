@@ -41,6 +41,7 @@ module csr_reg(
     reg[`DoubleRegBus] cycle;
     reg[`RegBus] mtvec;
     reg[`RegBus] mcause;
+    reg[`RegBus] mepc;
 
 
     // cycle counter
@@ -57,6 +58,7 @@ module csr_reg(
         if (rst == `RstEnable) begin
             mtvec <= `ZeroWord;
             mcause <= `ZeroWord;
+            mepc <= `ZeroWord;
         end else begin
             if (we_i == `WriteEnable) begin
                 case (waddr_i[11:0])
@@ -65,6 +67,9 @@ module csr_reg(
                     end
                     `CSR_MCAUSE: begin
                         mcause <= data_i;
+                    end
+                    `CSR_MEPC: begin
+                        mepc <= data_i;
                     end
                     default: begin
 
@@ -77,6 +82,9 @@ module csr_reg(
                     end
                     `CSR_MCAUSE: begin
                         mcause <= clint_data_i;
+                    end
+                    `CSR_MEPC: begin
+                        mepc <= clint_data_i;
                     end
                     default: begin
 
@@ -104,6 +112,9 @@ module csr_reg(
                 `CSR_MCAUSE: begin
                     data_o <= mcause;
                 end
+                `CSR_MEPC: begin
+                    data_o <= mepc;
+                end
                 default: begin
                     data_o <= `ZeroWord;
                 end
@@ -128,6 +139,9 @@ module csr_reg(
                 end
                 `CSR_MCAUSE: begin
                     clint_data_o <= mcause;
+                end
+                `CSR_MEPC: begin
+                    clint_data_o <= mepc;
                 end
                 default: begin
                     clint_data_o <= `ZeroWord;
