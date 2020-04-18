@@ -1,5 +1,6 @@
 RISCV_ARCH := rv32im
 RISCV_ABI := ilp32
+RISCV_MCMODEL := medlow
 
 TARGET := coremark
 
@@ -15,4 +16,6 @@ CFLAGS := -O2 -fno-common -funroll-loops -finline-functions --param max-inline-i
 CFLAGS += -DFLAGS_STR=\""$(CFLAGS)"\"
 CFLAGS += -DITERATIONS=10000 -DPERFORMANCE_RUN=1
 
+COMMON_DIR = ..
+TOOLCHAIN_DIR = ../../..
 include ../common.mk

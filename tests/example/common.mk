@@ -1,5 +1,5 @@
 
-RISCV_PATH := ../../../tools/gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64/
+RISCV_PATH := $(TOOLCHAIN_DIR)/tools/gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64/
 
 RISCV_GCC     := $(abspath $(RISCV_PATH)/bin/riscv-none-embed-gcc)
 RISCV_AS      := $(abspath $(RISCV_PATH)/bin/riscv-none-embed-as)
@@ -10,13 +10,8 @@ RISCV_AR      := $(abspath $(RISCV_PATH)/bin/riscv-none-embed-ar)
 RISCV_OBJCOPY := $(abspath $(RISCV_PATH)/bin/riscv-none-embed-objcopy)
 RISCV_READELF := $(abspath $(RISCV_PATH)/bin/riscv-none-embed-readelf)
 
-
-
 .PHONY: all
 all: $(TARGET)
-
-
-COMMON_DIR = ..
 
 ASM_SRCS += $(COMMON_DIR)/start.S
 ASM_SRCS += $(COMMON_DIR)/trap_entry.S
@@ -24,7 +19,6 @@ C_SRCS += $(COMMON_DIR)/init.c
 C_SRCS += $(COMMON_DIR)/lib/utils.c
 C_SRCS += $(COMMON_DIR)/lib/xprintf.c
 C_SRCS += $(COMMON_DIR)/lib/uart.c
-
 
 LINKER_SCRIPT := $(COMMON_DIR)/link.lds
 
@@ -40,10 +34,9 @@ LINK_DEPS += $(LINKER_SCRIPT)
 
 CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(TARGET).dump $(TARGET).bin
 
-#CFLAGS += -g
 CFLAGS += -march=$(RISCV_ARCH)
 CFLAGS += -mabi=$(RISCV_ABI)
-CFLAGS += -mcmodel=medany -ffunction-sections -fdata-sections -fno-builtin-printf -fno-builtin-malloc
+CFLAGS += -mcmodel=$(RISCV_MCMODEL) -ffunction-sections -fdata-sections -fno-builtin-printf -fno-builtin-malloc
 
 $(TARGET): $(LINK_OBJS) $(LINK_DEPS)
 	$(RISCV_GCC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)
