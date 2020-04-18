@@ -16,44 +16,45 @@
 
 `include "defines.v"
 
-// identification module
+// 译码模块
+// 纯组合逻辑电路
 module id(
 
 	input wire rst,
 
     // from if_id
-	input wire[`InstBus] inst_i,             // inst content
-    input wire[`InstAddrBus] inst_addr_i,    // inst addr
+    input wire[`InstBus] inst_i,             // 指令内容
+    input wire[`InstAddrBus] inst_addr_i,    // 指令地址
 
     // from regs
-    input wire[`RegBus] reg1_rdata_i,       // reg1 read data
-    input wire[`RegBus] reg2_rdata_i,       // reg2 read data
+    input wire[`RegBus] reg1_rdata_i,        // 通用寄存器1输入数据
+    input wire[`RegBus] reg2_rdata_i,        // 通用寄存器2输入数据
 
     // from csr reg
-    input wire[`RegBus] csr_rdata_i,
+    input wire[`RegBus] csr_rdata_i,         // CSR寄存器输入数据
 
     // from ex
-    input wire ex_jump_flag_i,
+    input wire ex_jump_flag_i,               // 跳转标志
 
     // to regs
-    output reg[`RegAddrBus] reg1_raddr_o,    // reg1 read addr
-    output reg[`RegAddrBus] reg2_raddr_o,    // reg2 read addr
+    output reg[`RegAddrBus] reg1_raddr_o,    // 读通用寄存器1地址
+    output reg[`RegAddrBus] reg2_raddr_o,    // 读通用寄存器2地址
 
     // to csr reg
-    output reg[`MemAddrBus] csr_raddr_o,
+    output reg[`MemAddrBus] csr_raddr_o,     // 读CSR寄存器地址
 
-    output wire mem_req_o,
+    output wire mem_req_o,                   // 向总线请求访问内存标志
 
     // to ex
-    output reg[`InstBus] inst_o,
-    output reg[`InstAddrBus] inst_addr_o,
-    output reg[`RegBus] reg1_rdata_o,        // reg1 read data
-    output reg[`RegBus] reg2_rdata_o,        // reg2 read data
-    output reg reg_we_o,                     // reg write enable
-    output reg[`RegAddrBus] reg_waddr_o,     // reg write addr
-    output reg csr_we_o,
-    output reg[`RegBus] csr_rdata_o,
-    output reg[`MemAddrBus] csr_waddr_o
+    output reg[`InstBus] inst_o,             // 指令内容
+    output reg[`InstAddrBus] inst_addr_o,    // 指令地址
+    output reg[`RegBus] reg1_rdata_o,        // 通用寄存器1数据
+    output reg[`RegBus] reg2_rdata_o,        // 通用寄存器2数据
+    output reg reg_we_o,                     // 写通用寄存器标志
+    output reg[`RegAddrBus] reg_waddr_o,     // 写通用寄存器地址
+    output reg csr_we_o,                     // 写CSR寄存器标志
+    output reg[`RegBus] csr_rdata_o,         // CSR寄存器数据
+    output reg[`MemAddrBus] csr_waddr_o      // 写CSR寄存器地址
 
     );
 
@@ -66,6 +67,7 @@ module id(
 
     reg mem_req;
 
+    // 跳转时不向总线请求访问内存
     assign mem_req_o = ((mem_req == `RIB_REQ) && (ex_jump_flag_i == `JumpDisable));
 
 

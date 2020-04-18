@@ -16,35 +16,45 @@
 
 `include "defines.v"
 
-// common reg module
+// 通用寄存器模块
 module regs(
 
     input wire clk,
     input wire rst,
 
-    input wire we_i,                  // reg write enable
-    input wire[`RegAddrBus] waddr_i,  // reg write addr
-    input wire[`RegBus] wdata_i,      // reg write data
+    // from ex
+    input wire we_i,                      // 写寄存器标志
+    input wire[`RegAddrBus] waddr_i,      // 写寄存器地址
+    input wire[`RegBus] wdata_i,          // 写寄存器数据
 
-    input wire jtag_we_i,                 // reg write enable
-    input wire[`RegAddrBus] jtag_addr_i,  // reg write addr
-    input wire[`RegBus] jtag_data_i,      // reg write data
+    // from jtag
+    input wire jtag_we_i,                 // 写寄存器标志
+    input wire[`RegAddrBus] jtag_addr_i,  // 读、写寄存器地址
+    input wire[`RegBus] jtag_data_i,      // 写寄存器数据
 
-    input wire[`RegAddrBus] raddr1_i, // reg1 read addr
-    output reg[`RegBus] rdata1_o,     // reg1 read data
+    // from id
+    input wire[`RegAddrBus] raddr1_i,     // 读寄存器1地址
 
-    input wire[`RegAddrBus] raddr2_i, // reg2 read addr
-    output reg[`RegBus] rdata2_o,     // reg2 read data
+    // to id
+    output reg[`RegBus] rdata1_o,         // 读寄存器1数据
 
-    output reg[`RegBus] jtag_data_o
+    // from id
+    input wire[`RegAddrBus] raddr2_i,     // 读寄存器2地址
+
+    // to id
+    output reg[`RegBus] rdata2_o,         // 读寄存器2数据
+
+    // to jtag
+    output reg[`RegBus] jtag_data_o       // 读寄存器数据
 
     );
 
     reg[`RegBus] regs[0:`RegNum - 1];
 
-    // write reg
+    // 写寄存器
     always @ (posedge clk) begin
         if (rst == `RstDisable) begin
+            // 优先ex模块写操作
             if ((we_i == `WriteEnable) && (waddr_i != `RegNumLog2'h0)) begin
                 regs[waddr_i] <= wdata_i;
             end else if ((jtag_we_i == `WriteEnable) && (jtag_addr_i != `RegNumLog2'h0)) begin
@@ -53,12 +63,13 @@ module regs(
         end
     end
 
-    // read reg1
+    // 读寄存器1
     always @ (*) begin
         if (rst == `RstEnable) begin
             rdata1_o <= `ZeroWord;
         end else if (raddr1_i == `RegNumLog2'h0) begin
             rdata1_o <= `ZeroWord;
+        // 如果读地址等于写地址，并且正在写操作，则直接返回写数据
         end else if (raddr1_i == waddr_i && we_i == `WriteEnable) begin
             rdata1_o <= wdata_i;
         end else begin
@@ -66,12 +77,13 @@ module regs(
         end
     end
 
-    // read reg2
+    // 读寄存器2
     always @ (*) begin
         if (rst == `RstEnable) begin
             rdata2_o <= `ZeroWord;
         end else if (raddr2_i == `RegNumLog2'h0) begin
             rdata2_o <= `ZeroWord;
+        // 如果读地址等于写地址，并且正在写操作，则直接返回写数据
         end else if (raddr2_i == waddr_i && we_i == `WriteEnable) begin
             rdata2_o <= wdata_i;
         end else begin
@@ -79,7 +91,7 @@ module regs(
         end
     end
 
-    // jtag read reg
+    // jtag读寄存器
     always @ (*) begin
         if (rst == `RstEnable) begin
             jtag_data_o <= `ZeroWord;

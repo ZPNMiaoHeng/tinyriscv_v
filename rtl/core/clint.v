@@ -24,26 +24,28 @@ module clint(
     input wire clk,
     input wire rst,
 
+    // from core
+    input wire[`INT_BUS] int_flag_i,         // 中断输入信号
+
     // from id
-    input wire[`INT_BUS] int_flag_i,
-    input wire[`InstBus] inst_i,
-    input wire[`InstAddrBus] inst_addr_i,
+    input wire[`InstBus] inst_i,             // 指令内容
+    input wire[`InstAddrBus] inst_addr_i,    // 指令地址
 
     // from ctrl
-    input wire[`Hold_Flag_Bus] hold_flag_i,
+    input wire[`Hold_Flag_Bus] hold_flag_i,  // 流水线暂停标志
 
     // from csr_reg
-    input wire[`RegBus] data_i,
+    input wire[`RegBus] data_i,              // CSR寄存器输入数据
 
     // to csr_reg
-    output reg we_o,
-    output reg[`MemAddrBus] waddr_o,
-    output reg[`MemAddrBus] raddr_o,
-    output reg[`RegBus] data_o,
+    output reg we_o,                         // 写CSR寄存器标志
+    output reg[`MemAddrBus] waddr_o,         // 写CSR寄存器地址
+    output reg[`MemAddrBus] raddr_o,         // 读CSR寄存器地址
+    output reg[`RegBus] data_o,              // 写CSR寄存器数据
 
     // to ex
-    output reg[`InstAddrBus] int_addr_o,
-    output reg int_assert_o
+    output reg[`InstAddrBus] int_addr_o,     // 被中断的指令地址
+    output reg int_assert_o                  // 中断标志
 
     );
 

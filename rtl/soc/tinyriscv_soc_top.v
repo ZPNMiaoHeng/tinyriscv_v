@@ -16,24 +16,24 @@
 
 `include "defines.v"
 
-
+// tinyriscv soc顶层模块
 module tinyriscv_soc_top(
 
     input wire clk,
     input wire rst,
 
-    output reg over,
-    output reg succ,
+    output reg over,         // 测试是否完成信号
+    output reg succ,         // 测试是否成功信号
 
-    output wire halted_ind,
+    output wire halted_ind,  // jtag是否已经halt住CPU信号
 
-    output wire tx_pin,
-    output wire io_pin,
+    output wire tx_pin,      // UART发送引脚
+    output wire io_pin,      // GPIO引脚
 
-    input wire jtag_TCK,
-    input wire jtag_TMS,
-    input wire jtag_TDI,
-    output wire jtag_TDO
+    input wire jtag_TCK,     // JTAG TCK引脚
+    input wire jtag_TMS,     // JTAG TMS引脚
+    input wire jtag_TDI,     // JTAG TDI引脚
+    output wire jtag_TDO     // JTAG TDO引脚
 
     );
 
@@ -124,6 +124,8 @@ module tinyriscv_soc_top(
 
     assign int_flag = {7'h0, timer0_int};
 
+    // 低电平点亮LED
+    // 低电平表示已经halt住CPU
     assign halted_ind = ~jtag_halt_req_o;
 
 
@@ -133,11 +135,11 @@ module tinyriscv_soc_top(
             succ <= 1'b1;
         end else begin
             over <= ~u_tinyriscv.u_regs.regs[26];  // when = 1, run over
-            succ <= ~u_tinyriscv.u_regs.regs[27];  // when = 1, succ
+            succ <= ~u_tinyriscv.u_regs.regs[27];  // when = 1, run succ, otherwise fail
         end
     end
 
-
+    // tinyriscv处理器核模块例化
     tinyriscv u_tinyriscv(
         .clk(clk),
         .rst(rst),
@@ -162,6 +164,7 @@ module tinyriscv_soc_top(
         .int_i(int_flag)
     );
 
+    // rom模块例化
     rom u_rom(
         .clk(clk),
         .rst(rst),
@@ -173,6 +176,7 @@ module tinyriscv_soc_top(
         .ack_o(s0_ack_i)
     );
 
+    // ram模块例化
     ram u_ram(
         .clk(clk),
         .rst(rst),
@@ -184,6 +188,7 @@ module tinyriscv_soc_top(
         .ack_o(s1_ack_i)
     );
 
+    // timer模块例化
     timer timer_0(
         .clk(clk),
         .rst(rst),
@@ -196,6 +201,7 @@ module tinyriscv_soc_top(
         .ack_o(s2_ack_i)
     );
 
+    // uart_tx模块例化
     uart_tx uart_tx_0(
         .clk(clk),
         .rst(rst),
@@ -208,6 +214,7 @@ module tinyriscv_soc_top(
         .tx_pin(tx_pin)
     );
 
+    // gpio模块例化
     gpio gpio_0(
         .clk(clk),
         .rst(rst),
@@ -220,6 +227,7 @@ module tinyriscv_soc_top(
         .io_pin(io_pin)
     );
 
+    // rib模块例化
     rib u_rib(
         .clk(clk),
         .rst(rst),
@@ -291,8 +299,7 @@ module tinyriscv_soc_top(
         .hold_flag_o(rib_hold_flag_o)
     );
 
-
-    // jtag module reset logic
+    // jtag模块复位逻辑
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             jtag_rst <= 1'b1;
@@ -307,6 +314,7 @@ module tinyriscv_soc_top(
         end
     end
 
+    // jtag模块例化
     jtag_top u_jtag_top(
         .jtag_rst_n(jtag_rst),
         .jtag_pin_TCK(jtag_TCK),

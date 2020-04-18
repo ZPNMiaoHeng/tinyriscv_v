@@ -16,23 +16,28 @@
 
 `include "defines.v"
 
-// csr reg module
+// CSR寄存器模块
 module csr_reg(
 
     input wire clk,
     input wire rst,
 
+    // form ex
     input wire we_i,
     input wire[`MemAddrBus] raddr_i,
     input wire[`MemAddrBus] waddr_i,
     input wire[`RegBus] data_i,
 
+    // from clint
     input wire clint_we_i,
     input wire[`MemAddrBus] clint_raddr_i,
     input wire[`MemAddrBus] clint_waddr_i,
     input wire[`RegBus] clint_data_i,
 
+    // to clint
     output reg[`RegBus] clint_data_o,
+
+    // to ex
     output reg[`RegBus] data_o
 
     );
@@ -45,6 +50,7 @@ module csr_reg(
 
 
     // cycle counter
+    // 复位撤销后就一直计数
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             cycle <= {`ZeroWord, `ZeroWord};
@@ -54,12 +60,14 @@ module csr_reg(
     end
 
     // write reg
+    // 写寄存器操作
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             mtvec <= `ZeroWord;
             mcause <= `ZeroWord;
             mepc <= `ZeroWord;
         end else begin
+            // 优先响应ex模块的写操作
             if (we_i == `WriteEnable) begin
                 case (waddr_i[11:0])
                     `CSR_MTVEC: begin
@@ -75,6 +83,7 @@ module csr_reg(
 
                     end
                 endcase
+            // clint模块写操作
             end else if (clint_we_i == `WriteEnable) begin
                 case (clint_waddr_i[11:0])
                     `CSR_MTVEC: begin
@@ -95,6 +104,7 @@ module csr_reg(
     end
 
     // read reg
+    // ex模块读CSR寄存器
     always @ (*) begin
         if (rst == `RstEnable) begin
             data_o <= `ZeroWord;
@@ -123,6 +133,7 @@ module csr_reg(
     end
 
     // read reg
+    // clint模块读CSR寄存器
     always @ (*) begin
         if (rst == `RstEnable) begin
             clint_data_o <= `ZeroWord;

@@ -16,42 +16,42 @@
 
 `include "defines.v"
 
-// CPU core top module
+// tinyriscv处理器核顶层模块
 module tinyriscv(
 
     input wire clk,
     input wire rst,
 
-    output wire[`MemAddrBus] rib_ex_addr_o,
-    input wire[`MemBus] rib_ex_data_i,
-    output wire[`MemBus] rib_ex_data_o,
-    output wire rib_ex_req_o,
-    output wire rib_ex_we_o,
+    output wire[`MemAddrBus] rib_ex_addr_o,    // 读、写外设的地址
+    input wire[`MemBus] rib_ex_data_i,         // 从外设读取的数据
+    output wire[`MemBus] rib_ex_data_o,        // 写入外设的数据
+    output wire rib_ex_req_o,                  // 访问外设请求
+    output wire rib_ex_we_o,                   // 写外设标志
 
-    output wire[`MemAddrBus] rib_pc_addr_o,
-    input wire[`MemBus] rib_pc_data_i,
+    output wire[`MemAddrBus] rib_pc_addr_o,    // 取指地址
+    input wire[`MemBus] rib_pc_data_i,         // 取到的指令内容
 
-    input wire[`RegAddrBus] jtag_reg_addr_i,
-    input wire[`RegBus] jtag_reg_data_i,
-    input wire jtag_reg_we_i,
-    output wire[`RegBus] jtag_reg_data_o,
+    input wire[`RegAddrBus] jtag_reg_addr_i,   // jtag模块读、写寄存器的地址
+    input wire[`RegBus] jtag_reg_data_i,       // jtag模块写寄存器数据
+    input wire jtag_reg_we_i,                  // jtag模块写寄存器标志
+    output wire[`RegBus] jtag_reg_data_o,      // jtag模块读取到的寄存器数据
 
-    input wire rib_hold_flag_i,
-    input wire jtag_halt_flag_i,
-    input wire jtag_reset_flag_i,
+    input wire rib_hold_flag_i,                // 总线暂停标志
+    input wire jtag_halt_flag_i,               // jtag暂停标志
+    input wire jtag_reset_flag_i,              // jtag复位PC标志
 
-    input wire[`INT_BUS] int_i
+    input wire[`INT_BUS] int_i                 // 中断信号
 
     );
 
-    // pc_reg
+    // pc_reg模块输出信号
 	wire[`InstAddrBus] pc_pc_o;
 
-    // if_id
+    // if_id模块输出信号
 	wire[`InstBus] if_inst_o;
     wire[`InstAddrBus] if_inst_addr_o;
 
-    // id
+    // id模块输出信号
     wire[`RegAddrBus] id_reg1_raddr_o;
     wire[`RegAddrBus] id_reg2_raddr_o;
     wire id_mem_req_o;
@@ -66,7 +66,7 @@ module tinyriscv(
     wire[`RegBus] id_csr_rdata_o;
     wire[`MemAddrBus] id_csr_waddr_o;
 
-    // id_ex
+    // id_ex模块输出信号
     wire[`InstBus] ie_inst_o;
     wire[`InstAddrBus] ie_inst_addr_o;
     wire ie_reg_we_o;
@@ -77,7 +77,7 @@ module tinyriscv(
     wire[`MemAddrBus] ie_csr_waddr_o;
     wire[`RegBus] ie_csr_rdata_o;
 
-    // ex
+    // ex模块输出信号
     wire[`MemBus] ex_mem_wdata_o;
     wire[`MemAddrBus] ex_mem_raddr_o;
     wire[`MemAddrBus] ex_mem_waddr_o;
@@ -98,27 +98,27 @@ module tinyriscv(
     wire ex_csr_we_o;
     wire[`MemAddrBus] ex_csr_waddr_o;
 
-    // regs
+    // regs模块输出信号
     wire[`RegBus] regs_rdata1_o;
     wire[`RegBus] regs_rdata2_o;
 
-    // csr reg
+    // csr_reg模块输出信号
     wire[`RegBus] csr_data_o;
     wire[`RegBus] csr_clint_data_o;
 
-    // ctrl
+    // ctrl模块输出信号
     wire[`Hold_Flag_Bus] ctrl_hold_flag_o;
     wire ctrl_jump_flag_o;
     wire[`InstAddrBus] ctrl_jump_addr_o;
 
-    // div
+    // div模块输出信号
     wire[`DoubleRegBus] div_result_o;
 	wire div_ready_o;
     wire div_busy_o;
     wire[2:0] div_op_o;
     wire[`RegAddrBus] div_reg_waddr_o;
 
-    // clint
+    // clint模块输出信号
     wire clint_we_o;
     wire[`MemAddrBus] clint_waddr_o;
     wire[`MemAddrBus] clint_raddr_o;
@@ -135,6 +135,7 @@ module tinyriscv(
     assign rib_pc_addr_o = pc_pc_o;
 
 
+    // pc_reg模块例化
     pc_reg u_pc_reg(
         .clk(clk),
         .rst(rst),
@@ -145,6 +146,7 @@ module tinyriscv(
         .jump_addr_i(ctrl_jump_addr_o)
     );
 
+    // ctrl模块例化
     ctrl u_ctrl(
         .rst(rst),
         .jump_flag_i(ex_jump_flag_o),
@@ -157,6 +159,7 @@ module tinyriscv(
         .jtag_halt_flag_i(jtag_halt_flag_i)
     );
 
+    // regs模块例化
     regs u_regs(
         .clk(clk),
         .rst(rst),
@@ -173,6 +176,7 @@ module tinyriscv(
         .jtag_data_o(jtag_reg_data_o)
     );
 
+    // csr_reg模块例化
     csr_reg u_csr_reg(
         .clk(clk),
         .rst(rst),
@@ -188,6 +192,7 @@ module tinyriscv(
         .clint_data_o(csr_clint_data_o)
     );
 
+    // if_id模块例化
     if_id u_if_id(
         .clk(clk),
         .rst(rst),
@@ -198,6 +203,7 @@ module tinyriscv(
         .inst_addr_o(if_inst_addr_o)
     );
 
+    // id模块例化
     id u_id(
         .rst(rst),
         .inst_i(if_inst_o),
@@ -221,6 +227,7 @@ module tinyriscv(
         .csr_waddr_o(id_csr_waddr_o)
     );
 
+    // id_ex模块例化
     id_ex u_id_ex(
         .clk(clk),
         .rst(rst),
@@ -245,6 +252,7 @@ module tinyriscv(
         .csr_rdata_o(ie_csr_rdata_o)
     );
 
+    // ex模块例化
     ex u_ex(
         .rst(rst),
         .inst_i(ie_inst_o),
@@ -285,6 +293,7 @@ module tinyriscv(
         .csr_waddr_o(ex_csr_waddr_o)
     );
 
+    // div模块例化
     div u_div(
         .clk(clk),
         .rst(rst),
@@ -300,6 +309,7 @@ module tinyriscv(
         .reg_waddr_o(div_reg_waddr_o)
     );
 
+    // clint模块例化
     clint u_clint(
         .clk(clk),
         .rst(rst),

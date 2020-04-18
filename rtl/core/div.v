@@ -16,26 +16,31 @@
 
 `include "defines.v"
 
-
+// 除法模块
+// 试商法实现32位整数除法
+// 每次除法运算至少需要32个时钟周期才能完成
 module div(
 
     input wire clk,
     input wire rst,
 
-    input wire[`RegBus] dividend_i,
-    input wire[`RegBus] divisor_i,
-    input wire start_i,
-    input wire[2:0] op_i,
-    input wire[`RegAddrBus] reg_waddr_i,
+    // from ex
+    input wire[`RegBus] dividend_i,      // 被除数
+    input wire[`RegBus] divisor_i,       // 除数
+    input wire start_i,                  // 开始信号，运算期间这个信号需要一直保持有效
+    input wire[2:0] op_i,                // 具体是哪一条指令
+    input wire[`RegAddrBus] reg_waddr_i, // 运算结束后需要写的寄存器
 
-    output reg[`DoubleRegBus] result_o,
-	output reg ready_o,
-    output wire busy_o,
-    output reg[2:0] op_o,
-    output reg[`RegAddrBus] reg_waddr_o
+    // to ex
+    output reg[`DoubleRegBus] result_o,  // 除法结果，高32位是余数，低32位是商
+    output reg ready_o,                  // 运算结束信号
+    output wire busy_o,                  // 正在运算信号
+    output reg[2:0] op_o,                // 具体是哪一条指令
+    output reg[`RegAddrBus] reg_waddr_o  // 运算结束后需要写的寄存器
 
     );
 
+    // 状态定义
     localparam STATE_IDLE = 0;
     localparam STATE_START = 1;
     localparam STATE_INVERT = 2;
@@ -55,6 +60,7 @@ module div(
     assign busy_o = (state != STATE_IDLE)? `True : `False;
 
 
+    // 状态机实现
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             state <= STATE_IDLE;
@@ -75,16 +81,20 @@ module div(
                         op_o <= op_i;
                         reg_waddr_o <= reg_waddr_i;
 
+                        // 除数为0
                         if (divisor_i == `ZeroWord) begin
                             ready_o <= `DivResultReady;
                             result_o <= {dividend_i, divisor_zero_result};
+                        // 除数不为0
                         end else begin
                             count <= 7'd31;
                             state <= STATE_START;
                             div_result <= `ZeroWord;
                             div_remain <= `ZeroWord;
 
+                            // DIV和REM这两条指令是有符号数运算
                             if ((op_i == `INST_DIV) || (op_i == `INST_REM)) begin
+                                // 被除数求补码
                                 if (dividend_i[31] == 1'b1) begin
                                     dividend_temp <= ~dividend_i + 1;
                                     minuend <= ((~dividend_i + 1) >> 7'd31) & 1'b1;
@@ -92,6 +102,7 @@ module div(
                                     dividend_temp <= dividend_i;
                                     minuend <= (dividend_i >> 7'd31) & 1'b1;
                                 end
+                                // 除数求补码
                                 if (divisor_i[31] == 1'b1) begin
                                     divisor_temp <= ~divisor_i + 1;
                                 end else begin
@@ -103,6 +114,7 @@ module div(
                                 divisor_temp <= divisor_i;
                             end
 
+                            // 运算结束后是否要对结果取补码
                             if (((op_i == `INST_DIV) && (dividend_i[31] ^ divisor_i[31] == 1'b1))
                                 || ((op_i == `INST_REM) && (dividend_i[31] == 1'b1))) begin
                                 invert_result <= 1'b1;

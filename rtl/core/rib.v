@@ -17,81 +17,83 @@
 `include "defines.v"
 
 
-
+// RIB总线模块
 module rib(
 
     input wire clk,
     input wire rst,
 
     // master 0 interface
-    input wire[`MemAddrBus] m0_addr_i,
-    input wire[`MemBus] m0_data_i,
-    output reg[`MemBus] m0_data_o,
-    output reg m0_ack_o,
-    input wire m0_req_i,
-    input wire m0_we_i,
+    input wire[`MemAddrBus] m0_addr_i,     // 主设备0读、写地址
+    input wire[`MemBus] m0_data_i,         // 主设备0写数据
+    output reg[`MemBus] m0_data_o,         // 主设备0读取到的数据
+    output reg m0_ack_o,                   // 主设备0访问完成标志
+    input wire m0_req_i,                   // 主设备0访问请求标志
+    input wire m0_we_i,                    // 主设备0写标志
 
     // master 1 interface
-    input wire[`MemAddrBus] m1_addr_i,
-    input wire[`MemBus] m1_data_i,
-    output reg[`MemBus] m1_data_o,
-    output reg m1_ack_o,
-    input wire m1_req_i,
-    input wire m1_we_i,
+    input wire[`MemAddrBus] m1_addr_i,     // 主设备1读、写地址
+    input wire[`MemBus] m1_data_i,         // 主设备1写数据
+    output reg[`MemBus] m1_data_o,         // 主设备1读取到的数据
+    output reg m1_ack_o,                   // 主设备1访问完成标志
+    input wire m1_req_i,                   // 主设备1访问请求标志
+    input wire m1_we_i,                    // 主设备1写标志
 
     // master 2 interface
-    input wire[`MemAddrBus] m2_addr_i,
-    input wire[`MemBus] m2_data_i,
-    output reg[`MemBus] m2_data_o,
-    output reg m2_ack_o,
-    input wire m2_req_i,
-    input wire m2_we_i,
+    input wire[`MemAddrBus] m2_addr_i,     // 主设备2读、写地址
+    input wire[`MemBus] m2_data_i,         // 主设备2写数据
+    output reg[`MemBus] m2_data_o,         // 主设备2读取到的数据
+    output reg m2_ack_o,                   // 主设备2访问完成标志
+    input wire m2_req_i,                   // 主设备2访问请求标志
+    input wire m2_we_i,                    // 主设备2写标志
 
     // slave 0 interface
-    output reg[`MemAddrBus] s0_addr_o,
-    output reg[`MemBus] s0_data_o,
-    input wire[`MemBus] s0_data_i,
-    input wire s0_ack_i,
-    output reg s0_req_o,
-    output reg s0_we_o,
+    output reg[`MemAddrBus] s0_addr_o,     // 从设备0读、写地址
+    output reg[`MemBus] s0_data_o,         // 从设备0写数据
+    input wire[`MemBus] s0_data_i,         // 从设备0读取到的数据
+    input wire s0_ack_i,                   // 从设备0访问完成标志
+    output reg s0_req_o,                   // 从设备0访问请求标志
+    output reg s0_we_o,                    // 从设备0写标志
 
     // slave 1 interface
-    output reg[`MemAddrBus] s1_addr_o,
-    output reg[`MemBus] s1_data_o,
-    input wire[`MemBus] s1_data_i,
-    input wire s1_ack_i,
-    output reg s1_req_o,
-    output reg s1_we_o,
+    output reg[`MemAddrBus] s1_addr_o,     // 从设备1读、写地址
+    output reg[`MemBus] s1_data_o,         // 从设备1写数据
+    input wire[`MemBus] s1_data_i,         // 从设备1读取到的数据
+    input wire s1_ack_i,                   // 从设备1访问完成标志
+    output reg s1_req_o,                   // 从设备1访问请求标志
+    output reg s1_we_o,                    // 从设备1写标志
 
     // slave 2 interface
-    output reg[`MemAddrBus] s2_addr_o,
-    output reg[`MemBus] s2_data_o,
-    input wire[`MemBus] s2_data_i,
-    input wire s2_ack_i,
-    output reg s2_req_o,
-    output reg s2_we_o,
+    output reg[`MemAddrBus] s2_addr_o,     // 从设备2读、写地址
+    output reg[`MemBus] s2_data_o,         // 从设备2写数据
+    input wire[`MemBus] s2_data_i,         // 从设备2读取到的数据
+    input wire s2_ack_i,                   // 从设备2访问完成标志
+    output reg s2_req_o,                   // 从设备2访问请求标志
+    output reg s2_we_o,                    // 从设备2写标志
 
     // slave 3 interface
-    output reg[`MemAddrBus] s3_addr_o,
-    output reg[`MemBus] s3_data_o,
-    input wire[`MemBus] s3_data_i,
-    input wire s3_ack_i,
-    output reg s3_req_o,
-    output reg s3_we_o,
+    output reg[`MemAddrBus] s3_addr_o,     // 从设备3读、写地址
+    output reg[`MemBus] s3_data_o,         // 从设备3写数据
+    input wire[`MemBus] s3_data_i,         // 从设备3读取到的数据
+    input wire s3_ack_i,                   // 从设备3访问完成标志
+    output reg s3_req_o,                   // 从设备3访问请求标志
+    output reg s3_we_o,                    // 从设备3写标志
 
     // slave 4 interface
-    output reg[`MemAddrBus] s4_addr_o,
-    output reg[`MemBus] s4_data_o,
-    input wire[`MemBus] s4_data_i,
-    input wire s4_ack_i,
-    output reg s4_req_o,
-    output reg s4_we_o,
+    output reg[`MemAddrBus] s4_addr_o,     // 从设备4读、写地址
+    output reg[`MemBus] s4_data_o,         // 从设备4写数据
+    input wire[`MemBus] s4_data_i,         // 从设备4读取到的数据
+    input wire s4_ack_i,                   // 从设备4访问完成标志
+    output reg s4_req_o,                   // 从设备4访问请求标志
+    output reg s4_we_o,                    // 从设备4写标志
 
-    output reg hold_flag_o
+    output reg hold_flag_o                 // 暂停流水线标志
 
     );
 
 
+    // 访问地址的最高4位决定要访问的是哪一个从设备
+    // 因此最高支持16个从设备
     parameter [3:0]slave_0 = 4'b0000;
     parameter [3:0]slave_1 = 4'b0001;
     parameter [3:0]slave_2 = 4'b0010;
@@ -108,10 +110,11 @@ module rib(
     reg[1:0] next_grant;
 
 
+    // 主设备请求信号
     assign req = {m2_req_i, m1_req_i, m0_req_i};
 
 
-
+    // 授权主设备切换
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             grant <= grant1;
@@ -120,7 +123,9 @@ module rib(
         end
     end
 
-    // arb
+    // 仲裁逻辑
+    // 固定优先级仲裁机制
+    // 优先级由高到低：主设备0，主设备2，主设备1
     always @ (*) begin
         if (rst == `RstEnable) begin
             next_grant <= grant1;
@@ -171,7 +176,7 @@ module rib(
         end
     end
 
-
+    // 根据授权结果，选择(访问)对应的从设备
     always @ (*) begin
         if (rst == `RstEnable) begin
             m0_ack_o <= `RIB_NACK;
