@@ -18,71 +18,155 @@
 
 
 // core local interruptor module
+// 核心中断管理、仲裁模块
 module clint(
 
     input wire clk,
     input wire rst,
 
+    // from id
     input wire[`INT_BUS] int_flag_i,
     input wire[`InstBus] inst_i,
     input wire[`InstAddrBus] inst_addr_i,
+
+    // from ctrl
     input wire[`Hold_Flag_Bus] hold_flag_i,
+
+    // from csr_reg
     input wire[`RegBus] data_i,
 
+    // to csr_reg
     output reg we_o,
     output reg[`MemAddrBus] waddr_o,
     output reg[`MemAddrBus] raddr_o,
     output reg[`RegBus] data_o,
 
+    // to ex
     output reg[`InstAddrBus] int_addr_o,
     output reg int_assert_o
 
     );
 
 
-    reg in_int_context;
-    reg[`InstAddrBus] int_return_addr;
+    // 状态定义
+    localparam STATE_IDLE      = 4'b0001;
+    localparam STATE_ASSERT    = 4'b0010;
+    localparam STATE_WAIT_MRET = 4'b0100;
+    localparam STATE_MRET      = 4'b1000;
+
+    reg[3:0] state;
+    reg[3:0] next_state;
 
 
+    // 状态更新
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
-            in_int_context <= `False;
-            int_return_addr <= `ZeroWord;
-            int_assert_o <= `INT_DEASSERT;
-            int_addr_o <= `ZeroWord;
+            state <= STATE_IDLE;
         end else begin
-            if (int_flag_i != `INT_NONE && in_int_context == `False) begin
-                int_assert_o <= `INT_ASSERT;
-                in_int_context <= `True;
-                int_return_addr <= inst_addr_i;
-                int_addr_o <= data_i;
-            end else if (inst_i == `INST_MRET) begin
-                in_int_context <= `False;
-                int_assert_o <= `INT_ASSERT;
-                int_addr_o <= int_return_addr;
-            end else begin
-                int_assert_o <= `INT_DEASSERT;
-            end
+            state <= next_state;
         end
     end
 
-    always @ (posedge clk) begin
+    // 状态切换
+    always @ (*) begin
+        if (rst == `RstEnable) begin
+            next_state <= STATE_IDLE;
+        end else begin
+            case (state)
+                STATE_IDLE: begin
+                    // 目前只要外设有中断信号发出就立马响应.
+                    // 后续增加中断优先级(嵌套)时需要修改这里的逻辑
+                    if (int_flag_i != `INT_NONE) begin
+                        next_state <= STATE_ASSERT;
+                    end else begin
+                        next_state <= STATE_IDLE;
+                    end
+                end
+                STATE_ASSERT: begin
+                    next_state <= STATE_WAIT_MRET;
+                end
+                STATE_WAIT_MRET: begin
+                    if (inst_i == `INST_MRET) begin
+                        next_state <= STATE_MRET;
+                    end else begin
+                        next_state <= STATE_WAIT_MRET;
+                    end
+                end
+                STATE_MRET: begin
+                    next_state <= STATE_IDLE;
+                end
+                default: begin
+                    next_state <= STATE_IDLE;
+                end
+            endcase
+        end
+    end
+
+    // 根据不同的状态，读取对应的CSR寄存器
+    always @ (*) begin
         if (rst == `RstEnable) begin
             raddr_o <= `ZeroWord;
         end else begin
-            raddr_o <= {20'h0, `CSR_MTVEC};
+            case (state)
+                STATE_IDLE: begin
+                    raddr_o <= {20'h0, `CSR_MTVEC};
+                end
+                STATE_ASSERT: begin
+                    raddr_o <= {20'h0, `CSR_MTVEC};
+                end
+                STATE_WAIT_MRET: begin
+                    raddr_o <= {20'h0, `CSR_MEPC};
+                end
+                STATE_MRET: begin
+                    raddr_o <= {20'h0, `CSR_MEPC};
+                end
+                default: begin
+                    raddr_o <= {20'h0, `CSR_MTVEC};
+                end
+            endcase
         end
     end
 
+    // 发出中断信号
+    // 中断响应和中断返回时都要发
+    always @ (posedge clk) begin
+        if (rst == `RstEnable) begin
+            int_assert_o <= `INT_DEASSERT;
+            int_addr_o <= `ZeroWord;
+        end else begin
+            case (state)
+                STATE_ASSERT: begin
+                    int_assert_o <= `INT_ASSERT;
+                    int_addr_o <= data_i;
+                end
+                STATE_MRET: begin
+                    int_assert_o <= `INT_ASSERT;
+                    int_addr_o <= data_i;
+                end
+                default: begin
+                    int_assert_o <= `INT_DEASSERT;
+                    int_addr_o <= `ZeroWord;
+                end
+            endcase
+        end
+    end
+
+    // 根据不同的状态，写对应的CSR寄存器
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             we_o <= `WriteDisable;
             waddr_o <= `ZeroWord;
             data_o <= `ZeroWord;
         end else begin
-            we_o <= `WriteEnable;
-            waddr_o <= {20'h0, `CSR_MCAUSE};
-            data_o <= {24'h0, int_flag_i};
+            if (state == STATE_ASSERT) begin
+                we_o <= `WriteEnable;
+                waddr_o <= {20'h0, `CSR_MEPC};
+                data_o <= inst_addr_i;
+            end else begin
+                we_o <= `WriteEnable;
+                waddr_o <= {20'h0, `CSR_MCAUSE};
+                data_o <= {24'h0, int_flag_i};
+            end
         end
     end
 
