@@ -29,7 +29,7 @@ module timer(
     input wire req_i,
 
     output reg[31:0] data_o,
-    output wire int_sig_o,
+    output reg int_sig_o,
     output reg ack_o
 
     );
@@ -53,46 +53,6 @@ module timer(
     reg[31:0] timer_value;
 
 
-    assign int_sig_o = (timer_ctrl[2:1] == 3'h3)? `INT_ASSERT: `INT_DEASSERT;
-
-
-    // write ctrl reg
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            timer_ctrl <= `ZeroWord;
-        end else begin
-            if (we_i == `WriteEnable) begin
-                if (addr_i[3:0] == REG_CTRL) begin
-                    if (data_i[2] == 1'b0) begin
-                        timer_ctrl <= {data_i[31:3], timer_ctrl[2], data_i[1:0]};
-                    // write 1 to clear pending
-                    end else begin
-                        timer_ctrl <= {data_i[31:3], 1'b0, data_i[1:0]};
-                    end
-                end
-            end else begin
-                // generate int pending
-                if (timer_count >= timer_value && timer_value > 32'h0) begin
-                    timer_ctrl[2] <= 1'b1;
-                    timer_ctrl[0] <= 1'b0;
-                end
-            end
-        end
-    end
-
-    // write value reg
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            timer_value <= `ZeroWord;
-        end else begin
-            if (we_i == `WriteEnable) begin
-                if (addr_i[3:0] == REG_VALUE) begin
-                    timer_value <= data_i;
-                end
-            end
-        end
-    end
-
     // counter
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
@@ -100,16 +60,49 @@ module timer(
         end else begin
             if (timer_ctrl[0] == 1'b1 && timer_value > 32'h0) begin
                 timer_count <= timer_count + 1'b1;
-                //if (timer_count == timer_value) begin
-                //    timer_count <= `ZeroWord;
-                //end
             end else begin
                 timer_count <= `ZeroWord;
             end
         end
     end
 
-    // read timer regs
+    // int signal
+    always @ (posedge clk) begin
+        if (rst == `RstEnable) begin
+            int_sig_o <= `INT_DEASSERT;
+        end else begin
+            if (timer_count >= timer_value && timer_value > 32'h0) begin
+                int_sig_o <= `INT_ASSERT;
+            end else if (we_i == `WriteEnable && addr_i[3:0] == REG_CTRL && timer_ctrl[2] == 1'b1) begin
+                int_sig_o <= `INT_DEASSERT;
+            end
+        end
+    end
+
+    // write regs
+    always @ (posedge clk) begin
+        if (rst == `RstEnable) begin
+            timer_ctrl <= `ZeroWord;
+            timer_value <= `ZeroWord;
+        end else begin
+            if (we_i == `WriteEnable) begin
+                case (addr_i[3:0])
+                    REG_CTRL: begin
+                        timer_ctrl <= data_i;
+                    end
+                    REG_VALUE: begin
+                        timer_value <= data_i;
+                    end
+                endcase
+            end else begin
+                if (timer_count >= timer_value && timer_value > 32'h0) begin
+                    timer_ctrl[0] <= 1'b0;
+                end
+            end
+        end
+    end
+
+    // read regs
     always @ (*) begin
         if (rst == `RstEnable) begin
             data_o <= `ZeroWord;
