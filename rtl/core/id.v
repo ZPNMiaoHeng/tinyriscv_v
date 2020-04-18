@@ -71,8 +71,8 @@ module id(
 
     always @ (*) begin
         if (rst == `RstEnable) begin
-            reg1_raddr_o <= `ZeroWord;
-            reg2_raddr_o <= `ZeroWord;
+            reg1_raddr_o <= `ZeroReg;
+            reg2_raddr_o <= `ZeroReg;
             csr_raddr_o <= `ZeroWord;
             inst_o <= `INST_NOP;
             inst_addr_o <= `ZeroWord;
@@ -81,7 +81,7 @@ module id(
             csr_rdata_o <= `ZeroWord;
             reg_we_o <= `WriteDisable;
             csr_we_o <= `WriteDisable;
-            reg_waddr_o <= `ZeroWord;
+            reg_waddr_o <= `ZeroReg;
             csr_waddr_o <= `ZeroWord;
             mem_req <= `RIB_NREQ;
         end else begin
@@ -102,55 +102,55 @@ module id(
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                         `INST_SLTI: begin
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                         `INST_SLTIU: begin
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                         `INST_XORI: begin
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                         `INST_ORI: begin
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                         `INST_ANDI: begin
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                         `INST_SLLI: begin
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                         `INST_SRI: begin
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                         default: begin
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
-                            reg1_raddr_o <= `ZeroWord;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
+                            reg1_raddr_o <= `ZeroReg;
+                            reg2_raddr_o <= `ZeroReg;
                         end
                     endcase
                 end
@@ -207,9 +207,9 @@ module id(
                             end
                             default: begin
                                 reg_we_o <= `WriteDisable;
-                                reg_waddr_o <= `ZeroWord;
-                                reg1_raddr_o <= `ZeroWord;
-                                reg2_raddr_o <= `ZeroWord;
+                                reg_waddr_o <= `ZeroReg;
+                                reg1_raddr_o <= `ZeroReg;
+                                reg2_raddr_o <= `ZeroReg;
                             end
                         endcase
                     end else if (funct7 == 7'b0000001) begin
@@ -264,60 +264,60 @@ module id(
                             end
                             default: begin
                                 reg_we_o <= `WriteDisable;
-                                reg_waddr_o <= `ZeroWord;
-                                reg1_raddr_o <= `ZeroWord;
-                                reg2_raddr_o <= `ZeroWord;
+                                reg_waddr_o <= `ZeroReg;
+                                reg1_raddr_o <= `ZeroReg;
+                                reg2_raddr_o <= `ZeroReg;
                             end
                         endcase
                     end else begin
                         reg_we_o <= `WriteDisable;
-                        reg_waddr_o <= `ZeroWord;
-                        reg1_raddr_o <= `ZeroWord;
-                        reg2_raddr_o <= `ZeroWord;
+                        reg_waddr_o <= `ZeroReg;
+                        reg1_raddr_o <= `ZeroReg;
+                        reg2_raddr_o <= `ZeroReg;
                     end
                 end
                 `INST_TYPE_L: begin
                     case (funct3)
                         `INST_LB: begin
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             mem_req <= `RIB_REQ;
                         end
                         `INST_LH: begin
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             mem_req <= `RIB_REQ;
                         end
                         `INST_LW: begin
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             mem_req <= `RIB_REQ;
                         end
                         `INST_LBU: begin
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             mem_req <= `RIB_REQ;
                         end
                         `INST_LHU: begin
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             mem_req <= `RIB_REQ;
                         end
                         default: begin
-                            reg1_raddr_o <= `ZeroWord;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg1_raddr_o <= `ZeroReg;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                         end
                     endcase
                 end
@@ -327,28 +327,28 @@ module id(
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                             mem_req <= `RIB_REQ;
                         end
                         `INST_SH: begin
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                             mem_req <= `RIB_REQ;
                         end
                         `INST_SW: begin
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                             mem_req <= `RIB_REQ;
                         end
                         default: begin
-                            reg1_raddr_o <= `ZeroWord;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg1_raddr_o <= `ZeroReg;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                         end
                     endcase
                 end
@@ -358,19 +358,19 @@ module id(
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                         end
                         `INST_BNE: begin
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                         end
                         `INST_BLT: begin
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                         end
                         `INST_BGE: begin
                             reg1_raddr_o <= rs1;
@@ -382,122 +382,122 @@ module id(
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                         end
                         `INST_BGEU: begin
                             reg1_raddr_o <= rs1;
                             reg2_raddr_o <= rs2;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                         end
                         default: begin
-                            reg1_raddr_o <= `ZeroWord;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg1_raddr_o <= `ZeroReg;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
                         end
                     endcase
                 end
                 `INST_JAL: begin
                     reg_we_o <= `WriteEnable;
                     reg_waddr_o <= rd;
-                    reg1_raddr_o <= `ZeroWord;
-                    reg2_raddr_o <= `ZeroWord;
+                    reg1_raddr_o <= `ZeroReg;
+                    reg2_raddr_o <= `ZeroReg;
                 end
                 `INST_JALR: begin
                     reg_we_o <= `WriteEnable;
 					reg1_raddr_o <= rs1;
-                    reg2_raddr_o <= `ZeroWord;
+                    reg2_raddr_o <= `ZeroReg;
                     reg_waddr_o <= rd;
                 end
                 `INST_LUI: begin
                     reg_we_o <= `WriteEnable;
                     reg_waddr_o <= rd;
-                    reg1_raddr_o <= `ZeroWord;
-                    reg2_raddr_o <= `ZeroWord;
+                    reg1_raddr_o <= `ZeroReg;
+                    reg2_raddr_o <= `ZeroReg;
                 end
                 `INST_AUIPC: begin
                     reg_we_o <= `WriteEnable;
                     reg_waddr_o <= rd;
-                    reg1_raddr_o <= `ZeroWord;
-                    reg2_raddr_o <= `ZeroWord;
+                    reg1_raddr_o <= `ZeroReg;
+                    reg2_raddr_o <= `ZeroReg;
                 end
                 `INST_NOP: begin
                     reg_we_o <= `WriteDisable;
-                    reg_waddr_o <= `ZeroWord;
-                    reg1_raddr_o <= `ZeroWord;
-                    reg2_raddr_o <= `ZeroWord;
+                    reg_waddr_o <= `ZeroReg;
+                    reg1_raddr_o <= `ZeroReg;
+                    reg2_raddr_o <= `ZeroReg;
                 end
                 `INST_FENCE: begin
                     reg_we_o <= `WriteDisable;
-                    reg_waddr_o <= `ZeroWord;
-                    reg1_raddr_o <= `ZeroWord;
-                    reg2_raddr_o <= `ZeroWord;
+                    reg_waddr_o <= `ZeroReg;
+                    reg1_raddr_o <= `ZeroReg;
+                    reg2_raddr_o <= `ZeroReg;
                 end
                 `INST_CSR: begin
                     reg_we_o <= `WriteDisable;
-                    reg_waddr_o <= `ZeroWord;
-                    reg1_raddr_o <= `ZeroWord;
-                    reg2_raddr_o <= `ZeroWord;
+                    reg_waddr_o <= `ZeroReg;
+                    reg1_raddr_o <= `ZeroReg;
+                    reg2_raddr_o <= `ZeroReg;
                     csr_raddr_o <= {20'h0, inst_i[31:20]};
                     csr_waddr_o <= {20'h0, inst_i[31:20]};
                     case (funct3)
                         `INST_CSRRW: begin
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             csr_we_o <= `WriteEnable;
                         end
                         `INST_CSRRS: begin
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             csr_we_o <= `WriteEnable;
                         end
                         `INST_CSRRC: begin
                             reg1_raddr_o <= rs1;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             csr_we_o <= `WriteEnable;
                         end
                         `INST_CSRRWI: begin
-                            reg1_raddr_o <= `ZeroWord;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg1_raddr_o <= `ZeroReg;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             csr_we_o <= `WriteEnable;
                         end
                         `INST_CSRRSI: begin
-                            reg1_raddr_o <= `ZeroWord;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg1_raddr_o <= `ZeroReg;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             csr_we_o <= `WriteEnable;
                         end
                         `INST_CSRRCI: begin
-                            reg1_raddr_o <= `ZeroWord;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg1_raddr_o <= `ZeroReg;
+                            reg2_raddr_o <= `ZeroReg;
                             reg_we_o <= `WriteEnable;
                             reg_waddr_o <= rd;
                             csr_we_o <= `WriteEnable;
                         end
                         default: begin
                             reg_we_o <= `WriteDisable;
-                            reg_waddr_o <= `ZeroWord;
-                            reg1_raddr_o <= `ZeroWord;
-                            reg2_raddr_o <= `ZeroWord;
+                            reg_waddr_o <= `ZeroReg;
+                            reg1_raddr_o <= `ZeroReg;
+                            reg2_raddr_o <= `ZeroReg;
                             csr_we_o <= `WriteDisable;
                         end
                     endcase
                 end
                 default: begin
                     reg_we_o <= `WriteDisable;
-                    reg_waddr_o <= `ZeroWord;
-                    reg1_raddr_o <= `ZeroWord;
-                    reg2_raddr_o <= `ZeroWord;
+                    reg_waddr_o <= `ZeroReg;
+                    reg1_raddr_o <= `ZeroReg;
+                    reg2_raddr_o <= `ZeroReg;
                 end
             endcase
         end
