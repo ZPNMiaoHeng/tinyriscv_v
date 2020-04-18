@@ -141,19 +141,28 @@ module ex(
             mul_op2 <= `ZeroWord;
         end else begin
             if ((opcode == `INST_TYPE_R_M) && (funct7 == 7'b0000001)) begin
-                if ((funct3 == `INST_MUL) || (funct3 == `INST_MULHU)) begin
-                    mul_op1 <= reg1_rdata_i;
-                    mul_op2 <= reg2_rdata_i;
-                end else if (funct3 == `INST_MULHSU) begin
-                    mul_op1 <= (reg1_rdata_i[31] == 1'b1)? (~reg1_rdata_i + 1): reg1_rdata_i;
-                    mul_op2 <= reg2_rdata_i;
-                end else if (funct3 == `INST_MULH) begin
-                    mul_op1 <= (reg1_rdata_i[31] == 1'b1)? (~reg1_rdata_i + 1): reg1_rdata_i;
-                    mul_op2 <= (reg2_rdata_i[31] == 1'b1)? (~reg2_rdata_i + 1): reg2_rdata_i;
-                end else begin
-                    mul_op1 <= reg1_rdata_i;
-                    mul_op2 <= reg2_rdata_i;
-                end
+                case (funct3)
+                    `INST_MUL: begin
+                        mul_op1 <= reg1_rdata_i;
+                        mul_op2 <= reg2_rdata_i;
+                    end
+                    `INST_MULHU: begin
+                        mul_op1 <= reg1_rdata_i;
+                        mul_op2 <= reg2_rdata_i;
+                    end
+                    `INST_MULHSU: begin
+                        mul_op1 <= (reg1_rdata_i[31] == 1'b1)? (~reg1_rdata_i + 1): reg1_rdata_i;
+                        mul_op2 <= reg2_rdata_i;
+                    end
+                    `INST_MULH: begin
+                        mul_op1 <= (reg1_rdata_i[31] == 1'b1)? (~reg1_rdata_i + 1): reg1_rdata_i;
+                        mul_op2 <= (reg2_rdata_i[31] == 1'b1)? (~reg2_rdata_i + 1): reg2_rdata_i;
+                    end
+                    default: begin
+                        mul_op1 <= reg1_rdata_i;
+                        mul_op2 <= reg2_rdata_i;
+                    end
+                endcase
             end else begin
                 mul_op1 <= reg1_rdata_i;
                 mul_op2 <= reg2_rdata_i;
