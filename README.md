@@ -41,7 +41,7 @@ tinyriscv目前外挂了5个外设，每个外设的空间大小为256MB，地�
 
 # 3.CoreMark测试
 
-目前tinyriscv在Xilinx Artix-7 35T FPGA平台上运行CoreMark跑分程序的结果如下图所示：
+目前tinyriscv在Xilinx Artix-7 35T FPGA平台(时钟50MHz)上运行CoreMark跑分程序的结果如下图所示：
 
 ![tinyriscv跑分](./pic/tinyriscv_coremark.png)
 
