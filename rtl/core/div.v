@@ -150,7 +150,7 @@ module div(
                             end
                         end
                     end else begin
-                        ready_o <= `DivResultReady;
+                        ready_o <= `DivResultNotReady;
                         result_o <= {`ZeroWord, `ZeroWord};
                         state <= STATE_IDLE;
                     end
@@ -164,7 +164,7 @@ module div(
                         end
                         state <= STATE_END;
                     end else begin
-                        ready_o <= `DivResultReady;
+                        ready_o <= `DivResultNotReady;
                         result_o <= {`ZeroWord, `ZeroWord};
                         state <= STATE_IDLE;
                     end

@@ -63,7 +63,7 @@ module ex(
     output wire[`MemAddrBus] csr_waddr_o,   // 写CSR寄存器地址
 
     // to div
-    output reg div_start_o,                 // 开始除法运算标志
+    output wire div_start_o,                 // 开始除法运算标志
     output reg[`RegBus] div_dividend_o,     // 被除数
     output reg[`RegBus] div_divisor_o,      // 除数
     output reg[2:0] div_op_o,               // 具体是哪一条除法指令
@@ -103,6 +103,7 @@ module ex(
     reg[`InstAddrBus] jump_addr;
     reg mem_we;
     reg mem_req;
+    reg div_start;
 
     assign opcode = inst_i[6:0];
     assign funct3 = inst_i[14:12];
@@ -118,6 +119,8 @@ module ex(
 
     assign mem_raddr_index = ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) - ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:20]}) & 32'hfffffffc)) & 2'b11;
     assign mem_waddr_index = ((reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]}) - (reg1_rdata_i + {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]} & 32'hfffffffc)) & 2'b11;
+
+    assign div_start_o = (int_assert_i == `INT_ASSERT)? `DivStop: div_start;
 
     assign reg_wdata_o = reg_wdata | div_wdata;
     // 响应中断时不写通用寄存器
@@ -139,7 +142,7 @@ module ex(
     assign csr_waddr_o = csr_waddr_i;
 
 
-    // 处理除法指令
+    // 处理乘法指令
     always @ (*) begin
         if (rst == `RstEnable) begin
             mul_op1 <= `ZeroWord;
@@ -175,7 +178,7 @@ module ex(
         end
     end
 
-    // 处理乘法指令
+    // 处理除法指令
     always @ (*) begin
         if (rst == `RstEnable) begin
             div_dividend_o <= `ZeroWord;
@@ -186,7 +189,7 @@ module ex(
             div_hold_flag <= `HoldDisable;
             div_we <= `WriteDisable;
             div_wdata <= `ZeroWord;
-            div_start_o <= `DivStop;
+            div_start <= `DivStop;
             div_jump_flag <= `JumpDisable;
             div_jump_addr <= `ZeroWord;
         end else begin
@@ -200,31 +203,31 @@ module ex(
                 div_waddr <= `ZeroWord;
                 case (funct3)
                     `INST_DIV: begin
-                        div_start_o <= `DivStart;
+                        div_start <= `DivStart;
                         div_jump_flag <= `JumpEnable;
                         div_hold_flag <= `HoldEnable;
                         div_jump_addr <= inst_addr_i + 4'h4;
                     end
                     `INST_DIVU: begin
-                        div_start_o <= `DivStart;
+                        div_start <= `DivStart;
                         div_jump_flag <= `JumpEnable;
                         div_hold_flag <= `HoldEnable;
                         div_jump_addr <= inst_addr_i + 4'h4;
                     end
                     `INST_REM: begin
-                        div_start_o <= `DivStart;
+                        div_start <= `DivStart;
                         div_jump_flag <= `JumpEnable;
                         div_hold_flag <= `HoldEnable;
                         div_jump_addr <= inst_addr_i + 4'h4;
                     end
                     `INST_REMU: begin
-                        div_start_o <= `DivStart;
+                        div_start <= `DivStart;
                         div_jump_flag <= `JumpEnable;
                         div_hold_flag <= `HoldEnable;
                         div_jump_addr <= inst_addr_i + 4'h4;
                     end
                     default: begin
-                        div_start_o <= `DivStop;
+                        div_start <= `DivStop;
                         div_jump_flag <= `JumpDisable;
                         div_hold_flag <= `HoldDisable;
                         div_jump_addr <= `ZeroWord;
@@ -234,13 +237,13 @@ module ex(
                 div_jump_flag <= `JumpDisable;
                 div_jump_addr <= `ZeroWord;
                 if (div_busy_i == `True) begin
-                    div_start_o <= `DivStart;
+                    div_start <= `DivStart;
                     div_we <= `WriteDisable;
                     div_wdata <= `ZeroWord;
                     div_waddr <= `ZeroWord;
                     div_hold_flag <= `HoldEnable;
                 end else begin
-                    div_start_o <= `DivStop;
+                    div_start <= `DivStop;
                     div_hold_flag <= `HoldDisable;
                     if (div_ready_i == `DivResultReady) begin
                         case (div_op_i)
