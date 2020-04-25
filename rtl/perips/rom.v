@@ -14,7 +14,7 @@
  limitations under the License.                                          
  */
 
-`include "defines.v"
+`include "../core/defines.v"
 
 
 module rom(

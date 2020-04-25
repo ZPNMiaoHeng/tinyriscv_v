@@ -14,7 +14,7 @@
  limitations under the License.                                          
  */
 
-`include "defines.v"
+`include "../core/defines.v"
 
 // tinyriscv soc顶层模块
 module tinyriscv_soc_top(
@@ -316,6 +316,7 @@ module tinyriscv_soc_top(
 
     // jtag模块例化
     jtag_top u_jtag_top(
+        .clk(clk),
         .jtag_rst_n(jtag_rst),
         .jtag_pin_TCK(jtag_TCK),
         .jtag_pin_TMS(jtag_TMS),
