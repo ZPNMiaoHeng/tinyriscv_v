@@ -105,6 +105,10 @@ module tinyriscv(
     // csr_reg模块输出信号
     wire[`RegBus] csr_data_o;
     wire[`RegBus] csr_clint_data_o;
+    wire csr_global_int_en_o;
+    wire[`RegBus] csr_clint_csr_mtvec;
+    wire[`RegBus] csr_clint_csr_mepc;
+    wire[`RegBus] csr_clint_csr_mstatus;
 
     // ctrl模块输出信号
     wire[`Hold_Flag_Bus] ctrl_hold_flag_o;
@@ -125,6 +129,7 @@ module tinyriscv(
     wire[`RegBus] clint_data_o;
     wire[`InstAddrBus] clint_int_addr_o;
     wire clint_int_assert_o;
+    wire clint_hold_flag_o;
 
 
     assign rib_ex_addr_o = (ex_mem_we_o == `WriteEnable)? ex_mem_waddr_o: ex_mem_raddr_o;
@@ -154,6 +159,7 @@ module tinyriscv(
         .hold_flag_ex_i(ex_hold_flag_o),
         .hold_flag_rib_i(rib_hold_flag_i),
         .hold_flag_o(ctrl_hold_flag_o),
+        .hold_flag_clint_i(clint_hold_flag_o),
         .jump_flag_o(ctrl_jump_flag_o),
         .jump_addr_o(ctrl_jump_addr_o),
         .jtag_halt_flag_i(jtag_halt_flag_i)
@@ -185,11 +191,15 @@ module tinyriscv(
         .waddr_i(ex_csr_waddr_o),
         .data_i(ex_csr_wdata_o),
         .data_o(csr_data_o),
+        .global_int_en_o(csr_global_int_en_o),
         .clint_we_i(clint_we_o),
         .clint_raddr_i(clint_raddr_o),
         .clint_waddr_i(clint_waddr_o),
         .clint_data_i(clint_data_o),
-        .clint_data_o(csr_clint_data_o)
+        .clint_data_o(csr_clint_data_o),
+        .clint_csr_mtvec(csr_clint_csr_mtvec),
+        .clint_csr_mepc(csr_clint_csr_mepc),
+        .clint_csr_mstatus(csr_clint_csr_mstatus)
     );
 
     // if_id模块例化
@@ -318,10 +328,15 @@ module tinyriscv(
         .inst_addr_i(id_inst_addr_o),
         .hold_flag_i(ctrl_hold_flag_o),
         .data_i(csr_clint_data_o),
+        .csr_mtvec(csr_clint_csr_mtvec),
+        .csr_mepc(csr_clint_csr_mepc),
+        .csr_mstatus(csr_clint_csr_mstatus),
         .we_o(clint_we_o),
         .waddr_o(clint_waddr_o),
         .raddr_o(clint_raddr_o),
         .data_o(clint_data_o),
+        .hold_flag_o(clint_hold_flag_o),
+        .global_int_en_i(csr_global_int_en_o),
         .int_addr_o(clint_int_addr_o),
         .int_assert_o(clint_int_assert_o)
     );
