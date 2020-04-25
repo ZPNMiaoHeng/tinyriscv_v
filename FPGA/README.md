@@ -30,7 +30,7 @@
 
 ![](./images/create_prj_5.png)
 
-选择RTL Project，并勾选上Do not specify sources at this time，如下图所示：
+选择RTL Project，并勾选上Do not specify sources at this time，然后点击Next按钮，如下图所示：
 
 ![](./images/create_prj_6.png)
 
@@ -112,4 +112,4 @@
 
 ![](./images/download_4.png)
 
-至此，Bitstream文件即可下载到FPGA。
+至此，即可将Bitstream文件下载到FPGA。
