@@ -72,11 +72,11 @@ tinyriscv目前外挂了5个外设，每个外设的空间大小为256MB，地�
 
 2. 安装GNU工具链
 
-可以通过百度网盘下载(链接: https://pan.baidu.com/s/1bYgslKxHMjtiZtIPsB2caQ 提取码: 9n3c)，下载完成后将压缩包解压到本项目的tools目录下。
+可以通过百度网盘下载(链接: https://pan.baidu.com/s/1bYgslKxHMjtiZtIPsB2caQ 提取码: 9n3c)，或者通过微云下载[https://share.weiyun.com/5bMOsu9](https://share.weiyun.com/5bMOsu9)，下载完成后将压缩包解压到本项目的tools目录下。
 
 3. 安装make工具
 
-可以通过百度网盘下载(链接: https://pan.baidu.com/s/1nFaUIwv171PDXuF7TziDFg 提取码: 9ntc)，下载完成后直接解压，然后将make所在的路径添加到环境变量里。
+可以通过百度网盘下载(链接: https://pan.baidu.com/s/1nFaUIwv171PDXuF7TziDFg 提取码: 9ntc)，或者通过微云下载[https://share.weiyun.com/59xtmWR](https://share.weiyun.com/59xtmWR)，下载完成后直接解压，然后将make所在的路径添加到环境变量里。
 
 ## 4.2运行指令测试程序
 
