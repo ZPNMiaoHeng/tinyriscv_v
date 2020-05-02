@@ -105,20 +105,20 @@ module timer(
     // read regs
     always @ (*) begin
         if (rst == `RstEnable) begin
-            data_o <= `ZeroWord;
+            data_o = `ZeroWord;
         end else begin
             case (addr_i[3:0])
                 REG_VALUE: begin
-                    data_o <= timer_value;
+                    data_o = timer_value;
                 end
                 REG_CTRL: begin
-                    data_o <= timer_ctrl;
+                    data_o = timer_ctrl;
                 end
                 REG_COUNT: begin
-                    data_o <= timer_count;
+                    data_o = timer_count;
                 end
                 default: begin
-                    data_o <= `ZeroWord;
+                    data_o = `ZeroWord;
                 end
             endcase
         end

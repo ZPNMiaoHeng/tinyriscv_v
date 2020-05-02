@@ -104,20 +104,20 @@ module uart_tx(
 
     always @ (*) begin
         if (rst == 1'b0) begin
-            data_o <= 32'h0;
+            data_o = 32'h0;
         end else begin
             case (addr_i[3:0])
                 UART_CTRL: begin
-                    data_o <= uart_ctrl;
+                    data_o = uart_ctrl;
                 end
                 UART_STATUS: begin
-                    data_o <= uart_status;
+                    data_o = uart_status;
                 end
                 UART_BAUD: begin
-                    data_o <= uart_baud;
+                    data_o = uart_baud;
                 end
                 default: begin
-                    data_o <= 32'h0;
+                    data_o = 32'h0;
                 end
             endcase
         end

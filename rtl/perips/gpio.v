@@ -57,11 +57,14 @@ module gpio(
 
     always @ (*) begin
         if (rst == 1'b0) begin
-            data_o <= 32'h0;
+            data_o = 32'h0;
         end else begin
             case (addr_i[3:0])
                 GPIO_DATA: begin
-                    data_o <= gpio_data;
+                    data_o = gpio_data;
+                end
+                default: begin
+                    data_o = 32'h0;
                 end
             endcase
         end

@@ -47,9 +47,9 @@ module ram(
 
     always @ (*) begin
         if (rst == `RstEnable) begin
-            data_o <= `ZeroWord;
+            data_o = `ZeroWord;
         end else begin
-            data_o <= _ram[addr_i[31:2]];
+            data_o = _ram[addr_i[31:2]];
         end
     end
 
