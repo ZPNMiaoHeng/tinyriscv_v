@@ -171,6 +171,7 @@ module jtag_driver(
     always @(posedge jtag_TCK or negedge rst_n) begin
         if (!rst_n) begin
             dtm_req_valid <= `DTM_REQ_INVALID;
+            dtm_req_data <= 40'h0;
         end else begin
             if (jtag_state == UPDATE_DR) begin
                 if (ir_reg == REG_DMI) begin

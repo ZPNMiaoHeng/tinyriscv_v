@@ -127,6 +127,21 @@ module jtag_dm(
             is_halted <= 1'b0;
             is_reseted <= 1'b0;
             dm_op_req <= 1'b0;
+            op <= 2'h0;
+            data <= 32'h0;
+            sbaddress0 <= 32'h0;
+            dcsr <= 32'h0;
+            hartinfo <= 32'h0;
+            sbcs <= 32'h0;
+            dmcontrol <= 32'h0;
+            abstractcs <= 32'h0;
+            data0 <= 32'h0;
+            sbdata0 <= 32'h0;
+            command <= 32'h0;
+            dm_reg_wdata <= 32'h0;
+            dm_mem_wdata <= 32'h0;
+            address <= 6'h0;
+            dmstatus <= 32'h0;
         end else begin
             if (state == STATE_IDLE) begin
                 dm_mem_we <= 1'b0;
