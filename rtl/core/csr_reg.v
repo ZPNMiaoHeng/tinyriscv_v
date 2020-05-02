@@ -135,32 +135,32 @@ module csr_reg(
     // ex模块读CSR寄存器
     always @ (*) begin
         if (rst == `RstEnable) begin
-            data_o <= `ZeroWord;
+            data_o = `ZeroWord;
         end else begin
             case (raddr_i[11:0])
                 `CSR_CYCLE: begin
-                    data_o <= cycle[31:0];
+                    data_o = cycle[31:0];
                 end
                 `CSR_CYCLEH: begin
-                    data_o <= cycle[63:32];
+                    data_o = cycle[63:32];
                 end
                 `CSR_MTVEC: begin
-                    data_o <= mtvec;
+                    data_o = mtvec;
                 end
                 `CSR_MCAUSE: begin
-                    data_o <= mcause;
+                    data_o = mcause;
                 end
                 `CSR_MEPC: begin
-                    data_o <= mepc;
+                    data_o = mepc;
                 end
                 `CSR_MIE: begin
-                    data_o <= mie;
+                    data_o = mie;
                 end
                 `CSR_MSTATUS: begin
-                    data_o <= mstatus;
+                    data_o = mstatus;
                 end
                 default: begin
-                    data_o <= `ZeroWord;
+                    data_o = `ZeroWord;
                 end
             endcase
         end

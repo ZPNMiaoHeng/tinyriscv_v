@@ -83,16 +83,16 @@ module clint(
     // ÖĞ¶ÏÖÙ²ÃÂß¼­
     always @ (*) begin
         if (rst == `RstEnable) begin
-            int_state <= S_INT_IDLE;
+            int_state = S_INT_IDLE;
         end else begin
             if (inst_i == `INST_ECALL) begin
-                int_state <= S_INT_SYNC_ASSERT;
+                int_state = S_INT_SYNC_ASSERT;
             end else if (int_flag_i != `INT_NONE && global_int_en_i == `True) begin
-                int_state <= S_INT_ASYNC_ASSERT;
+                int_state = S_INT_ASYNC_ASSERT;
             end else if (inst_i == `INST_MRET) begin
-                int_state <= S_INT_MRET;
+                int_state = S_INT_MRET;
             end else begin
-                int_state <= S_INT_IDLE;
+                int_state = S_INT_IDLE;
             end
         end
     end

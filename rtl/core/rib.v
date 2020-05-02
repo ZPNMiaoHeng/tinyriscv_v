@@ -128,49 +128,49 @@ module rib(
     // 优先级由高到低：主设备0，主设备2，主设备1
     always @ (*) begin
         if (rst == `RstEnable) begin
-            next_grant <= grant1;
-            hold_flag_o <= `HoldDisable;
+            next_grant = grant1;
+            hold_flag_o = `HoldDisable;
         end else begin
             case (grant)
                 grant0: begin
                     if (req[0]) begin
-                        next_grant <= grant0;
-                        hold_flag_o <= `HoldEnable;
+                        next_grant = grant0;
+                        hold_flag_o = `HoldEnable;
                     end else if (req[2]) begin
-                        next_grant <= grant2;
-                        hold_flag_o <= `HoldEnable;
+                        next_grant = grant2;
+                        hold_flag_o = `HoldEnable;
                     end else begin
-                        next_grant <= grant1;
-                        hold_flag_o <= `HoldDisable;
+                        next_grant = grant1;
+                        hold_flag_o = `HoldDisable;
                     end
                 end
                 grant1: begin
                     if (req[0]) begin
-                        next_grant <= grant0;
-                        hold_flag_o <= `HoldEnable;
+                        next_grant = grant0;
+                        hold_flag_o = `HoldEnable;
                     end else if (req[2]) begin
-                        next_grant <= grant2;
-                        hold_flag_o <= `HoldEnable;
+                        next_grant = grant2;
+                        hold_flag_o = `HoldEnable;
                     end else begin
-                        next_grant <= grant1;
-                        hold_flag_o <= `HoldDisable;
+                        next_grant = grant1;
+                        hold_flag_o = `HoldDisable;
                     end
                 end
                 grant2: begin
                     if (req[0]) begin
-                        next_grant <= grant0;
-                        hold_flag_o <= `HoldEnable;
+                        next_grant = grant0;
+                        hold_flag_o = `HoldEnable;
                     end else if (req[2]) begin
-                        next_grant <= grant2;
-                        hold_flag_o <= `HoldEnable;
+                        next_grant = grant2;
+                        hold_flag_o = `HoldEnable;
                     end else begin
-                        next_grant <= grant1;
-                        hold_flag_o <= `HoldDisable;
+                        next_grant = grant1;
+                        hold_flag_o = `HoldDisable;
                     end
                 end
                 default: begin
-                    next_grant <= grant1;
-                    hold_flag_o <= `HoldDisable;
+                    next_grant = grant1;
+                    hold_flag_o = `HoldDisable;
                 end
             endcase
         end
@@ -179,104 +179,104 @@ module rib(
     // 根据授权结果，选择(访问)对应的从设备
     always @ (*) begin
         if (rst == `RstEnable) begin
-            m0_ack_o <= `RIB_NACK;
-            m1_ack_o <= `RIB_NACK;
-            m2_ack_o <= `RIB_NACK;
-            m0_data_o <= `ZeroWord;
-            m1_data_o <= `INST_NOP;
-            m2_data_o <= `ZeroWord;
+            m0_ack_o = `RIB_NACK;
+            m1_ack_o = `RIB_NACK;
+            m2_ack_o = `RIB_NACK;
+            m0_data_o = `ZeroWord;
+            m1_data_o = `INST_NOP;
+            m2_data_o = `ZeroWord;
 
-            s0_addr_o <= `ZeroWord;
-            s1_addr_o <= `ZeroWord;
-            s2_addr_o <= `ZeroWord;
-            s3_addr_o <= `ZeroWord;
-            s4_addr_o <= `ZeroWord;
-            s0_data_o <= `ZeroWord;
-            s1_data_o <= `ZeroWord;
-            s2_data_o <= `ZeroWord;
-            s3_data_o <= `ZeroWord;
-            s4_data_o <= `ZeroWord;
-            s0_req_o <= `RIB_NREQ;
-            s1_req_o <= `RIB_NREQ;
-            s2_req_o <= `RIB_NREQ;
-            s3_req_o <= `RIB_NREQ;
-            s4_req_o <= `RIB_NREQ;
-            s0_we_o <= `WriteDisable;
-            s1_we_o <= `WriteDisable;
-            s2_we_o <= `WriteDisable;
-            s3_we_o <= `WriteDisable;
-            s4_we_o <= `WriteDisable;
+            s0_addr_o = `ZeroWord;
+            s1_addr_o = `ZeroWord;
+            s2_addr_o = `ZeroWord;
+            s3_addr_o = `ZeroWord;
+            s4_addr_o = `ZeroWord;
+            s0_data_o = `ZeroWord;
+            s1_data_o = `ZeroWord;
+            s2_data_o = `ZeroWord;
+            s3_data_o = `ZeroWord;
+            s4_data_o = `ZeroWord;
+            s0_req_o = `RIB_NREQ;
+            s1_req_o = `RIB_NREQ;
+            s2_req_o = `RIB_NREQ;
+            s3_req_o = `RIB_NREQ;
+            s4_req_o = `RIB_NREQ;
+            s0_we_o = `WriteDisable;
+            s1_we_o = `WriteDisable;
+            s2_we_o = `WriteDisable;
+            s3_we_o = `WriteDisable;
+            s4_we_o = `WriteDisable;
         end else begin
-            m0_ack_o <= `RIB_NACK;
-            m1_ack_o <= `RIB_NACK;
-            m2_ack_o <= `RIB_NACK;
-            m0_data_o <= `ZeroWord;
-            m1_data_o <= `INST_NOP;
-            m2_data_o <= `ZeroWord;
+            m0_ack_o = `RIB_NACK;
+            m1_ack_o = `RIB_NACK;
+            m2_ack_o = `RIB_NACK;
+            m0_data_o = `ZeroWord;
+            m1_data_o = `INST_NOP;
+            m2_data_o = `ZeroWord;
 
-            s0_addr_o <= `ZeroWord;
-            s1_addr_o <= `ZeroWord;
-            s2_addr_o <= `ZeroWord;
-            s3_addr_o <= `ZeroWord;
-            s4_addr_o <= `ZeroWord;
-            s0_data_o <= `ZeroWord;
-            s1_data_o <= `ZeroWord;
-            s2_data_o <= `ZeroWord;
-            s3_data_o <= `ZeroWord;
-            s4_data_o <= `ZeroWord;
-            s0_req_o <= `RIB_NREQ;
-            s1_req_o <= `RIB_NREQ;
-            s2_req_o <= `RIB_NREQ;
-            s3_req_o <= `RIB_NREQ;
-            s4_req_o <= `RIB_NREQ;
-            s0_we_o <= `WriteDisable;
-            s1_we_o <= `WriteDisable;
-            s2_we_o <= `WriteDisable;
-            s3_we_o <= `WriteDisable;
-            s4_we_o <= `WriteDisable;
+            s0_addr_o = `ZeroWord;
+            s1_addr_o = `ZeroWord;
+            s2_addr_o = `ZeroWord;
+            s3_addr_o = `ZeroWord;
+            s4_addr_o = `ZeroWord;
+            s0_data_o = `ZeroWord;
+            s1_data_o = `ZeroWord;
+            s2_data_o = `ZeroWord;
+            s3_data_o = `ZeroWord;
+            s4_data_o = `ZeroWord;
+            s0_req_o = `RIB_NREQ;
+            s1_req_o = `RIB_NREQ;
+            s2_req_o = `RIB_NREQ;
+            s3_req_o = `RIB_NREQ;
+            s4_req_o = `RIB_NREQ;
+            s0_we_o = `WriteDisable;
+            s1_we_o = `WriteDisable;
+            s2_we_o = `WriteDisable;
+            s3_we_o = `WriteDisable;
+            s4_we_o = `WriteDisable;
 
             case (grant)
                 grant0: begin
                     case (m0_addr_i[31:28])
                         slave_0: begin
-                            s0_req_o <= m0_req_i;
-                            s0_we_o <= m0_we_i;
-                            s0_addr_o <= {{4'h0}, {m0_addr_i[27:0]}};
-                            s0_data_o <= m0_data_i;
-                            m0_ack_o <= s0_ack_i;
-                            m0_data_o <= s0_data_i;
+                            s0_req_o = m0_req_i;
+                            s0_we_o = m0_we_i;
+                            s0_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                            s0_data_o = m0_data_i;
+                            m0_ack_o = s0_ack_i;
+                            m0_data_o = s0_data_i;
                         end
                         slave_1: begin
-                            s1_req_o <= m0_req_i;
-                            s1_we_o <= m0_we_i;
-                            s1_addr_o <= {{4'h0}, {m0_addr_i[27:0]}};
-                            s1_data_o <= m0_data_i;
-                            m0_ack_o <= s1_ack_i;
-                            m0_data_o <= s1_data_i;
+                            s1_req_o = m0_req_i;
+                            s1_we_o = m0_we_i;
+                            s1_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                            s1_data_o = m0_data_i;
+                            m0_ack_o = s1_ack_i;
+                            m0_data_o = s1_data_i;
                         end
                         slave_2: begin
-                            s2_req_o <= m0_req_i;
-                            s2_we_o <= m0_we_i;
-                            s2_addr_o <= {{4'h0}, {m0_addr_i[27:0]}};
-                            s2_data_o <= m0_data_i;
-                            m0_ack_o <= s2_ack_i;
-                            m0_data_o <= s2_data_i;
+                            s2_req_o = m0_req_i;
+                            s2_we_o = m0_we_i;
+                            s2_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                            s2_data_o = m0_data_i;
+                            m0_ack_o = s2_ack_i;
+                            m0_data_o = s2_data_i;
                         end
                         slave_3: begin
-                            s3_req_o <= m0_req_i;
-                            s3_we_o <= m0_we_i;
-                            s3_addr_o <= {{4'h0}, {m0_addr_i[27:0]}};
-                            s3_data_o <= m0_data_i;
-                            m0_ack_o <= s3_ack_i;
-                            m0_data_o <= s3_data_i;
+                            s3_req_o = m0_req_i;
+                            s3_we_o = m0_we_i;
+                            s3_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                            s3_data_o = m0_data_i;
+                            m0_ack_o = s3_ack_i;
+                            m0_data_o = s3_data_i;
                         end
                         slave_4: begin
-                            s4_req_o <= m0_req_i;
-                            s4_we_o <= m0_we_i;
-                            s4_addr_o <= {{4'h0}, {m0_addr_i[27:0]}};
-                            s4_data_o <= m0_data_i;
-                            m0_ack_o <= s4_ack_i;
-                            m0_data_o <= s4_data_i;
+                            s4_req_o = m0_req_i;
+                            s4_we_o = m0_we_i;
+                            s4_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                            s4_data_o = m0_data_i;
+                            m0_ack_o = s4_ack_i;
+                            m0_data_o = s4_data_i;
                         end
                         default: begin
 
@@ -286,44 +286,44 @@ module rib(
                 grant1: begin
                     case (m1_addr_i[31:28])
                         slave_0: begin
-                            s0_req_o <= m1_req_i;
-                            s0_we_o <= m1_we_i;
-                            s0_addr_o <= {{4'h0}, {m1_addr_i[27:0]}};
-                            s0_data_o <= m1_data_i;
-                            m1_ack_o <= s0_ack_i;
-                            m1_data_o <= s0_data_i;
+                            s0_req_o = m1_req_i;
+                            s0_we_o = m1_we_i;
+                            s0_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                            s0_data_o = m1_data_i;
+                            m1_ack_o = s0_ack_i;
+                            m1_data_o = s0_data_i;
                         end
                         slave_1: begin
-                            s1_req_o <= m1_req_i;
-                            s1_we_o <= m1_we_i;
-                            s1_addr_o <= {{4'h0}, {m1_addr_i[27:0]}};
-                            s1_data_o <= m1_data_i;
-                            m1_ack_o <= s1_ack_i;
-                            m1_data_o <= s1_data_i;
+                            s1_req_o = m1_req_i;
+                            s1_we_o = m1_we_i;
+                            s1_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                            s1_data_o = m1_data_i;
+                            m1_ack_o = s1_ack_i;
+                            m1_data_o = s1_data_i;
                         end
                         slave_2: begin
-                            s2_req_o <= m1_req_i;
-                            s2_we_o <= m1_we_i;
-                            s2_addr_o <= {{4'h0}, {m1_addr_i[27:0]}};
-                            s2_data_o <= m1_data_i;
-                            m1_ack_o <= s2_ack_i;
-                            m1_data_o <= s2_data_i;
+                            s2_req_o = m1_req_i;
+                            s2_we_o = m1_we_i;
+                            s2_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                            s2_data_o = m1_data_i;
+                            m1_ack_o = s2_ack_i;
+                            m1_data_o = s2_data_i;
                         end
                         slave_3: begin
-                            s3_req_o <= m1_req_i;
-                            s3_we_o <= m1_we_i;
-                            s3_addr_o <= {{4'h0}, {m1_addr_i[27:0]}};
-                            s3_data_o <= m1_data_i;
-                            m1_ack_o <= s3_ack_i;
-                            m1_data_o <= s3_data_i;
+                            s3_req_o = m1_req_i;
+                            s3_we_o = m1_we_i;
+                            s3_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                            s3_data_o = m1_data_i;
+                            m1_ack_o = s3_ack_i;
+                            m1_data_o = s3_data_i;
                         end
                         slave_4: begin
-                            s4_req_o <= m1_req_i;
-                            s4_we_o <= m1_we_i;
-                            s4_addr_o <= {{4'h0}, {m1_addr_i[27:0]}};
-                            s4_data_o <= m1_data_i;
-                            m1_ack_o <= s4_ack_i;
-                            m1_data_o <= s4_data_i;
+                            s4_req_o = m1_req_i;
+                            s4_we_o = m1_we_i;
+                            s4_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                            s4_data_o = m1_data_i;
+                            m1_ack_o = s4_ack_i;
+                            m1_data_o = s4_data_i;
                         end
                         default: begin
 
@@ -333,44 +333,44 @@ module rib(
                 grant2: begin
                     case (m2_addr_i[31:28])
                         slave_0: begin
-                            s0_req_o <= m2_req_i;
-                            s0_we_o <= m2_we_i;
-                            s0_addr_o <= {{4'h0}, {m2_addr_i[27:0]}};
-                            s0_data_o <= m2_data_i;
-                            m2_ack_o <= s0_ack_i;
-                            m2_data_o <= s0_data_i;
+                            s0_req_o = m2_req_i;
+                            s0_we_o = m2_we_i;
+                            s0_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                            s0_data_o = m2_data_i;
+                            m2_ack_o = s0_ack_i;
+                            m2_data_o = s0_data_i;
                         end
                         slave_1: begin
-                            s1_req_o <= m2_req_i;
-                            s1_we_o <= m2_we_i;
-                            s1_addr_o <= {{4'h0}, {m2_addr_i[27:0]}};
-                            s1_data_o <= m2_data_i;
-                            m2_ack_o <= s1_ack_i;
-                            m2_data_o <= s1_data_i;
+                            s1_req_o = m2_req_i;
+                            s1_we_o = m2_we_i;
+                            s1_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                            s1_data_o = m2_data_i;
+                            m2_ack_o = s1_ack_i;
+                            m2_data_o = s1_data_i;
                         end
                         slave_2: begin
-                            s2_req_o <= m2_req_i;
-                            s2_we_o <= m2_we_i;
-                            s2_addr_o <= {{4'h0}, {m2_addr_i[27:0]}};
-                            s2_data_o <= m2_data_i;
-                            m2_ack_o <= s2_ack_i;
-                            m2_data_o <= s2_data_i;
+                            s2_req_o = m2_req_i;
+                            s2_we_o = m2_we_i;
+                            s2_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                            s2_data_o = m2_data_i;
+                            m2_ack_o = s2_ack_i;
+                            m2_data_o = s2_data_i;
                         end
                         slave_3: begin
-                            s3_req_o <= m2_req_i;
-                            s3_we_o <= m2_we_i;
-                            s3_addr_o <= {{4'h0}, {m2_addr_i[27:0]}};
-                            s3_data_o <= m2_data_i;
-                            m2_ack_o <= s3_ack_i;
-                            m2_data_o <= s3_data_i;
+                            s3_req_o = m2_req_i;
+                            s3_we_o = m2_we_i;
+                            s3_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                            s3_data_o = m2_data_i;
+                            m2_ack_o = s3_ack_i;
+                            m2_data_o = s3_data_i;
                         end
                         slave_4: begin
-                            s4_req_o <= m2_req_i;
-                            s4_we_o <= m2_we_i;
-                            s4_addr_o <= {{4'h0}, {m2_addr_i[27:0]}};
-                            s4_data_o <= m2_data_i;
-                            m2_ack_o <= s4_ack_i;
-                            m2_data_o <= s4_data_i;
+                            s4_req_o = m2_req_i;
+                            s4_we_o = m2_we_i;
+                            s4_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                            s4_data_o = m2_data_i;
+                            m2_ack_o = s4_ack_i;
+                            m2_data_o = s4_data_i;
                         end
                         default: begin
 
