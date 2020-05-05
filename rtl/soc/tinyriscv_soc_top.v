@@ -33,7 +33,12 @@ module tinyriscv_soc_top(
     input wire jtag_TCK,     // JTAG TCK引脚
     input wire jtag_TMS,     // JTAG TMS引脚
     input wire jtag_TDI,     // JTAG TDI引脚
-    output wire jtag_TDO     // JTAG TDO引脚
+    output wire jtag_TDO,    // JTAG TDO引脚
+
+    input wire spi_miso,     // SPI MISO引脚
+    output wire spi_mosi,    // SPI MOSI引脚
+    output wire spi_ss,      // SPI SS引脚
+    output wire spi_clk      // SPI CLK引脚
 
     );
 
@@ -101,6 +106,14 @@ module tinyriscv_soc_top(
     wire s4_ack_i;
     wire s4_req_o;
     wire s4_we_o;
+
+    // slave 5 interface
+    wire[`MemAddrBus] s5_addr_o;
+    wire[`MemBus] s5_data_o;
+    wire[`MemBus] s5_data_i;
+    wire s5_ack_i;
+    wire s5_req_o;
+    wire s5_we_o;
 
     // rib
     wire rib_hold_flag_o;
@@ -227,6 +240,22 @@ module tinyriscv_soc_top(
         .io_pin(io_pin)
     );
 
+    // spi模块例化
+    spi spi_0(
+        .clk(clk),
+        .rst(rst),
+        .data_i(s5_data_o),
+        .addr_i(s5_addr_o),
+        .we_i(s5_we_o),
+        .req_i(s5_req_o),
+        .data_o(s5_data_i),
+        .ack_o(s5_ack_i),
+        .spi_mosi(spi_mosi),
+        .spi_miso(spi_miso),
+        .spi_ss(spi_ss),
+        .spi_clk(spi_clk)
+    );
+
     // rib模块例化
     rib u_rib(
         .clk(clk),
@@ -295,6 +324,14 @@ module tinyriscv_soc_top(
         .s4_ack_i(s4_ack_i),
         .s4_req_o(s4_req_o),
         .s4_we_o(s4_we_o),
+
+        // slave 5 interface
+        .s5_addr_o(s5_addr_o),
+        .s5_data_o(s5_data_o),
+        .s5_data_i(s5_data_i),
+        .s5_ack_i(s5_ack_i),
+        .s5_req_o(s5_req_o),
+        .s5_we_o(s5_we_o),
 
         .hold_flag_o(rib_hold_flag_o)
     );
