@@ -19,6 +19,8 @@ C_SRCS += $(COMMON_DIR)/init.c
 C_SRCS += $(COMMON_DIR)/lib/utils.c
 C_SRCS += $(COMMON_DIR)/lib/xprintf.c
 C_SRCS += $(COMMON_DIR)/lib/uart.c
+C_SRCS += $(COMMON_DIR)/lib/flash_n25q.c
+C_SRCS += $(COMMON_DIR)/lib/spi.c
 
 LINKER_SCRIPT := $(COMMON_DIR)/link.lds
 
