@@ -40,7 +40,7 @@ tinyriscv的整体框架如下：
 
 ![tinyriscv整体框架](./pic/arch.jpg)
 
-tinyriscv目前外挂了5个外设，每个外设的空间大小为256MB，地址空间分配如下图所示：
+tinyriscv目前外挂了6个外设，每个外设的空间大小为256MB，地址空间分配如下图所示：
 
 <img src="./pic/addr_alloc.jpg" alt="地址空间分配" style="zoom:70%;" />
 
@@ -116,11 +116,13 @@ C语言程序例程位于tests\example目录里。
 
 1. 写设计文档；
 
-2. 支持SPI norflash；
+2. 支持通过UART烧写固件；
 
 3. ......
 
 # 7.更新记录
+
+2020-05-05：支持spi master，增加spi测试例程。
 
 2020-04-25：支持FreeRTOS(v10.3.1)。
 
