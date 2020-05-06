@@ -36,3 +36,17 @@ set_property PACKAGE_PIN N2 [get_ports jtag_TDI]
 
 set_property IOSTANDARD LVCMOS33 [get_ports jtag_TDO]
 set_property PACKAGE_PIN M1 [get_ports jtag_TDO]
+
+# SPI pin
+set_property IOSTANDARD LVCMOS33 [get_ports spi_miso]
+set_property PACKAGE_PIN P1 [get_ports spi_miso]
+
+set_property IOSTANDARD LVCMOS33 [get_ports spi_mosi]
+set_property PACKAGE_PIN N1 [get_ports spi_mosi]
+
+set_property IOSTANDARD LVCMOS33 [get_ports spi_ss]
+set_property PACKAGE_PIN M5 [get_ports spi_ss]
+
+set_property IOSTANDARD LVCMOS33 [get_ports spi_clk]
+set_property PACKAGE_PIN N4 [get_ports spi_clk]
+
