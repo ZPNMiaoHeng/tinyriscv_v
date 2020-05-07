@@ -1028,7 +1028,7 @@ module ex(
                     jump_flag = `JumpDisable;
                     reg_wdata = {inst_i[31:12], 12'b0} + inst_addr_i;
                 end
-                `INST_NOP: begin
+                `INST_NOP_OP: begin
                     jump_flag = `JumpDisable;
                     hold_flag = `HoldDisable;
                     jump_addr = `ZeroWord;

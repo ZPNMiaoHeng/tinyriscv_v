@@ -232,7 +232,7 @@ module id(
                     reg1_raddr_o = `ZeroReg;
                     reg2_raddr_o = `ZeroReg;
                 end
-                `INST_NOP: begin
+                `INST_NOP_OP: begin
                     reg_we_o = `WriteDisable;
                     reg_waddr_o = `ZeroReg;
                     reg1_raddr_o = `ZeroReg;
