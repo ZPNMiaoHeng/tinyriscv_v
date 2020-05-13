@@ -30,14 +30,14 @@ module jtag_top(
     output wire jtag_pin_TDO,
 
     output reg reg_we_o,
-    output reg[4:0] reg_addr_o,
-    output reg[31:0] reg_wdata_o,
+    output wire[4:0] reg_addr_o,
+    output wire[31:0] reg_wdata_o,
     input wire[31:0] reg_rdata_i,
     output reg mem_we_o,
-    output reg[31:0] mem_addr_o,
-    output reg[31:0] mem_wdata_o,
+    output wire[31:0] mem_addr_o,
+    output wire[31:0] mem_wdata_o,
     input wire[31:0] mem_rdata_i,
-    output reg op_req_o,
+    output wire op_req_o,
 
     output reg halt_req_o,
     output reg reset_req_o
@@ -78,26 +78,23 @@ module jtag_top(
     reg tmp_reset_req_o;
 
 
+    assign reg_addr_o = dm_reg_addr_o;
+    assign reg_wdata_o = dm_reg_wdata_o;
+    assign mem_addr_o = dm_mem_addr_o;
+    assign mem_wdata_o = dm_mem_wdata_o;
+    assign op_req_o = dm_op_req_o;
+
+
     // 打第一拍
     always @ (posedge clk) begin
         if (!jtag_rst_n) begin
             tmp_reg_we_o <= `WriteDisable;
-            tmp_reg_addr_o <= `ZeroReg;
-            tmp_reg_wdata_o <= `ZeroWord;
             tmp_mem_we_o <= `WriteDisable;
-            tmp_mem_addr_o <= `ZeroWord;
-            tmp_mem_wdata_o <= `ZeroWord;
-            tmp_op_req_o <= 1'b0;
             tmp_halt_req_o <= 1'b0;
             tmp_reset_req_o <= 1'b0;
         end else begin
             tmp_reg_we_o <= dm_reg_we_o;
-            tmp_reg_addr_o <= dm_reg_addr_o;
-            tmp_reg_wdata_o <= dm_reg_wdata_o;
             tmp_mem_we_o <= dm_mem_we_o;
-            tmp_mem_addr_o <= dm_mem_addr_o;
-            tmp_mem_wdata_o <= dm_mem_wdata_o;
-            tmp_op_req_o <= dm_op_req_o;
             tmp_halt_req_o <= dm_halt_req_o;
             tmp_reset_req_o <= dm_reset_req_o;
         end
@@ -107,22 +104,12 @@ module jtag_top(
     always @ (posedge clk) begin
         if (!jtag_rst_n) begin
             reg_we_o <= `WriteDisable;
-            reg_addr_o <= `ZeroReg;
-            reg_wdata_o <= `ZeroWord;
             mem_we_o <= `WriteDisable;
-            mem_addr_o <= `ZeroWord;
-            mem_wdata_o <= `ZeroWord;
-            op_req_o <= 1'b0;
             halt_req_o <= 1'b0;
             reset_req_o <= 1'b0;
         end else begin
             reg_we_o <= tmp_reg_we_o;
-            reg_addr_o <= tmp_reg_addr_o;
-            reg_wdata_o <= tmp_reg_wdata_o;
             mem_we_o <= tmp_mem_we_o;
-            mem_addr_o <= tmp_mem_addr_o;
-            mem_wdata_o <= tmp_mem_wdata_o;
-            op_req_o <= tmp_op_req_o;
             halt_req_o <= tmp_halt_req_o;
             reset_req_o <= tmp_reset_req_o;
         end
