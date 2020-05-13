@@ -1,12 +1,14 @@
 # 1.概述
 
-介绍如何将tinyriscv移植到FPGA平台上。
+介绍如何将tinyriscv移植到FPGA平台上和如何通过JTAG下载程序到FPGA。
 
 1.软件：xilinx vivado(以2018.1版本为例)开发环境。
 
 2.FPGA：xilinx Artix-7 35T。
 
-# 2.步骤
+3.调试器：CMSIS-DAP或者DAPLink。
+
+# 2.FPGA移植步骤
 
 ## 2.1创建工程
 
@@ -113,3 +115,44 @@
 ![](./images/download_4.png)
 
 至此，即可将Bitstream文件下载到FPGA。
+
+# 3.下载程序到FPGA
+
+将CMSIS-DAP调试器连接好FPGA板子和PC电脑。
+
+打开一个CMD窗口，然后cd进入到tinyriscv项目的tools/openocd目录，执行命令：
+
+`openocd.exe -f tinyriscv.cfg`
+
+如果执行成功的话则会如下图所示：
+
+![openocd](./images/openocd.png)
+
+然后打开另一个CMD窗口，执行以下命令来连接openocd，注意电脑要启用telnet host服务。
+
+`telnet localhost 4444`
+
+接着执行以下命令来停住CPU：
+
+`halt`
+
+使用load_image命令将固件下载到FPGA，这里以freertos.bin文件为例，以下所示：
+
+`load_image D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x0 bin 0x0 0x1000000`
+
+使用verify_image命令来校验是否下载成功，如下所示：
+
+`verify_image D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x0`
+
+如果下载出错的话会有提示的，没有提示则说明下载成功。
+
+最后断开与openocd的连接：
+
+`exit`
+
+整个下载过程如下图所示：
+
+![openocd_cli](./images/openocd_cli.png)
+
+退出openocd服务(ctrl+c)，按一下FPGA板子上的复位按键即可开始运行程序。
+
