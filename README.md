@@ -1,4 +1,4 @@
-与本项目配套的设计文档[《从零开始写RISC-V处理器》](https://liangkangnan.gitee.io/2020/04/29/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99RISC-V%E5%A4%84%E7%90%86%E5%99%A8/)，目前大纲已经出来了，内容持续更新中。
+与本项目配套的设计文档[《从零开始写RISC-V处理器》](https://liangkangnan.gitee.io/2020/04/29/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99RISC-V%E5%A4%84%E7%90%86%E5%99%A8/)，内容持续更新中。
 
 # 1.初衷
 
