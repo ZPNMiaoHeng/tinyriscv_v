@@ -136,7 +136,7 @@
 
 `halt`
 
-使用load_image命令将固件下载到FPGA，这里以freertos.bin文件为例，以下所示：
+使用load_image命令将固件下载到FPGA，这里以freertos.bin文件为例，如下所示：
 
 `load_image D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x0 bin 0x0 0x1000000`
 
@@ -156,3 +156,14 @@
 
 退出openocd服务(ctrl+c)，按一下FPGA板子上的复位按键即可开始运行程序。
 
+# 4.Vivado仿真设置
+
+如果要在vivado里进行RTL仿真的话，还需要添加sim目录里的tinyriscv_soc_tb.v文件，具体方法和添加RTL源文件类似，只是在源文件类型里选择simulation sources，如下图所示：
+
+![add_sim](./images/add_sim.png)
+
+最后设置一下define.v文件的路径，如下图所示：
+
+![defines](./images/defines.png)
+
+设置完成后，即可进行RTL仿真。
