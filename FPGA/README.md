@@ -166,4 +166,13 @@
 
 ![defines](./images/defines.png)
 
+最后，还要指定inst.data文件的路径，即修改tinyriscv_soc_tb.v文件里的下面这一行：
+
+```
+    // read mem data
+    initial begin
+        $readmemh ("F://yourpath/inst.data", tinyriscv_soc_top_0.u_rom._rom);
+    end
+```
+
 设置完成后，即可进行RTL仿真。
