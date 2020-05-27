@@ -158,7 +158,7 @@
 
 # 4.Vivado仿真设置
 
-如果要在vivado里进行RTL仿真的话，还需要添加sim目录里的tinyriscv_soc_tb.v文件，具体方法和添加RTL源文件类似，只是在源文件类型里选择simulation sources，如下图所示：
+如果要在vivado里进行RTL仿真的话，还需要添加tb目录里的tinyriscv_soc_tb.v文件，具体方法和添加RTL源文件类似，只是在源文件类型里选择simulation sources，如下图所示：
 
 ![add_sim](./images/add_sim.png)
 
