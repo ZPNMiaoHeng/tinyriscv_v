@@ -12,7 +12,7 @@
 
 # 2.介绍
 
-本项目实现的是一个单核32位的小型RISC-V处理器核(tinyriscv)，采用verilog语言编写。tinyriscv有以下特点：
+本项目实现的是一个单核32位的小型RISC-V处理器核(tinyriscv)，采用verilog语言编写。设计目标是对标ARM Cortex-M3系列处理器。tinyriscv有以下特点：
 
 1. 支持RV32IM指令集，通过RISC-V指令兼容性测试；
 3. 采用三级流水线，即取指，译码，执行；
@@ -33,6 +33,8 @@
 **tools**：该目录包含编译汇编和c语言程序所需GNU工具链和将二进制文件转成仿真所需的mem格式文件的工具BinToMem。BinToMem\_CLI.exe需要在cmd窗口下执行，BinToMem\_GUI.exe提供图形界面，双击即可运行；
 
 **pic**：存放图片；
+
+**tb**：testbench文件；
 
 **FPGA**：存放FPGA相关文件，如约束文件；
 
@@ -78,9 +80,17 @@ tinyriscv目前外挂了6个外设，每个外设的空间大小为256MB，地�
 
 可以通过百度网盘下载(链接: https://pan.baidu.com/s/1nFaUIwv171PDXuF7TziDFg 提取码: 9ntc)，或者通过微云下载[https://share.weiyun.com/59xtmWR](https://share.weiyun.com/59xtmWR)，下载完成后直接解压，然后将make所在的路径添加到环境变量里。
 
+4. 安装python3
+
+到python官网下载安装win版本的python，注意要下载python3版本的。网速慢的同学可以通过百度网盘下载(链接: https://pan.baidu.com/s/1gNC8L5dZTsN6E5TJD2rmnQ 提取码: 3b4t)，或者通过微云下载[https://share.weiyun.com/XwzSQHND](https://share.weiyun.com/XwzSQHND)。安装完后将python添加到环境变量里。
+
 ## 4.2运行指令测试程序
 
-下面以add指令为例，说明如何运行指令测试程序。
+### 4.2.1 运行旧的指令测试程序
+
+旧的指令测试程序属于比较早的指令兼容性测试方法，虽然目前RISC-V官方已经不更新了，但仍然是一个比较好的测试参考。
+
+下面以add指令为例，说明如何运行旧的指令测试程序。
 
 打开CMD窗口，进入到sim目录，执行以下命令：
 
@@ -89,6 +99,28 @@ tinyriscv目前外挂了6个外设，每个外设的空间大小为256MB，地�
 如果运行成功的话就可以看到&quot;PASS&quot;的打印。其他指令使用方法类似。
 
 ![](./pic/test_output.png)
+
+也可以一次性对所有指令进行测试，方法如下。
+
+打开CMD窗口进入到sim目录下，执行以下命令：
+
+`python .\test_all_isa.py`
+
+### 4.2.2运行新的指令测试程序
+
+新的指令兼容性([riscv-compliance](https://github.com/riscv/riscv-compliance))测试项相对于旧的指令兼容性测试项来说对指令的测试更加严谨，可以精确到每一条指令的运行结果，而且RISC-V官方一直在更新。
+
+下面以add指令为例，说明如何运行新的指令测试程序。
+
+打开CMD窗口，进入到sim/compliance_test目录，执行以下命令：
+
+`python compliance_test.py ..\..\tests\riscv-compliance\build_generated\rv32i\I-ADD-01.elf.bin inst.data`
+
+如果运行成功的话就可以看到&quot;PASS&quot;的打印。其他指令使用方法类似。
+
+![new_test_output](./pic/new_test_output.png)
+
+目前只测试了几条指令，还没全部指令测试过一遍。如有遇到测试失败的指令，可先自行通过查看波形定位问题所在。
 
 ## 4.3运行C语言程序
 
@@ -121,6 +153,8 @@ C语言程序例程位于tests\example目录里。
 3. ......
 
 # 7.更新记录
+
+2020-05-27：增加新的指令兼容性(riscv-compliance)测试项。
 
 2020-05-05：支持spi master，增加spi测试例程。
 
