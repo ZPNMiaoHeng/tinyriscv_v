@@ -84,7 +84,7 @@
 
 ![](./images/add_src_7.png)
 
-勾选上Copy constraints files into project，然后点击Finish按钮。
+勾选上Copy constraints files into project，然后点击Finish按钮。**如果你的开发板和我的不一样，则需要将约束文件里的引脚配置改成你的开发板上对应的引脚**。
 
 至此，约束文件添加完成。
 
@@ -154,7 +154,9 @@
 
 ![openocd_cli](./images/openocd_cli.png)
 
-退出openocd服务(ctrl+c)，按一下FPGA板子上的复位按键即可开始运行程序。
+**注意：下载完成后需要退出openocd服务(ctrl+c)，然后按一下FPGA板子上的复位按键即可开始运行程序。**
+
+不要通过reset或者resume命令来运行程序。
 
 # 4.Vivado仿真设置
 
