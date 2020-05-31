@@ -170,32 +170,32 @@ module csr_reg(
     // clint模块读CSR寄存器
     always @ (*) begin
         if (rst == `RstEnable) begin
-            clint_data_o <= `ZeroWord;
+            clint_data_o = `ZeroWord;
         end else begin
             case (clint_raddr_i[11:0])
                 `CSR_CYCLE: begin
-                    clint_data_o <= cycle[31:0];
+                    clint_data_o = cycle[31:0];
                 end
                 `CSR_CYCLEH: begin
-                    clint_data_o <= cycle[63:32];
+                    clint_data_o = cycle[63:32];
                 end
                 `CSR_MTVEC: begin
-                    clint_data_o <= mtvec;
+                    clint_data_o = mtvec;
                 end
                 `CSR_MCAUSE: begin
-                    clint_data_o <= mcause;
+                    clint_data_o = mcause;
                 end
                 `CSR_MEPC: begin
-                    clint_data_o <= mepc;
+                    clint_data_o = mepc;
                 end
                 `CSR_MIE: begin
-                    clint_data_o <= mie;
+                    clint_data_o = mie;
                 end
                 `CSR_MSTATUS: begin
-                    clint_data_o <= mstatus;
+                    clint_data_o = mstatus;
                 end
                 default: begin
-                    clint_data_o <= `ZeroWord;
+                    clint_data_o = `ZeroWord;
                 end
             endcase
         end

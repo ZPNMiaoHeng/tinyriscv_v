@@ -66,39 +66,39 @@ module regs(
     // 读寄存器1
     always @ (*) begin
         if (rst == `RstEnable) begin
-            rdata1_o <= `ZeroWord;
+            rdata1_o = `ZeroWord;
         end else if (raddr1_i == `RegNumLog2'h0) begin
-            rdata1_o <= `ZeroWord;
+            rdata1_o = `ZeroWord;
         // 如果读地址等于写地址，并且正在写操作，则直接返回写数据
         end else if (raddr1_i == waddr_i && we_i == `WriteEnable) begin
-            rdata1_o <= wdata_i;
+            rdata1_o = wdata_i;
         end else begin
-            rdata1_o <= regs[raddr1_i];
+            rdata1_o = regs[raddr1_i];
         end
     end
 
     // 读寄存器2
     always @ (*) begin
         if (rst == `RstEnable) begin
-            rdata2_o <= `ZeroWord;
+            rdata2_o = `ZeroWord;
         end else if (raddr2_i == `RegNumLog2'h0) begin
-            rdata2_o <= `ZeroWord;
+            rdata2_o = `ZeroWord;
         // 如果读地址等于写地址，并且正在写操作，则直接返回写数据
         end else if (raddr2_i == waddr_i && we_i == `WriteEnable) begin
-            rdata2_o <= wdata_i;
+            rdata2_o = wdata_i;
         end else begin
-            rdata2_o <= regs[raddr2_i];
+            rdata2_o = regs[raddr2_i];
         end
     end
 
     // jtag读寄存器
     always @ (*) begin
         if (rst == `RstEnable) begin
-            jtag_data_o <= `ZeroWord;
+            jtag_data_o = `ZeroWord;
         end else if (jtag_addr_i == `RegNumLog2'h0) begin
-            jtag_data_o <= `ZeroWord;
+            jtag_data_o = `ZeroWord;
         end else begin
-            jtag_data_o <= regs[jtag_addr_i];
+            jtag_data_o = regs[jtag_addr_i];
         end
     end
 
