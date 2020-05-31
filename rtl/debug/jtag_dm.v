@@ -85,6 +85,7 @@ module jtag_dm(
     reg[DTM_REQ_BITS - 1:0] req_data;
     reg is_halted;
     reg is_reseted;
+    reg is_read_reg;
 
     // DM regs
     reg[31:0] dcsr;
@@ -142,6 +143,7 @@ module jtag_dm(
             dm_mem_wdata <= 32'h0;
             address <= 6'h0;
             dmstatus <= 32'h0;
+            is_read_reg <= 1'b0;
         end else begin
             if (state == STATE_IDLE) begin
                 dm_mem_we <= 1'b0;
@@ -154,7 +156,13 @@ module jtag_dm(
                     address <= dtm_req_data[DTM_REQ_BITS - 1:DMI_DATA_BITS + DMI_OP_BITS];
                     req_data <= dtm_req_data;
                     dm_is_busy <= 1'b1;
-                    dm_op_req <= 1'b1;
+                    if ((dtm_req_data[DMI_OP_BITS - 1:0] == `DTM_OP_READ &&
+                        dtm_req_data[DTM_REQ_BITS - 1:DMI_DATA_BITS + DMI_OP_BITS] == DMSTATUS) ||
+                        (dtm_req_data[DMI_OP_BITS - 1:0] == `DTM_OP_NOP)) begin
+                        dm_op_req <= 1'b0;
+                    end else begin
+                        dm_op_req <= 1'b1;
+                    end
                 end else begin
                     dm_op_req <= 1'b0;
                 end
@@ -195,7 +203,12 @@ module jtag_dm(
                             DATA0: begin
                                 dm_is_busy <= 1'b0;
                                 state <= STATE_IDLE;
-                                dm_resp_data <= {address, data0, OP_SUCC};
+                                if (is_read_reg == 1'b1) begin
+                                    dm_resp_data <= {address, dm_reg_rdata, OP_SUCC};
+                                end else begin
+                                    dm_resp_data <= {address, data0, OP_SUCC};
+                                end
+                                is_read_reg <= 1'b0;
                             end
 
                             SBDATA0: begin
@@ -224,7 +237,7 @@ module jtag_dm(
                                 // reset DM module
                                 if (data[0] == 1'b0) begin
                                     dcsr <= 32'hc0;
-                                    dmstatus <= 32'h400982;  // not halted, all running
+                                    dmstatus <= 32'h430c82;  // not halted, all running
                                     hartinfo <= 32'h0;
                                     sbcs <= 32'h20040404;
                                     abstractcs <= 32'h1000003;
@@ -237,37 +250,18 @@ module jtag_dm(
                                 end else begin
                                     // we have only one hart
                                     dmcontrol <= (data & ~(32'h3fffc0)) | 32'h10000;
-                                    // reset
-                                    if (data[1] == 1'b1) begin
-                                        dm_reset_req <= 1'b1;
-                                        is_reseted <= 1'b1;
-                                        // halt after reset
-                                        if (data[31] == 1'b1) begin
-                                            is_halted <= 1'b1;
-                                            dm_halt_req <= 1'b1;
-                                        // run after reset
-                                        end else begin
-                                            is_halted <= 1'b0;
-                                            dm_halt_req <= 1'b0;
-                                        end
-                                        dmstatus <= dmstatus & (~(32'h800));  // ALLRUNNING = 0
-                                    // dereset
-                                    end else if (is_reseted == 1'b1 && data[1] == 1'b0) begin
-                                        dm_reset_req <= 1'b0;
-                                        is_reseted <= 1'b0;
-                                        dmstatus <= dmstatus | 32'h800;       // ALLRUNNING = 1
                                     // halt
-                                    end else if (data[31] == 1'b1) begin
+                                    if (data[31] == 1'b1) begin
                                         dm_halt_req <= 1'b1;
                                         is_halted <= 1'b1;
-                                        // clear ALLRESUMEACK and set ALLHALTED
-                                        dmstatus <= dmstatus | 32'h200 & (~32'h20000);
+                                        // clear ALLRUNNING ANYRUNNING and set ALLHALTED
+                                        dmstatus <= {dmstatus[31:12], 4'h3, dmstatus[7:0]};
                                     // resume
                                     end else if (is_halted == 1'b1 && data[30] == 1'b1) begin
                                         dm_halt_req <= 1'b0;
                                         is_halted <= 1'b0;
-                                        // set ALLRESUMEACK and clear ALLHALTED
-                                        dmstatus <= dmstatus & (~32'h200) | (32'h20000);
+                                        // set ALLRUNNING ANYRUNNING and clear ALLHALTED
+                                        dmstatus <= {dmstatus[31:12], 4'hc, dmstatus[7:0]};
                                     end
                                 end
                                 dm_is_busy <= 1'b0;
@@ -288,12 +282,22 @@ module jtag_dm(
                                             if (data[16] == 1'b0) begin
                                                 if (data[15:0] == DCSR) begin
                                                     data0 <= dcsr;
+                                                end else if (data[15:0] < 16'h1020) begin
+                                                    dm_reg_addr <= data[15:0] - 16'h1000;
+                                                    is_read_reg <= 1'b1;
                                                 end
                                             // write
                                             end else begin
                                                 // when write dpc, we reset cpu here
                                                 if (data[15:0] == DPC) begin
                                                     dm_reset_req <= 1'b1;
+                                                    dm_halt_req <= 1'b0;
+                                                    is_halted <= 1'b0;
+                                                    dmstatus <= {dmstatus[31:12], 4'hc, dmstatus[7:0]};
+                                                end else if (data[15:0] < 16'h1020) begin
+                                                    dm_reg_we <= 1'b1;
+                                                    dm_reg_addr <= data[15:0] - 16'h1000;
+                                                    dm_reg_wdata <= data0;
                                                 end
                                             end
                                         end
