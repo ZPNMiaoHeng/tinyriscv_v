@@ -36,7 +36,7 @@
 
 **tb**：testbench文件；
 
-**FPGA**：存放FPGA相关文件，如约束文件；
+**fpga**：存放FPGA相关文件，如约束文件；
 
 tinyriscv的整体框架如下：
 
@@ -142,7 +142,7 @@ C语言程序例程位于tests\example目录里。
 
 # 5.移植到FPGA
 
-详细的移植方法请查看本项目下的FPGA目录中的README.md文件。
+详细的移植方法请查看本项目下的fpga目录中的README.md文件。
 
 # 6.未来计划
 
