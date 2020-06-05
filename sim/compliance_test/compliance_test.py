@@ -67,10 +67,10 @@ def get_reference_file(bin_file):
     #print('bin prefix: %s' % prefix)
 
     files = []
-    if (bin_file.find('rv32i') != -1):
-        files = list_ref_files(r'..\..\tests\riscv-compliance\riscv-test-suite\rv32i\references')
-    elif (bin_file.find('rv32im') != -1):
+    if (bin_file.find('rv32im') != -1):
         files = list_ref_files(r'..\..\tests\riscv-compliance\riscv-test-suite\rv32im\references')
+    elif (bin_file.find('rv32i') != -1):
+        files = list_ref_files(r'..\..\tests\riscv-compliance\riscv-test-suite\rv32i\references')
     elif (bin_file.find('rv32Zicsr') != -1):
         files = list_ref_files(r'..\..\tests\riscv-compliance\riscv-test-suite\rv32Zicsr\references')
     elif (bin_file.find('rv32Zifencei') != -1):
