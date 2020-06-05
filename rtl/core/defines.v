@@ -143,6 +143,7 @@
 `define CSR_MEPC    12'h341
 `define CSR_MIE     12'h304
 `define CSR_MSTATUS 12'h300
+`define CSR_MSCRATCH 12'h340
 
 `define RomNum 4096  // rom depth(how many words)
 

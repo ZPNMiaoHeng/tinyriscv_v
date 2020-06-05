@@ -54,6 +54,7 @@ module csr_reg(
     reg[`RegBus] mepc;
     reg[`RegBus] mie;
     reg[`RegBus] mstatus;
+    reg[`RegBus] mscratch;
 
 
     assign global_int_en_o = (mstatus[3] == 1'b1)? `True: `False;
@@ -82,6 +83,7 @@ module csr_reg(
             mepc <= `ZeroWord;
             mie <= `ZeroWord;
             mstatus <= `ZeroWord;
+            mscratch <= `ZeroWord;
         end else begin
             // 优先响应ex模块的写操作
             if (we_i == `WriteEnable) begin
@@ -100,6 +102,9 @@ module csr_reg(
                     end
                     `CSR_MSTATUS: begin
                         mstatus <= data_i;
+                    end
+                    `CSR_MSCRATCH: begin
+                        mscratch <= data_i;
                     end
                     default: begin
 
@@ -123,6 +128,9 @@ module csr_reg(
                     `CSR_MSTATUS: begin
                         mstatus <= clint_data_i;
                     end
+                    `CSR_MSCRATCH: begin
+                        mscratch <= clint_data_i;
+                    end
                     default: begin
 
                     end
@@ -137,32 +145,39 @@ module csr_reg(
         if (rst == `RstEnable) begin
             data_o = `ZeroWord;
         end else begin
-            case (raddr_i[11:0])
-                `CSR_CYCLE: begin
-                    data_o = cycle[31:0];
-                end
-                `CSR_CYCLEH: begin
-                    data_o = cycle[63:32];
-                end
-                `CSR_MTVEC: begin
-                    data_o = mtvec;
-                end
-                `CSR_MCAUSE: begin
-                    data_o = mcause;
-                end
-                `CSR_MEPC: begin
-                    data_o = mepc;
-                end
-                `CSR_MIE: begin
-                    data_o = mie;
-                end
-                `CSR_MSTATUS: begin
-                    data_o = mstatus;
-                end
-                default: begin
-                    data_o = `ZeroWord;
-                end
-            endcase
+            if ((waddr_i[11:0] == raddr_i[11:0]) && (we_i == `WriteEnable)) begin
+                data_o = data_i;
+            end else begin
+                case (raddr_i[11:0])
+                    `CSR_CYCLE: begin
+                        data_o = cycle[31:0];
+                    end
+                    `CSR_CYCLEH: begin
+                        data_o = cycle[63:32];
+                    end
+                    `CSR_MTVEC: begin
+                        data_o = mtvec;
+                    end
+                    `CSR_MCAUSE: begin
+                        data_o = mcause;
+                    end
+                    `CSR_MEPC: begin
+                        data_o = mepc;
+                    end
+                    `CSR_MIE: begin
+                        data_o = mie;
+                    end
+                    `CSR_MSTATUS: begin
+                        data_o = mstatus;
+                    end
+                    `CSR_MSCRATCH: begin
+                        data_o = mscratch;
+                    end
+                    default: begin
+                        data_o = `ZeroWord;
+                    end
+                endcase
+            end
         end
     end
 
@@ -172,32 +187,39 @@ module csr_reg(
         if (rst == `RstEnable) begin
             clint_data_o = `ZeroWord;
         end else begin
-            case (clint_raddr_i[11:0])
-                `CSR_CYCLE: begin
-                    clint_data_o = cycle[31:0];
-                end
-                `CSR_CYCLEH: begin
-                    clint_data_o = cycle[63:32];
-                end
-                `CSR_MTVEC: begin
-                    clint_data_o = mtvec;
-                end
-                `CSR_MCAUSE: begin
-                    clint_data_o = mcause;
-                end
-                `CSR_MEPC: begin
-                    clint_data_o = mepc;
-                end
-                `CSR_MIE: begin
-                    clint_data_o = mie;
-                end
-                `CSR_MSTATUS: begin
-                    clint_data_o = mstatus;
-                end
-                default: begin
-                    clint_data_o = `ZeroWord;
-                end
-            endcase
+            if ((clint_waddr_i[11:0] == clint_raddr_i[11:0]) && (clint_we_i == `WriteEnable)) begin
+                clint_data_o = clint_data_i;
+            end else begin
+                case (clint_raddr_i[11:0])
+                    `CSR_CYCLE: begin
+                        clint_data_o = cycle[31:0];
+                    end
+                    `CSR_CYCLEH: begin
+                        clint_data_o = cycle[63:32];
+                    end
+                    `CSR_MTVEC: begin
+                        clint_data_o = mtvec;
+                    end
+                    `CSR_MCAUSE: begin
+                        clint_data_o = mcause;
+                    end
+                    `CSR_MEPC: begin
+                        clint_data_o = mepc;
+                    end
+                    `CSR_MIE: begin
+                        clint_data_o = mie;
+                    end
+                    `CSR_MSTATUS: begin
+                        clint_data_o = mstatus;
+                    end
+                    `CSR_MSCRATCH: begin
+                        clint_data_o = mscratch;
+                    end
+                    default: begin
+                        clint_data_o = `ZeroWord;
+                    end
+                endcase
+            end
         end
     end
 
