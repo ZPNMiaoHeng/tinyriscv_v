@@ -1,4 +1,4 @@
-与本项目配套的设计文档[《从零开始写RISC-V处理器》](https://liangkangnan.gitee.io/2020/04/29/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99RISC-V%E5%A4%84%E7%90%86%E5%99%A8/)，目前已经更新完第二章绪论，其他内容持续更新中。
+与本项目配套的设计文档[《从零开始写RISC-V处理器》](https://liangkangnan.gitee.io/2020/04/29/%E4%BB%8E%E9%9B%B6%E5%BC%80%E5%A7%8B%E5%86%99RISC-V%E5%A4%84%E7%90%86%E5%99%A8/)，目前已经更新到第三章硬件篇，其他内容持续更新中。
 
 # 1.初衷
 
@@ -82,7 +82,7 @@ tinyriscv目前外挂了6个外设，每个外设的空间大小为256MB，地�
 
 4. 安装python3
 
-到python官网下载安装win版本的python，注意要下载python3版本的。网速慢的同学可以通过百度网盘下载(链接: https://pan.baidu.com/s/1gNC8L5dZTsN6E5TJD2rmnQ 提取码: 3b4t)，或者通过微云下载[https://share.weiyun.com/XwzSQHND](https://share.weiyun.com/XwzSQHND)。安装完后将python添加到环境变量里。
+到[python官网](https://www.python.org/)下载win版本的python，注意要下载python3版本的。网速慢的同学可以通过百度网盘下载(链接: https://pan.baidu.com/s/1gNC8L5dZTsN6E5TJD2rmnQ 提取码: 3b4t)，或者通过微云下载[https://share.weiyun.com/XwzSQHND](https://share.weiyun.com/XwzSQHND)。安装完后将python添加到环境变量里。
 
 ## 4.2运行指令测试程序
 
@@ -189,4 +189,6 @@ C语言程序例程位于tests\example目录里。
 # 8.其他
 
 如有疑问或者建议，欢迎在下方评论、或者私信、或者发邮件(liangkangnan@163.com)给我，24小时内必回复。
+
+如果您热爱RISC-V或者对RISC-V感兴趣，欢迎发邮件或者私信我，我把您拉进RISC-V群里面交流。
 
