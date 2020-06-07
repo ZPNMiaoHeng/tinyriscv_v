@@ -132,11 +132,7 @@
 
 `telnet localhost 4444`
 
-接着执行以下命令来停住CPU：
-
-`halt`
-
-使用load_image命令将固件下载到FPGA，这里以freertos.bin文件为例，如下所示：
+然后在这个CMD窗口下使用load_image命令将固件下载到FPGA，这里以freertos.bin文件为例，如下所示：
 
 `load_image D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x0 bin 0x0 0x1000000`
 
@@ -146,17 +142,11 @@
 
 如果下载出错的话会有提示的，没有提示则说明下载成功。
 
-最后断开与openocd的连接：
+最后执行以下命令让程序跑起来：
 
-`exit`
+`resume 0`
 
-整个下载过程如下图所示：
-
-![openocd_cli](./images/openocd_cli.png)
-
-**注意：下载完成后需要退出openocd服务(ctrl+c)，然后按一下FPGA板子上的复位按键即可开始运行程序。**
-
-不要通过reset或者resume命令来运行程序。
+**注意：每次下载程序前记得先执行halt命令停住CPU。**
 
 # 4.Vivado仿真设置
 
