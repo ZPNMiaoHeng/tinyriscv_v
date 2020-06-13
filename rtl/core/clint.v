@@ -85,7 +85,7 @@ module clint(
         if (rst == `RstEnable) begin
             int_state = S_INT_IDLE;
         end else begin
-            if (inst_i == `INST_ECALL) begin
+            if (inst_i == `INST_ECALL || inst_i == `INST_EBREAK) begin
                 int_state = S_INT_SYNC_ASSERT;
             end else if (int_flag_i != `INT_NONE && global_int_en_i == `True) begin
                 int_state = S_INT_ASYNC_ASSERT;
@@ -107,10 +107,19 @@ module clint(
             case (csr_state)
                 S_CSR_IDLE: begin
                     if (int_state == S_INT_SYNC_ASSERT) begin
-                        // ecall异常
-                        cause <= 32'd11;
                         csr_state <= S_CSR_MEPC;
                         inst_addr <= inst_addr_i;
+                        case (inst_i)
+                            `INST_ECALL: begin
+                                cause <= 32'd11;
+                            end
+                            `INST_EBREAK: begin
+                                cause <= 32'd3;
+                            end
+                            default: begin
+                                cause <= 32'd10;
+                            end
+                        endcase
                     end else if (int_state == S_INT_ASYNC_ASSERT) begin
                         // 定时器中断
                         cause <= 32'h80000004;

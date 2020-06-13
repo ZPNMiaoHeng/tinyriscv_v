@@ -116,6 +116,7 @@
 
 `define INST_FENCE  7'b0001111
 `define INST_ECALL  32'h73
+`define INST_EBREAK 32'h00100073
 
 // J type inst
 `define INST_TYPE_B 7'b1100011
