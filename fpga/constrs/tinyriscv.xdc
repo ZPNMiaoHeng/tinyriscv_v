@@ -67,3 +67,7 @@ set_property PACKAGE_PIN M5 [get_ports spi_ss]
 # SPI CLK引脚
 set_property IOSTANDARD LVCMOS33 [get_ports spi_clk]
 set_property PACKAGE_PIN N4 [get_ports spi_clk]
+
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]  
+set_property CONFIG_MODE SPIx4 [current_design] 
+set_property BITSTREAM.CONFIG.CONFIGRATE 50 [current_design]
