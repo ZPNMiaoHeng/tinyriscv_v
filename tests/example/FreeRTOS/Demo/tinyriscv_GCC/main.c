@@ -107,7 +107,7 @@ int main( void )
 
 static void prvSetupHardware( void )
 {
-
+    GPIO_REG(GPIO_CTRL) |= 0x1;  // set gpio0 output mode
 }
 /*-----------------------------------------------------------*/
 
