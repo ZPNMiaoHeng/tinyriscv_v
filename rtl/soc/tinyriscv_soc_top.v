@@ -28,7 +28,7 @@ module tinyriscv_soc_top(
     output wire halted_ind,  // jtag是否已经halt住CPU信号
 
     output wire tx_pin,      // UART发送引脚
-    output wire io_pin,      // GPIO引脚
+    inout wire[1:0] gpio,    // GPIO引脚
 
     input wire jtag_TCK,     // JTAG TCK引脚
     input wire jtag_TMS,     // JTAG TMS引脚
@@ -134,6 +134,10 @@ module tinyriscv_soc_top(
     // timer0
     wire timer0_int;
 
+    // gpio
+    wire[1:0] io_in;
+    wire[31:0] gpio_ctrl;
+    wire[31:0] gpio_data;
 
     assign int_flag = {7'h0, timer0_int};
 
@@ -227,6 +231,13 @@ module tinyriscv_soc_top(
         .tx_pin(tx_pin)
     );
 
+    // io0
+    assign gpio[0] = (gpio_ctrl[1:0] == 2'b01)? gpio_data[0]: 1'bz;
+    assign io_in[0] = gpio[0];
+    // io1
+    assign gpio[1] = (gpio_ctrl[3:2] == 2'b01)? gpio_data[1]: 1'bz;
+    assign io_in[1] = gpio[1];
+
     // gpio模块例化
     gpio gpio_0(
         .clk(clk),
@@ -237,7 +248,9 @@ module tinyriscv_soc_top(
         .data_i(s4_data_o),
         .data_o(s4_data_i),
         .ack_o(s4_ack_i),
-        .io_pin(io_pin)
+        .io_pin_i(io_in),
+        .reg_ctrl(gpio_ctrl),
+        .reg_data(gpio_data)
     );
 
     // spi模块例化
