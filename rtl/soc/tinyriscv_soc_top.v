@@ -28,6 +28,7 @@ module tinyriscv_soc_top(
     output wire halted_ind,  // jtag是否已经halt住CPU信号
 
     output wire tx_pin,      // UART发送引脚
+    input wire rx_pin,       // UART接收引脚
     inout wire[1:0] gpio,    // GPIO引脚
 
     input wire jtag_TCK,     // JTAG TCK引脚
@@ -218,8 +219,8 @@ module tinyriscv_soc_top(
         .ack_o(s2_ack_i)
     );
 
-    // uart_tx模块例化
-    uart_tx uart_tx_0(
+    // uart模块例化
+    uart uart_0(
         .clk(clk),
         .rst(rst),
         .we_i(s3_we_o),
@@ -228,7 +229,8 @@ module tinyriscv_soc_top(
         .data_i(s3_data_o),
         .data_o(s3_data_i),
         .ack_o(s3_ack_i),
-        .tx_pin(tx_pin)
+        .tx_pin(tx_pin),
+        .rx_pin(rx_pin)
     );
 
     // io0
