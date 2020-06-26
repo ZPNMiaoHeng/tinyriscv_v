@@ -26,6 +26,10 @@ set_property PACKAGE_PIN P15 [get_ports halted_ind]
 set_property IOSTANDARD LVCMOS33 [get_ports tx_pin]
 set_property PACKAGE_PIN M6 [get_ports tx_pin]
 
+# 串口接收引脚
+set_property IOSTANDARD LVCMOS33 [get_ports rx_pin]
+set_property PACKAGE_PIN N6 [get_ports rx_pin]
+
 # GPIO0引脚
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio[0]}]
 set_property PACKAGE_PIN P16 [get_ports {gpio[0]}]
