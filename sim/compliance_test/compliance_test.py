@@ -35,7 +35,7 @@ iverilog_cmd.append(r'..\..\rtl\perips\ram.v')
 iverilog_cmd.append(r'..\..\rtl\perips\rom.v')
 iverilog_cmd.append(r'..\..\rtl\perips\spi.v')
 iverilog_cmd.append(r'..\..\rtl\perips\timer.v')
-iverilog_cmd.append(r'..\..\rtl\perips\uart_tx.v')
+iverilog_cmd.append(r'..\..\rtl\perips\uart.v')
 iverilog_cmd.append(r'..\..\rtl\perips\gpio.v')
 # ..\rtl\debug
 iverilog_cmd.append(r'..\..\rtl\debug\jtag_dm.v')
