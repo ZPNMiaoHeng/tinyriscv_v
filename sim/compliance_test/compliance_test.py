@@ -94,12 +94,12 @@ def main():
     bin_to_mem_cmd.append(sys.argv[1])
     bin_to_mem_cmd.append(sys.argv[2])
     process = subprocess.Popen(bin_to_mem_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    process.wait(timeout=2)
+    process.wait(timeout=5)
 
     # 2.编译rtl文件
     logfile = open('complie.log', 'w')
     process = subprocess.Popen(iverilog_cmd, stdout=logfile, stderr=logfile)
-    process.wait(timeout=2)
+    process.wait(timeout=5)
     logfile.close()
 
     # 3.运行
@@ -107,16 +107,32 @@ def main():
     vvp_cmd = [r'vvp']
     vvp_cmd.append(r'out.vvp')
     process = subprocess.Popen(vvp_cmd, stdout=logfile, stderr=logfile)
-    process.wait(timeout=2)
+    process.wait(timeout=5)
     logfile.close()
 
     # 4.比较结果
     ref_file = get_reference_file(sys.argv[1])
     if (ref_file != None):
-        if (filecmp.cmp('signature.output', ref_file, shallow=False) == True):
-            print('### PASS ###')
-        else:
+        # 如果文件大小不一致，直接报fail
+        if (os.path.getsize('signature.output') != os.path.getsize(ref_file)):
             print('!!! FAIL !!!')
+            return
+        f1 = open('signature.output')
+        f2 = open(ref_file)
+        f1_lines = f1.readlines()
+        i = 0
+        # 逐行比较
+        for line in f2.readlines():
+            # 只要有一行内容不一样就报fail
+            if (f1_lines[i] != line):
+                print('!!! FAIL !!!')
+                f1.close()
+                f2.close()
+                return
+            i = i + 1
+        f1.close()
+        f2.close()
+        print('### PASS ###')
     else:
         print('No ref file found, please check result by yourself.')
 
