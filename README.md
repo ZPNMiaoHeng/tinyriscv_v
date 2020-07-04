@@ -26,17 +26,17 @@
 
 **rtl**：该目录包含tinyriscv的所有verilog源码；
 
-**sim**：该目录包含仿真的顶层testbench代码和批处理bat文件；
+**sim**：该目录包含仿真批处理bat文件和脚本；
 
 **tests**：该目录包含测试程序源码，其中example目录为C语言程序例程源码，isa目录为RV32指令测试源码；
 
-**tools**：该目录包含编译汇编和c语言程序所需GNU工具链和将二进制文件转成仿真所需的mem格式文件的工具BinToMem。BinToMem\_CLI.exe需要在cmd窗口下执行，BinToMem\_GUI.exe提供图形界面，双击即可运行；
+**tools**：该目录包含编译汇编和C语言程序所需GNU工具链和将二进制文件转成仿真所需的mem格式文件的工具BinToMem，还有通过串口下载程序的脚本。BinToMem\_CLI.exe需要在cmd窗口下执行，BinToMem\_GUI.exe提供图形界面，双击即可运行；
 
 **pic**：存放图片；
 
-**tb**：testbench文件；
+**tb**：该目录包含仿真的testbench文件；
 
-**fpga**：存放FPGA相关文件，如约束文件；
+**fpga**：存放FPGA相关文件，比如约束文件；
 
 tinyriscv的整体框架如下：
 
@@ -146,11 +146,13 @@ C语言程序例程位于tests\example目录里。
 
 1. 写设计文档；
 
-2. 支持通过UART烧写固件；
+2. 支持硬件中断嵌套和快速实时中断；
 
 3. ......
 
 # 7.更新记录
+
+2020-07-04：支持通过UART烧写固件；
 
 2020-05-27：增加新的指令兼容性(riscv-compliance)测试项。
 
