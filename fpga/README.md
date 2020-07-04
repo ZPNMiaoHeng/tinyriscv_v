@@ -84,7 +84,9 @@
 
 ![](./images/add_src_7.png)
 
-勾选上Copy constraints files into project，然后点击Finish按钮。**如果你的开发板和我的不一样，则需要将约束文件里的引脚配置改成你的开发板上对应的引脚**。
+勾选上Copy constraints files into project，然后点击Finish按钮。
+
+**注意：如果你的开发板和我的不一样，则需要将约束文件里的引脚配置改成你的开发板上对应的引脚**。
 
 至此，约束文件添加完成。
 
@@ -118,6 +120,8 @@
 
 # 3.下载程序到FPGA
 
+## 3.1通过JTAG方式下载
+
 将CMSIS-DAP调试器连接好FPGA板子和PC电脑。
 
 打开一个CMD窗口，然后cd进入到tinyriscv项目的tools/openocd目录，执行命令：
@@ -147,6 +151,18 @@
 `resume 0`
 
 **注意：每次下载程序前记得先执行halt命令停住CPU。**
+
+## 3.2通过UART方式下载
+
+通过UART方式下载前需要先使能UART debug模块。在约束文件里指定的uart_debug_en引脚，当其输入为高电平时表示使能UART debug模块，输入为低电平时表示关闭UART debug模块。
+
+当使能了UART debug模块后，就可以通过tools/tinyriscv_fw_downloader.py脚本来下载程序。
+
+打开CMD窗口，进入到tools目录，比如输入以下命令：
+
+![uart_debug](./images/uart_debug.png)
+
+即可下载freertos.bin程序到软核里。下载完后，先关闭UART debug模块，然后按板子上的复位(rst)按键即可让程序跑起来。
 
 # 4.Vivado仿真设置
 
