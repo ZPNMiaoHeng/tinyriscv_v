@@ -41,6 +41,7 @@ iverilog_cmd.append(r'..\..\rtl\perips\gpio.v')
 iverilog_cmd.append(r'..\..\rtl\debug\jtag_dm.v')
 iverilog_cmd.append(r'..\..\rtl\debug\jtag_driver.v')
 iverilog_cmd.append(r'..\..\rtl\debug\jtag_top.v')
+iverilog_cmd.append(r'..\..\rtl\debug\uart_debug.v')
 # ..\rtl\soc
 iverilog_cmd.append(r'..\..\rtl\soc\tinyriscv_soc_top.v')
 
