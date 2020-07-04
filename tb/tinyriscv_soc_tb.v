@@ -496,7 +496,8 @@ module tinyriscv_soc_tb;
 
     tinyriscv_soc_top tinyriscv_soc_top_0(
         .clk(clk),
-        .rst(rst)/*
+        .rst(rst),
+        .uart_debug_pin(1'b0)/*
         .jtag_TCK(TCK),
         .jtag_TMS(TMS),
         .jtag_TDI(TDI),
