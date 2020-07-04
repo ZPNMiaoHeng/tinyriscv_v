@@ -27,8 +27,10 @@ module tinyriscv_soc_top(
 
     output wire halted_ind,  // jtag是否已经halt住CPU信号
 
-    output wire tx_pin,      // UART发送引脚
-    input wire rx_pin,       // UART接收引脚
+    input wire uart_debug_pin, // 串口下载使能引脚
+
+    output wire uart_tx_pin, // UART发送引脚
+    input wire uart_rx_pin,  // UART接收引脚
     inout wire[1:0] gpio,    // GPIO引脚
 
     input wire jtag_TCK,     // JTAG TCK引脚
@@ -67,6 +69,14 @@ module tinyriscv_soc_top(
     wire m2_ack_o;
     wire m2_req_i;
     wire m2_we_i;
+
+    // master 3 interface
+    wire[`MemAddrBus] m3_addr_i;
+    wire[`MemBus] m3_data_i;
+    wire[`MemBus] m3_data_o;
+    wire m3_ack_o;
+    wire m3_req_i;
+    wire m3_we_i;
 
     // slave 0 interface
     wire[`MemAddrBus] s0_addr_o;
@@ -229,8 +239,8 @@ module tinyriscv_soc_top(
         .data_i(s3_data_o),
         .data_o(s3_data_i),
         .ack_o(s3_ack_i),
-        .tx_pin(tx_pin),
-        .rx_pin(rx_pin)
+        .tx_pin(uart_tx_pin),
+        .rx_pin(uart_rx_pin)
     );
 
     // io0
@@ -300,6 +310,14 @@ module tinyriscv_soc_top(
         .m2_req_i(m2_req_i),
         .m2_we_i(m2_we_i),
 
+        // master 3 interface
+        .m3_addr_i(m3_addr_i),
+        .m3_data_i(m3_data_i),
+        .m3_data_o(m3_data_o),
+        .m3_ack_o(m3_ack_o),
+        .m3_req_i(m3_req_i),
+        .m3_we_i(m3_we_i),
+
         // slave 0 interface
         .s0_addr_o(s0_addr_o),
         .s0_data_o(s0_data_o),
@@ -349,6 +367,18 @@ module tinyriscv_soc_top(
         .s5_we_o(s5_we_o),
 
         .hold_flag_o(rib_hold_flag_o)
+    );
+
+    // 串口下载模块例化
+    uart_debug u_uart_debug(
+        .clk(clk),
+        .rst(rst),
+        .debug_en_i(uart_debug_pin),
+        .req_o(m3_req_i),
+        .mem_we_o(m3_we_i),
+        .mem_addr_o(m3_addr_i),
+        .mem_wdata_o(m3_data_i),
+        .mem_rdata_i(m3_data_o)
     );
 
     // jtag模块复位逻辑
