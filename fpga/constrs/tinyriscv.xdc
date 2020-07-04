@@ -22,13 +22,17 @@ set_property PACKAGE_PIN N16 [get_ports succ]
 set_property IOSTANDARD LVCMOS33 [get_ports halted_ind]
 set_property PACKAGE_PIN P15 [get_ports halted_ind]
 
+# 串口下载使能引脚
+set_property IOSTANDARD LVCMOS33 [get_ports uart_debug_pin]
+set_property PACKAGE_PIN K13 [get_ports uart_debug_pin]
+
 # 串口发送引脚
-set_property IOSTANDARD LVCMOS33 [get_ports tx_pin]
-set_property PACKAGE_PIN M6 [get_ports tx_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports uart_tx_pin]
+set_property PACKAGE_PIN M6 [get_ports uart_tx_pin]
 
 # 串口接收引脚
-set_property IOSTANDARD LVCMOS33 [get_ports rx_pin]
-set_property PACKAGE_PIN N6 [get_ports rx_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports uart_rx_pin]
+set_property PACKAGE_PIN N6 [get_ports uart_rx_pin]
 
 # GPIO0引脚
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio[0]}]
