@@ -118,6 +118,34 @@
 
 至此，即可将Bitstream文件下载到FPGA。
 
+## 2.6固化软核到FPGA
+
+对于下载Bitstream文件到FPGA这种方式，当断电后再上电就要重新下载，因此可以将tinyriscv软核固化到FPGA，这样每次上电后就不需要重新下载Bitstream文件了，只需要下载bin文件就可以。
+
+点击vivado工具栏的Tools-->Generate Memory Configuration File...选项后会出现以下界面：
+
+![config_mcs](./images/config_mcs.png)
+
+按照图中红色框来设置，然后点击确定。
+
+然后点击Open Hardware Manager，按下图选择：
+
+![add_mcs_device](./images/add_mcs_device.png)
+
+然后按下图设置：
+
+![select_spi](./images/select_spi.png)
+
+弹出如下对话框，点击确定。
+
+![mcs_ok](./images/mcs_ok.png)
+
+最后按下图设置：
+
+![mcs_prog](./images/mcs_prog.png)
+
+点击确定后开始固化。固化过程比下载Bitstream文件的时间要长，耐心等待一下即可。
+
 # 3.下载程序到FPGA
 
 ## 3.1通过JTAG方式下载
