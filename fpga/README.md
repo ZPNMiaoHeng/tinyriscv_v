@@ -1,12 +1,14 @@
 # 1.概述
 
-介绍如何将tinyriscv移植到FPGA平台上和如何通过JTAG下载程序到FPGA。
+介绍如何将tinyriscv移植到FPGA平台上和如何通过JTAG或者UART下载程序到FPGA。
 
 1.软件：xilinx vivado(以2018.1版本为例)开发环境。
 
 2.FPGA：xilinx Artix-7 35T。
 
 3.调试器：CMSIS-DAP或者DAPLink。
+
+这里只是以Xilinx平台为例，实际上可以移植到任何FPGA平台（只要资源足够）。
 
 # 2.FPGA移植步骤
 
@@ -185,6 +187,10 @@
 通过UART方式下载前需要先使能UART debug模块。在约束文件里指定的uart_debug_en引脚，当其输入为高电平时表示使能UART debug模块，输入为低电平时表示关闭UART debug模块。
 
 当使能了UART debug模块后，就可以通过tools/tinyriscv_fw_downloader.py脚本来下载程序。
+
+tinyriscv_fw_downloader.py脚本使用方法：
+
+`python tinyriscv_fw_downloader.py 串口号 bin文件`
 
 打开CMD窗口，进入到tools目录，比如输入以下命令：
 
