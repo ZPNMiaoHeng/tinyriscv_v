@@ -76,7 +76,9 @@ tinyriscv目前外挂了6个外设，每个外设的空间大小为256MB，地�
 
 2. 安装GNU工具链
 
-可以通过百度网盘下载(链接: https://pan.baidu.com/s/1bYgslKxHMjtiZtIPsB2caQ 提取码: 9n3c)，或者通过微云下载[https://share.weiyun.com/5bMOsu9](https://share.weiyun.com/5bMOsu9)，下载完成后将压缩包解压到本项目的tools目录下。
+可以通过百度网盘下载(链接: https://pan.baidu.com/s/1bYgslKxHMjtiZtIPsB2caQ 提取码: 9n3c)，或者通过微云下载[https://share.weiyun.com/5bMOsu9](https://share.weiyun.com/5bMOsu9)，下载完成后将压缩包解压到本项目的tools目录下。注意目录的层次结构，解压后的工具路径应该如下所示：
+
+`tinyriscv\tools\gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64\bin\riscv-none-embed-gcc`
 
 3. 安装make工具
 
@@ -85,6 +87,12 @@ tinyriscv目前外挂了6个外设，每个外设的空间大小为256MB，地�
 4. 安装python3
 
 到[python官网](https://www.python.org/)下载win版本的python，注意要下载python3版本的。网速慢的同学可以通过百度网盘下载(链接: https://pan.baidu.com/s/1gNC8L5dZTsN6E5TJD2rmnQ 提取码: 3b4t)，或者通过微云下载[https://share.weiyun.com/XwzSQHND](https://share.weiyun.com/XwzSQHND)。安装完后将python添加到环境变量里。
+
+5. 下载代码
+
+使用git clone命令下载，不要使用zip方式下载，否则有些文件会有格式问题。
+
+`git clone https://gitee.com/liangkangnan/tinyriscv.git`
 
 ## 4.2运行指令测试程序
 
