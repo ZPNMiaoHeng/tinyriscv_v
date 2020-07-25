@@ -46,7 +46,7 @@ set_property PACKAGE_PIN T15 [get_ports {gpio[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports jtag_TCK]
 set_property PACKAGE_PIN N11 [get_ports jtag_TCK]
 
-create_clock -name jtag_clk_pin -period 300 [get_ports {jtag_TCK}];
+#create_clock -name jtag_clk_pin -period 300 [get_ports {jtag_TCK}];
 
 # JTAG TMS引脚
 set_property IOSTANDARD LVCMOS33 [get_ports jtag_TMS]
