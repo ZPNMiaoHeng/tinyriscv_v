@@ -112,7 +112,11 @@ module clint(
                 S_CSR_IDLE: begin
                     if (int_state == S_INT_SYNC_ASSERT) begin
                         csr_state <= S_CSR_MEPC;
-                        inst_addr <= inst_addr_i;
+                        if (jump_flag_i == `JumpEnable) begin
+                            inst_addr <= jump_addr_i - 4'h4;
+                        end else begin
+                            inst_addr <= inst_addr_i;
+                        end
                         case (inst_i)
                             `INST_ECALL: begin
                                 cause <= 32'd11;
@@ -204,18 +208,22 @@ module clint(
             int_assert_o <= `INT_DEASSERT;
             int_addr_o <= `ZeroWord;
         end else begin
-            // 发出中断进入信号.写完mcause寄存器才能发
-            if (csr_state == S_CSR_MCAUSE) begin
-                int_assert_o <= `INT_ASSERT;
-                int_addr_o <= csr_mtvec;
-            // 发出中断返回信号
-            end else if (csr_state == S_CSR_MSTATUS_MRET) begin
-                int_assert_o <= `INT_ASSERT;
-                int_addr_o <= csr_mepc;
-            end else begin
-                int_assert_o <= `INT_DEASSERT;
-                int_addr_o <= `ZeroWord;
-            end
+            case (csr_state)
+                // 发出中断进入信号.写完mcause寄存器才能发
+                S_CSR_MCAUSE: begin
+                    int_assert_o <= `INT_ASSERT;
+                    int_addr_o <= csr_mtvec;
+                end
+                // 发出中断返回信号
+                S_CSR_MSTATUS_MRET: begin
+                    int_assert_o <= `INT_ASSERT;
+                    int_addr_o <= csr_mepc;
+                end
+                default: begin
+                    int_assert_o <= `INT_DEASSERT;
+                    int_addr_o <= `ZeroWord;
+                end
+            endcase
         end
     end
 
