@@ -27,6 +27,9 @@ module if_id(
 
     input wire[`Hold_Flag_Bus] hold_flag_i, // 流水线暂停标志
 
+    input wire[`INT_BUS] int_flag_i,        // 外设中断输入信号
+    output reg[`INT_BUS] int_flag_o,
+
     output reg[`InstBus] inst_o,            // 指令内容
     output reg[`InstAddrBus] inst_addr_o    // 指令地址
 
@@ -36,13 +39,16 @@ module if_id(
         if (rst == `RstEnable) begin
             inst_o <= `INST_NOP;
             inst_addr_o <= `ZeroWord;
+            int_flag_o <= `INT_NONE;
         // 流水线暂停时传递默认值
         end else if (hold_flag_i >= `Hold_If) begin
             inst_o <= `INST_NOP;
             inst_addr_o <= inst_addr_i;
+            int_flag_o <= `INT_NONE;
         end else begin
             inst_o <= inst_i;
             inst_addr_o <= inst_addr_i;
+            int_flag_o <= int_flag_i;
         end
     end
 

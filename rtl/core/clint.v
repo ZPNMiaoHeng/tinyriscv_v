@@ -31,6 +31,10 @@ module clint(
     input wire[`InstBus] inst_i,             // 指令内容
     input wire[`InstAddrBus] inst_addr_i,    // 指令地址
 
+    // from ex
+    input wire jump_flag_i,
+    input wire[`InstAddrBus] jump_addr_i,
+
     // from ctrl
     input wire[`Hold_Flag_Bus] hold_flag_i,  // 流水线暂停标志
 
@@ -124,19 +128,23 @@ module clint(
                         // 定时器中断
                         cause <= 32'h80000004;
                         csr_state <= S_CSR_MEPC;
-                        inst_addr <= inst_addr_i;
+                        if (jump_flag_i == `JumpEnable) begin
+                            inst_addr <= jump_addr_i;
+                        end else begin
+                            inst_addr <= inst_addr_i;
+                        end
                     // 中断返回
                     end else if (int_state == S_INT_MRET) begin
                         csr_state <= S_CSR_MSTATUS_MRET;
                     end
                 end
                 S_CSR_MEPC: begin
-                    csr_state <= S_CSR_MCAUSE;
-                end
-                S_CSR_MCAUSE: begin
                     csr_state <= S_CSR_MSTATUS;
                 end
                 S_CSR_MSTATUS: begin
+                    csr_state <= S_CSR_MCAUSE;
+                end
+                S_CSR_MCAUSE: begin
                     csr_state <= S_CSR_IDLE;
                 end
                 S_CSR_MSTATUS_MRET: begin
@@ -196,8 +204,8 @@ module clint(
             int_assert_o <= `INT_DEASSERT;
             int_addr_o <= `ZeroWord;
         end else begin
-            // 发出中断进入信号.写完mstatus寄存器才能发
-            if (csr_state == S_CSR_MSTATUS) begin
+            // 发出中断进入信号.写完mcause寄存器才能发
+            if (csr_state == S_CSR_MCAUSE) begin
                 int_assert_o <= `INT_ASSERT;
                 int_addr_o <= csr_mtvec;
             // 发出中断返回信号

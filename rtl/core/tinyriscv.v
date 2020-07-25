@@ -50,6 +50,7 @@ module tinyriscv(
     // if_id模块输出信号
 	wire[`InstBus] if_inst_o;
     wire[`InstAddrBus] if_inst_addr_o;
+    wire[`INT_BUS] if_int_flag_o;
 
     // id模块输出信号
     wire[`RegAddrBus] id_reg1_raddr_o;
@@ -208,6 +209,8 @@ module tinyriscv(
         .rst(rst),
         .inst_i(rib_pc_data_i),
         .inst_addr_i(pc_pc_o),
+        .int_flag_i(int_i),
+        .int_flag_o(if_int_flag_o),
         .hold_flag_i(ctrl_hold_flag_o),
         .inst_o(if_inst_o),
         .inst_addr_o(if_inst_addr_o)
@@ -323,9 +326,11 @@ module tinyriscv(
     clint u_clint(
         .clk(clk),
         .rst(rst),
-        .int_flag_i(int_i),
+        .int_flag_i(if_int_flag_o),
         .inst_i(id_inst_o),
         .inst_addr_i(id_inst_addr_o),
+        .jump_flag_i(ex_jump_flag_o),
+        .jump_addr_i(ex_jump_addr_o),
         .hold_flag_i(ctrl_hold_flag_o),
         .data_i(csr_clint_data_o),
         .csr_mtvec(csr_clint_csr_mtvec),
