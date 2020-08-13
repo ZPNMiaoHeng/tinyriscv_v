@@ -55,7 +55,6 @@ module tinyriscv(
     // id模块输出信号
     wire[`RegAddrBus] id_reg1_raddr_o;
     wire[`RegAddrBus] id_reg2_raddr_o;
-    wire id_mem_req_o;
     wire[`InstBus] id_inst_o;
     wire[`InstAddrBus] id_inst_addr_o;
     wire[`RegBus] id_reg1_rdata_o;
@@ -66,6 +65,10 @@ module tinyriscv(
     wire id_csr_we_o;
     wire[`RegBus] id_csr_rdata_o;
     wire[`MemAddrBus] id_csr_waddr_o;
+    wire[`MemAddrBus] id_op1_o;
+    wire[`MemAddrBus] id_op2_o;
+    wire[`MemAddrBus] id_op1_jump_o;
+    wire[`MemAddrBus] id_op2_jump_o;
 
     // id_ex模块输出信号
     wire[`InstBus] ie_inst_o;
@@ -77,6 +80,10 @@ module tinyriscv(
     wire ie_csr_we_o;
     wire[`MemAddrBus] ie_csr_waddr_o;
     wire[`RegBus] ie_csr_rdata_o;
+    wire[`MemAddrBus] ie_op1_o;
+    wire[`MemAddrBus] ie_op2_o;
+    wire[`MemAddrBus] ie_op1_jump_o;
+    wire[`MemAddrBus] ie_op2_jump_o;
 
     // ex模块输出信号
     wire[`MemBus] ex_mem_wdata_o;
@@ -135,7 +142,7 @@ module tinyriscv(
 
     assign rib_ex_addr_o = (ex_mem_we_o == `WriteEnable)? ex_mem_waddr_o: ex_mem_raddr_o;
     assign rib_ex_data_o = ex_mem_wdata_o;
-    assign rib_ex_req_o = ex_mem_req_o | id_mem_req_o;
+    assign rib_ex_req_o = ex_mem_req_o;
     assign rib_ex_we_o = ex_mem_we_o;
 
     assign rib_pc_addr_o = pc_pc_o;
@@ -226,13 +233,16 @@ module tinyriscv(
         .ex_jump_flag_i(ex_jump_flag_o),
         .reg1_raddr_o(id_reg1_raddr_o),
         .reg2_raddr_o(id_reg2_raddr_o),
-        .mem_req_o(id_mem_req_o),
         .inst_o(id_inst_o),
         .inst_addr_o(id_inst_addr_o),
         .reg1_rdata_o(id_reg1_rdata_o),
         .reg2_rdata_o(id_reg2_rdata_o),
         .reg_we_o(id_reg_we_o),
         .reg_waddr_o(id_reg_waddr_o),
+        .op1_o(id_op1_o),
+        .op2_o(id_op2_o),
+        .op1_jump_o(id_op1_jump_o),
+        .op2_jump_o(id_op2_jump_o),
         .csr_rdata_i(csr_data_o),
         .csr_raddr_o(id_csr_raddr_o),
         .csr_we_o(id_csr_we_o),
@@ -257,6 +267,14 @@ module tinyriscv(
         .reg_waddr_o(ie_reg_waddr_o),
         .reg1_rdata_o(ie_reg1_rdata_o),
         .reg2_rdata_o(ie_reg2_rdata_o),
+        .op1_i(id_op1_o),
+        .op2_i(id_op2_o),
+        .op1_jump_i(id_op1_jump_o),
+        .op2_jump_i(id_op2_jump_o),
+        .op1_o(ie_op1_o),
+        .op2_o(ie_op2_o),
+        .op1_jump_o(ie_op1_jump_o),
+        .op2_jump_o(ie_op2_jump_o),
         .csr_we_i(id_csr_we_o),
         .csr_waddr_i(id_csr_waddr_o),
         .csr_rdata_i(id_csr_rdata_o),
@@ -274,6 +292,10 @@ module tinyriscv(
         .reg_waddr_i(ie_reg_waddr_o),
         .reg1_rdata_i(ie_reg1_rdata_o),
         .reg2_rdata_i(ie_reg2_rdata_o),
+        .op1_i(ie_op1_o),
+        .op2_i(ie_op2_o),
+        .op1_jump_i(ie_op1_jump_o),
+        .op2_jump_i(ie_op2_jump_o),
         .mem_rdata_i(rib_ex_data_i),
         .mem_wdata_o(ex_mem_wdata_o),
         .mem_raddr_o(ex_mem_raddr_o),

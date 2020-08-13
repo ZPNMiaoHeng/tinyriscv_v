@@ -31,9 +31,17 @@ module id_ex(
     input wire csr_we_i,                    // 写CSR寄存器标志
     input wire[`MemAddrBus] csr_waddr_i,    // 写CSR寄存器地址
     input wire[`RegBus] csr_rdata_i,        // CSR寄存器读数据
+    input wire[`MemAddrBus] op1_i,
+    input wire[`MemAddrBus] op2_i,
+    input wire[`MemAddrBus] op1_jump_i,
+    input wire[`MemAddrBus] op2_jump_i,
 
     input wire[`Hold_Flag_Bus] hold_flag_i, // 流水线暂停标志
 
+    output reg[`MemAddrBus] op1_o,
+    output reg[`MemAddrBus] op2_o,
+    output reg[`MemAddrBus] op1_jump_o,
+    output reg[`MemAddrBus] op2_jump_o,
     output reg[`InstBus] inst_o,            // 指令内容
     output reg[`InstAddrBus] inst_addr_o,   // 指令地址
     output reg reg_we_o,                    // 写通用寄存器标志
@@ -57,6 +65,10 @@ module id_ex(
             csr_we_o <= `WriteDisable;
             csr_waddr_o <= `ZeroWord;
             csr_rdata_o <= `ZeroWord;
+            op1_o <= `ZeroWord;
+            op2_o <= `ZeroWord;
+            op1_jump_o <= `ZeroWord;
+            op2_jump_o <= `ZeroWord;
         end else begin
             // 流水线暂停时传递默认值
             if (hold_flag_i >= `Hold_Id) begin
@@ -69,6 +81,10 @@ module id_ex(
                 csr_we_o <= `WriteDisable;
                 csr_waddr_o <= `ZeroWord;
                 csr_rdata_o <= `ZeroWord;
+                op1_o <= `ZeroWord;
+                op2_o <= `ZeroWord;
+                op1_jump_o <= `ZeroWord;
+                op2_jump_o <= `ZeroWord;
             end else begin
                 inst_o <= inst_i;
                 inst_addr_o <= inst_addr_i;
@@ -79,6 +95,10 @@ module id_ex(
                 csr_we_o <= csr_we_i;
                 csr_waddr_o <= csr_waddr_i;
                 csr_rdata_o <= csr_rdata_i;
+                op1_o <= op1_i;
+                op2_o <= op2_i;
+                op1_jump_o <= op1_jump_i;
+                op2_jump_o <= op2_jump_i;
             end
         end
     end
