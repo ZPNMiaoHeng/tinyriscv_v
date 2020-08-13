@@ -122,103 +122,38 @@ module rib(
     parameter [1:0]grant2 = 2'h2;
     parameter [1:0]grant3 = 2'h3;
 
-
     wire[3:0] req;
     reg[1:0] grant;
-    reg[1:0] next_grant;
 
 
     // 主设备请求信号
     assign req = {m3_req_i, m2_req_i, m1_req_i, m0_req_i};
-
-
-    // 授权主设备切换
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            grant <= grant1;
-        end else begin
-            grant <= next_grant;
-        end
-    end
 
     // 仲裁逻辑
     // 固定优先级仲裁机制
     // 优先级由高到低：主设备0，主设备2，主设备1
     always @ (*) begin
         if (rst == `RstEnable) begin
-            next_grant = grant1;
+            grant = grant1;
             hold_flag_o = `HoldDisable;
         end else begin
-            case (grant)
-                grant0: begin
-                    if (req[3]) begin
-                        next_grant = grant3;
-                        hold_flag_o = `HoldEnable;
-                    end else if (req[0]) begin
-                        next_grant = grant0;
-                        hold_flag_o = `HoldEnable;
-                    end else if (req[2]) begin
-                        next_grant = grant2;
-                        hold_flag_o = `HoldEnable;
-                    end else begin
-                        next_grant = grant1;
-                        hold_flag_o = `HoldDisable;
-                    end
-                end
-                grant1: begin
-                    if (req[3]) begin
-                        next_grant = grant3;
-                        hold_flag_o = `HoldEnable;
-                    end else if (req[0]) begin
-                        next_grant = grant0;
-                        hold_flag_o = `HoldEnable;
-                    end else if (req[2]) begin
-                        next_grant = grant2;
-                        hold_flag_o = `HoldEnable;
-                    end else begin
-                        next_grant = grant1;
-                        hold_flag_o = `HoldDisable;
-                    end
-                end
-                grant2: begin
-                    if (req[3]) begin
-                        next_grant = grant3;
-                        hold_flag_o = `HoldEnable;
-                    end else if (req[0]) begin
-                        next_grant = grant0;
-                        hold_flag_o = `HoldEnable;
-                    end else if (req[2]) begin
-                        next_grant = grant2;
-                        hold_flag_o = `HoldEnable;
-                    end else begin
-                        next_grant = grant1;
-                        hold_flag_o = `HoldDisable;
-                    end
-                end
-                grant3: begin
-                    if (req[3]) begin
-                        next_grant = grant3;
-                        hold_flag_o = `HoldEnable;
-                    end else if (req[0]) begin
-                        next_grant = grant0;
-                        hold_flag_o = `HoldEnable;
-                    end else if (req[2]) begin
-                        next_grant = grant2;
-                        hold_flag_o = `HoldEnable;
-                    end else begin
-                        next_grant = grant1;
-                        hold_flag_o = `HoldDisable;
-                    end
-                end
-                default: begin
-                    next_grant = grant1;
-                    hold_flag_o = `HoldDisable;
-                end
-            endcase
+            if (req[3]) begin
+                grant = grant3;
+                hold_flag_o = `HoldEnable;
+            end else if (req[0]) begin
+                grant = grant0;
+                hold_flag_o = `HoldEnable;
+            end else if (req[2]) begin
+                grant = grant2;
+                hold_flag_o = `HoldEnable;
+            end else begin
+                grant = grant1;
+                hold_flag_o = `HoldDisable;
+            end
         end
     end
 
-    // 根据授权结果，选择(访问)对应的从设备
+    // 根据仲裁结果，选择(访问)对应的从设备
     always @ (*) begin
         if (rst == `RstEnable) begin
             m0_ack_o = `RIB_NACK;
