@@ -34,6 +34,7 @@ module clint(
     // from ex
     input wire jump_flag_i,
     input wire[`InstAddrBus] jump_addr_i,
+    input wire div_started_i,
 
     // from ctrl
     input wire[`Hold_Flag_Bus] hold_flag_i,  // 流水线暂停标志
@@ -63,10 +64,10 @@ module clint(
 
 
     // 中断状态定义
-    localparam S_INT_IDLE         = 4'b0001;
-    localparam S_INT_SYNC_ASSERT  = 4'b0010;
-    localparam S_INT_ASYNC_ASSERT = 4'b0100;
-    localparam S_INT_MRET         = 4'b1000;
+    localparam S_INT_IDLE            = 4'b0001;
+    localparam S_INT_SYNC_ASSERT     = 4'b0010;
+    localparam S_INT_ASYNC_ASSERT    = 4'b0100;
+    localparam S_INT_MRET            = 4'b1000;
 
     // 写CSR寄存器状态定义
     localparam S_CSR_IDLE            = 5'b00001;
@@ -81,7 +82,7 @@ module clint(
     reg[31:0] cause;
 
 
-    assign hold_flag_o = ((int_state != S_INT_IDLE) || (csr_state != S_CSR_IDLE))? `HoldEnable: `HoldDisable;
+    assign hold_flag_o = ((int_state != S_INT_IDLE) | (csr_state != S_CSR_IDLE))? `HoldEnable: `HoldDisable;
 
 
     // 中断仲裁逻辑
@@ -90,7 +91,12 @@ module clint(
             int_state = S_INT_IDLE;
         end else begin
             if (inst_i == `INST_ECALL || inst_i == `INST_EBREAK) begin
-                int_state = S_INT_SYNC_ASSERT;
+                // 如果执行阶段的指令为除法指令，则先不处理同步中断，等除法指令执行完再处理
+                if (div_started_i == `DivStop) begin
+                    int_state = S_INT_SYNC_ASSERT;
+                end else begin
+                    int_state = S_INT_IDLE;
+                end
             end else if (int_flag_i != `INT_NONE && global_int_en_i == `True) begin
                 int_state = S_INT_ASYNC_ASSERT;
             end else if (inst_i == `INST_MRET) begin
@@ -110,8 +116,10 @@ module clint(
         end else begin
             case (csr_state)
                 S_CSR_IDLE: begin
+                    // 同步中断
                     if (int_state == S_INT_SYNC_ASSERT) begin
                         csr_state <= S_CSR_MEPC;
+                        // 在中断处理函数里会将中断返回地址加4
                         if (jump_flag_i == `JumpEnable) begin
                             inst_addr <= jump_addr_i - 4'h4;
                         end else begin
@@ -128,12 +136,16 @@ module clint(
                                 cause <= 32'd10;
                             end
                         endcase
+                    // 异步中断
                     end else if (int_state == S_INT_ASYNC_ASSERT) begin
                         // 定时器中断
                         cause <= 32'h80000004;
                         csr_state <= S_CSR_MEPC;
                         if (jump_flag_i == `JumpEnable) begin
                             inst_addr <= jump_addr_i;
+                        // 异步中断可以中断除法指令的执行，中断处理完再重新执行除法指令
+                        end else if (div_started_i == `DivStart) begin
+                            inst_addr <= inst_addr_i - 4'h4;
                         end else begin
                             inst_addr <= inst_addr_i;
                         end

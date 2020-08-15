@@ -354,6 +354,7 @@ module tinyriscv(
         .jump_flag_i(ex_jump_flag_o),
         .jump_addr_i(ex_jump_addr_o),
         .hold_flag_i(ctrl_hold_flag_o),
+        .div_started_i(ex_div_start_o),
         .data_i(csr_clint_data_o),
         .csr_mtvec(csr_clint_csr_mtvec),
         .csr_mepc(csr_clint_csr_mepc),
