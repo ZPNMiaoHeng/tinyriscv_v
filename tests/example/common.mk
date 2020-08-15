@@ -16,6 +16,7 @@ all: $(TARGET)
 ASM_SRCS += $(COMMON_DIR)/start.S
 ASM_SRCS += $(COMMON_DIR)/trap_entry.S
 C_SRCS += $(COMMON_DIR)/init.c
+C_SRCS += $(COMMON_DIR)/trap_handler.c
 C_SRCS += $(COMMON_DIR)/lib/utils.c
 C_SRCS += $(COMMON_DIR)/lib/xprintf.c
 C_SRCS += $(COMMON_DIR)/lib/uart.c
