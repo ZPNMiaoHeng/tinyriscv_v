@@ -27,7 +27,6 @@ module rib(
     input wire[`MemAddrBus] m0_addr_i,     // 主设备0读、写地址
     input wire[`MemBus] m0_data_i,         // 主设备0写数据
     output reg[`MemBus] m0_data_o,         // 主设备0读取到的数据
-    output reg m0_ack_o,                   // 主设备0访问完成标志
     input wire m0_req_i,                   // 主设备0访问请求标志
     input wire m0_we_i,                    // 主设备0写标志
 
@@ -35,7 +34,6 @@ module rib(
     input wire[`MemAddrBus] m1_addr_i,     // 主设备1读、写地址
     input wire[`MemBus] m1_data_i,         // 主设备1写数据
     output reg[`MemBus] m1_data_o,         // 主设备1读取到的数据
-    output reg m1_ack_o,                   // 主设备1访问完成标志
     input wire m1_req_i,                   // 主设备1访问请求标志
     input wire m1_we_i,                    // 主设备1写标志
 
@@ -43,7 +41,6 @@ module rib(
     input wire[`MemAddrBus] m2_addr_i,     // 主设备2读、写地址
     input wire[`MemBus] m2_data_i,         // 主设备2写数据
     output reg[`MemBus] m2_data_o,         // 主设备2读取到的数据
-    output reg m2_ack_o,                   // 主设备2访问完成标志
     input wire m2_req_i,                   // 主设备2访问请求标志
     input wire m2_we_i,                    // 主设备2写标志
 
@@ -51,7 +48,6 @@ module rib(
     input wire[`MemAddrBus] m3_addr_i,     // 主设备3读、写地址
     input wire[`MemBus] m3_data_i,         // 主设备3写数据
     output reg[`MemBus] m3_data_o,         // 主设备3读取到的数据
-    output reg m3_ack_o,                   // 主设备3访问完成标志
     input wire m3_req_i,                   // 主设备3访问请求标志
     input wire m3_we_i,                    // 主设备3写标志
 
@@ -59,48 +55,36 @@ module rib(
     output reg[`MemAddrBus] s0_addr_o,     // 从设备0读、写地址
     output reg[`MemBus] s0_data_o,         // 从设备0写数据
     input wire[`MemBus] s0_data_i,         // 从设备0读取到的数据
-    input wire s0_ack_i,                   // 从设备0访问完成标志
-    output reg s0_req_o,                   // 从设备0访问请求标志
     output reg s0_we_o,                    // 从设备0写标志
 
     // slave 1 interface
     output reg[`MemAddrBus] s1_addr_o,     // 从设备1读、写地址
     output reg[`MemBus] s1_data_o,         // 从设备1写数据
     input wire[`MemBus] s1_data_i,         // 从设备1读取到的数据
-    input wire s1_ack_i,                   // 从设备1访问完成标志
-    output reg s1_req_o,                   // 从设备1访问请求标志
     output reg s1_we_o,                    // 从设备1写标志
 
     // slave 2 interface
     output reg[`MemAddrBus] s2_addr_o,     // 从设备2读、写地址
     output reg[`MemBus] s2_data_o,         // 从设备2写数据
     input wire[`MemBus] s2_data_i,         // 从设备2读取到的数据
-    input wire s2_ack_i,                   // 从设备2访问完成标志
-    output reg s2_req_o,                   // 从设备2访问请求标志
     output reg s2_we_o,                    // 从设备2写标志
 
     // slave 3 interface
     output reg[`MemAddrBus] s3_addr_o,     // 从设备3读、写地址
     output reg[`MemBus] s3_data_o,         // 从设备3写数据
     input wire[`MemBus] s3_data_i,         // 从设备3读取到的数据
-    input wire s3_ack_i,                   // 从设备3访问完成标志
-    output reg s3_req_o,                   // 从设备3访问请求标志
     output reg s3_we_o,                    // 从设备3写标志
 
     // slave 4 interface
     output reg[`MemAddrBus] s4_addr_o,     // 从设备4读、写地址
     output reg[`MemBus] s4_data_o,         // 从设备4写数据
     input wire[`MemBus] s4_data_i,         // 从设备4读取到的数据
-    input wire s4_ack_i,                   // 从设备4访问完成标志
-    output reg s4_req_o,                   // 从设备4访问请求标志
     output reg s4_we_o,                    // 从设备4写标志
 
     // slave 5 interface
     output reg[`MemAddrBus] s5_addr_o,     // 从设备5读、写地址
     output reg[`MemBus] s5_data_o,         // 从设备5写数据
     input wire[`MemBus] s5_data_i,         // 从设备5读取到的数据
-    input wire s5_ack_i,                   // 从设备5访问完成标志
-    output reg s5_req_o,                   // 从设备5访问请求标志
     output reg s5_we_o,                    // 从设备5写标志
 
     output reg hold_flag_o                 // 暂停流水线标志
@@ -156,10 +140,6 @@ module rib(
     // 根据仲裁结果，选择(访问)对应的从设备
     always @ (*) begin
         if (rst == `RstEnable) begin
-            m0_ack_o = `RIB_NACK;
-            m1_ack_o = `RIB_NACK;
-            m2_ack_o = `RIB_NACK;
-            m3_ack_o = `RIB_NACK;
             m0_data_o = `ZeroWord;
             m1_data_o = `INST_NOP;
             m2_data_o = `ZeroWord;
@@ -177,12 +157,6 @@ module rib(
             s3_data_o = `ZeroWord;
             s4_data_o = `ZeroWord;
             s5_data_o = `ZeroWord;
-            s0_req_o = `RIB_NREQ;
-            s1_req_o = `RIB_NREQ;
-            s2_req_o = `RIB_NREQ;
-            s3_req_o = `RIB_NREQ;
-            s4_req_o = `RIB_NREQ;
-            s5_req_o = `RIB_NREQ;
             s0_we_o = `WriteDisable;
             s1_we_o = `WriteDisable;
             s2_we_o = `WriteDisable;
@@ -190,10 +164,6 @@ module rib(
             s4_we_o = `WriteDisable;
             s5_we_o = `WriteDisable;
         end else begin
-            m0_ack_o = `RIB_NACK;
-            m1_ack_o = `RIB_NACK;
-            m2_ack_o = `RIB_NACK;
-            m3_ack_o = `RIB_NACK;
             m0_data_o = `ZeroWord;
             m1_data_o = `INST_NOP;
             m2_data_o = `ZeroWord;
@@ -211,12 +181,6 @@ module rib(
             s3_data_o = `ZeroWord;
             s4_data_o = `ZeroWord;
             s5_data_o = `ZeroWord;
-            s0_req_o = `RIB_NREQ;
-            s1_req_o = `RIB_NREQ;
-            s2_req_o = `RIB_NREQ;
-            s3_req_o = `RIB_NREQ;
-            s4_req_o = `RIB_NREQ;
-            s5_req_o = `RIB_NREQ;
             s0_we_o = `WriteDisable;
             s1_we_o = `WriteDisable;
             s2_we_o = `WriteDisable;
@@ -228,51 +192,39 @@ module rib(
                 grant0: begin
                     case (m0_addr_i[31:28])
                         slave_0: begin
-                            s0_req_o = m0_req_i;
                             s0_we_o = m0_we_i;
                             s0_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
                             s0_data_o = m0_data_i;
-                            m0_ack_o = s0_ack_i;
                             m0_data_o = s0_data_i;
                         end
                         slave_1: begin
-                            s1_req_o = m0_req_i;
                             s1_we_o = m0_we_i;
                             s1_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
                             s1_data_o = m0_data_i;
-                            m0_ack_o = s1_ack_i;
                             m0_data_o = s1_data_i;
                         end
                         slave_2: begin
-                            s2_req_o = m0_req_i;
                             s2_we_o = m0_we_i;
                             s2_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
                             s2_data_o = m0_data_i;
-                            m0_ack_o = s2_ack_i;
                             m0_data_o = s2_data_i;
                         end
                         slave_3: begin
-                            s3_req_o = m0_req_i;
                             s3_we_o = m0_we_i;
                             s3_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
                             s3_data_o = m0_data_i;
-                            m0_ack_o = s3_ack_i;
                             m0_data_o = s3_data_i;
                         end
                         slave_4: begin
-                            s4_req_o = m0_req_i;
                             s4_we_o = m0_we_i;
                             s4_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
                             s4_data_o = m0_data_i;
-                            m0_ack_o = s4_ack_i;
                             m0_data_o = s4_data_i;
                         end
                         slave_5: begin
-                            s5_req_o = m0_req_i;
                             s5_we_o = m0_we_i;
                             s5_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
                             s5_data_o = m0_data_i;
-                            m0_ack_o = s5_ack_i;
                             m0_data_o = s5_data_i;
                         end
                         default: begin
@@ -283,51 +235,39 @@ module rib(
                 grant1: begin
                     case (m1_addr_i[31:28])
                         slave_0: begin
-                            s0_req_o = m1_req_i;
                             s0_we_o = m1_we_i;
                             s0_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
                             s0_data_o = m1_data_i;
-                            m1_ack_o = s0_ack_i;
                             m1_data_o = s0_data_i;
                         end
                         slave_1: begin
-                            s1_req_o = m1_req_i;
                             s1_we_o = m1_we_i;
                             s1_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
                             s1_data_o = m1_data_i;
-                            m1_ack_o = s1_ack_i;
                             m1_data_o = s1_data_i;
                         end
                         slave_2: begin
-                            s2_req_o = m1_req_i;
                             s2_we_o = m1_we_i;
                             s2_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
                             s2_data_o = m1_data_i;
-                            m1_ack_o = s2_ack_i;
                             m1_data_o = s2_data_i;
                         end
                         slave_3: begin
-                            s3_req_o = m1_req_i;
                             s3_we_o = m1_we_i;
                             s3_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
                             s3_data_o = m1_data_i;
-                            m1_ack_o = s3_ack_i;
                             m1_data_o = s3_data_i;
                         end
                         slave_4: begin
-                            s4_req_o = m1_req_i;
                             s4_we_o = m1_we_i;
                             s4_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
                             s4_data_o = m1_data_i;
-                            m1_ack_o = s4_ack_i;
                             m1_data_o = s4_data_i;
                         end
                         slave_5: begin
-                            s5_req_o = m1_req_i;
                             s5_we_o = m1_we_i;
                             s5_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
                             s5_data_o = m1_data_i;
-                            m1_ack_o = s5_ack_i;
                             m1_data_o = s5_data_i;
                         end
                         default: begin
@@ -338,51 +278,39 @@ module rib(
                 grant2: begin
                     case (m2_addr_i[31:28])
                         slave_0: begin
-                            s0_req_o = m2_req_i;
                             s0_we_o = m2_we_i;
                             s0_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
                             s0_data_o = m2_data_i;
-                            m2_ack_o = s0_ack_i;
                             m2_data_o = s0_data_i;
                         end
                         slave_1: begin
-                            s1_req_o = m2_req_i;
                             s1_we_o = m2_we_i;
                             s1_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
                             s1_data_o = m2_data_i;
-                            m2_ack_o = s1_ack_i;
                             m2_data_o = s1_data_i;
                         end
                         slave_2: begin
-                            s2_req_o = m2_req_i;
                             s2_we_o = m2_we_i;
                             s2_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
                             s2_data_o = m2_data_i;
-                            m2_ack_o = s2_ack_i;
                             m2_data_o = s2_data_i;
                         end
                         slave_3: begin
-                            s3_req_o = m2_req_i;
                             s3_we_o = m2_we_i;
                             s3_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
                             s3_data_o = m2_data_i;
-                            m2_ack_o = s3_ack_i;
                             m2_data_o = s3_data_i;
                         end
                         slave_4: begin
-                            s4_req_o = m2_req_i;
                             s4_we_o = m2_we_i;
                             s4_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
                             s4_data_o = m2_data_i;
-                            m2_ack_o = s4_ack_i;
                             m2_data_o = s4_data_i;
                         end
                         slave_5: begin
-                            s5_req_o = m2_req_i;
                             s5_we_o = m2_we_i;
                             s5_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
                             s5_data_o = m2_data_i;
-                            m2_ack_o = s5_ack_i;
                             m2_data_o = s5_data_i;
                         end
                         default: begin
@@ -393,51 +321,39 @@ module rib(
                 grant3: begin
                     case (m3_addr_i[31:28])
                         slave_0: begin
-                            s0_req_o = m3_req_i;
                             s0_we_o = m3_we_i;
                             s0_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
                             s0_data_o = m3_data_i;
-                            m3_ack_o = s0_ack_i;
                             m3_data_o = s0_data_i;
                         end
                         slave_1: begin
-                            s1_req_o = m3_req_i;
                             s1_we_o = m3_we_i;
                             s1_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
                             s1_data_o = m3_data_i;
-                            m3_ack_o = s1_ack_i;
                             m3_data_o = s1_data_i;
                         end
                         slave_2: begin
-                            s2_req_o = m3_req_i;
                             s2_we_o = m3_we_i;
                             s2_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
                             s2_data_o = m3_data_i;
-                            m3_ack_o = s2_ack_i;
                             m3_data_o = s2_data_i;
                         end
                         slave_3: begin
-                            s3_req_o = m3_req_i;
                             s3_we_o = m3_we_i;
                             s3_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
                             s3_data_o = m3_data_i;
-                            m3_ack_o = s3_ack_i;
                             m3_data_o = s3_data_i;
                         end
                         slave_4: begin
-                            s4_req_o = m3_req_i;
                             s4_we_o = m3_we_i;
                             s4_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
                             s4_data_o = m3_data_i;
-                            m3_ack_o = s4_ack_i;
                             m3_data_o = s4_data_i;
                         end
                         slave_5: begin
-                            s5_req_o = m3_req_i;
                             s5_we_o = m3_we_i;
                             s5_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
                             s5_data_o = m3_data_i;
-                            m3_ack_o = s5_ack_i;
                             m3_data_o = s5_data_i;
                         end
                         default: begin

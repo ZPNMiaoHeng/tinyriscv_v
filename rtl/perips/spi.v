@@ -24,10 +24,8 @@ module spi(
     input wire[31:0] data_i,
     input wire[31:0] addr_i,
     input wire we_i,
-    input wire req_i,
 
     output reg[31:0] data_o,
-    output reg ack_o,
 
     output reg spi_mosi,             // spi控制器输出、spi设备输入信号
     input wire spi_miso,             // spi控制器输入、spi设备输出信号

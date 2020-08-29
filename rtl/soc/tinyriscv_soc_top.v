@@ -50,7 +50,6 @@ module tinyriscv_soc_top(
     wire[`MemAddrBus] m0_addr_i;
     wire[`MemBus] m0_data_i;
     wire[`MemBus] m0_data_o;
-    wire m0_ack_o;
     wire m0_req_i;
     wire m0_we_i;
 
@@ -58,7 +57,6 @@ module tinyriscv_soc_top(
     wire[`MemAddrBus] m1_addr_i;
     wire[`MemBus] m1_data_i;
     wire[`MemBus] m1_data_o;
-    wire m1_ack_o;
     wire m1_req_i;
     wire m1_we_i;
 
@@ -66,7 +64,6 @@ module tinyriscv_soc_top(
     wire[`MemAddrBus] m2_addr_i;
     wire[`MemBus] m2_data_i;
     wire[`MemBus] m2_data_o;
-    wire m2_ack_o;
     wire m2_req_i;
     wire m2_we_i;
 
@@ -74,7 +71,6 @@ module tinyriscv_soc_top(
     wire[`MemAddrBus] m3_addr_i;
     wire[`MemBus] m3_data_i;
     wire[`MemBus] m3_data_o;
-    wire m3_ack_o;
     wire m3_req_i;
     wire m3_we_i;
 
@@ -82,48 +78,36 @@ module tinyriscv_soc_top(
     wire[`MemAddrBus] s0_addr_o;
     wire[`MemBus] s0_data_o;
     wire[`MemBus] s0_data_i;
-    wire s0_ack_i;
-    wire s0_req_o;
     wire s0_we_o;
 
     // slave 1 interface
     wire[`MemAddrBus] s1_addr_o;
     wire[`MemBus] s1_data_o;
     wire[`MemBus] s1_data_i;
-    wire s1_ack_i;
-    wire s1_req_o;
     wire s1_we_o;
 
     // slave 2 interface
     wire[`MemAddrBus] s2_addr_o;
     wire[`MemBus] s2_data_o;
     wire[`MemBus] s2_data_i;
-    wire s2_ack_i;
-    wire s2_req_o;
     wire s2_we_o;
 
     // slave 3 interface
     wire[`MemAddrBus] s3_addr_o;
     wire[`MemBus] s3_data_o;
     wire[`MemBus] s3_data_i;
-    wire s3_ack_i;
-    wire s3_req_o;
     wire s3_we_o;
 
     // slave 4 interface
     wire[`MemAddrBus] s4_addr_o;
     wire[`MemBus] s4_data_o;
     wire[`MemBus] s4_data_i;
-    wire s4_ack_i;
-    wire s4_req_o;
     wire s4_we_o;
 
     // slave 5 interface
     wire[`MemAddrBus] s5_addr_o;
     wire[`MemBus] s5_data_o;
     wire[`MemBus] s5_data_i;
-    wire s5_ack_i;
-    wire s5_req_o;
     wire s5_we_o;
 
     // rib
@@ -199,9 +183,7 @@ module tinyriscv_soc_top(
         .we_i(s0_we_o),
         .addr_i(s0_addr_o),
         .data_i(s0_data_o),
-        .req_i(s0_req_o),
-        .data_o(s0_data_i),
-        .ack_o(s0_ack_i)
+        .data_o(s0_data_i)
     );
 
     // ram模块例化
@@ -211,9 +193,7 @@ module tinyriscv_soc_top(
         .we_i(s1_we_o),
         .addr_i(s1_addr_o),
         .data_i(s1_data_o),
-        .req_i(s1_req_o),
-        .data_o(s1_data_i),
-        .ack_o(s1_ack_i)
+        .data_o(s1_data_i)
     );
 
     // timer模块例化
@@ -224,9 +204,7 @@ module tinyriscv_soc_top(
         .addr_i(s2_addr_o),
         .we_i(s2_we_o),
         .data_o(s2_data_i),
-        .int_sig_o(timer0_int),
-        .req_i(s2_req_o),
-        .ack_o(s2_ack_i)
+        .int_sig_o(timer0_int)
     );
 
     // uart模块例化
@@ -234,11 +212,9 @@ module tinyriscv_soc_top(
         .clk(clk),
         .rst(rst),
         .we_i(s3_we_o),
-        .req_i(s3_req_o),
         .addr_i(s3_addr_o),
         .data_i(s3_data_o),
         .data_o(s3_data_i),
-        .ack_o(s3_ack_i),
         .tx_pin(uart_tx_pin),
         .rx_pin(uart_rx_pin)
     );
@@ -255,11 +231,9 @@ module tinyriscv_soc_top(
         .clk(clk),
         .rst(rst),
         .we_i(s4_we_o),
-        .req_i(s4_req_o),
         .addr_i(s4_addr_o),
         .data_i(s4_data_o),
         .data_o(s4_data_i),
-        .ack_o(s4_ack_i),
         .io_pin_i(io_in),
         .reg_ctrl(gpio_ctrl),
         .reg_data(gpio_data)
@@ -272,9 +246,7 @@ module tinyriscv_soc_top(
         .data_i(s5_data_o),
         .addr_i(s5_addr_o),
         .we_i(s5_we_o),
-        .req_i(s5_req_o),
         .data_o(s5_data_i),
-        .ack_o(s5_ack_i),
         .spi_mosi(spi_mosi),
         .spi_miso(spi_miso),
         .spi_ss(spi_ss),
@@ -290,7 +262,6 @@ module tinyriscv_soc_top(
         .m0_addr_i(m0_addr_i),
         .m0_data_i(m0_data_i),
         .m0_data_o(m0_data_o),
-        .m0_ack_o(m0_ack_o),
         .m0_req_i(m0_req_i),
         .m0_we_i(m0_we_i),
 
@@ -298,7 +269,6 @@ module tinyriscv_soc_top(
         .m1_addr_i(m1_addr_i),
         .m1_data_i(`ZeroWord),
         .m1_data_o(m1_data_o),
-        .m1_ack_o(m1_ack_o),
         .m1_req_i(`RIB_REQ),
         .m1_we_i(`WriteDisable),
 
@@ -306,7 +276,6 @@ module tinyriscv_soc_top(
         .m2_addr_i(m2_addr_i),
         .m2_data_i(m2_data_i),
         .m2_data_o(m2_data_o),
-        .m2_ack_o(m2_ack_o),
         .m2_req_i(m2_req_i),
         .m2_we_i(m2_we_i),
 
@@ -314,7 +283,6 @@ module tinyriscv_soc_top(
         .m3_addr_i(m3_addr_i),
         .m3_data_i(m3_data_i),
         .m3_data_o(m3_data_o),
-        .m3_ack_o(m3_ack_o),
         .m3_req_i(m3_req_i),
         .m3_we_i(m3_we_i),
 
@@ -322,48 +290,36 @@ module tinyriscv_soc_top(
         .s0_addr_o(s0_addr_o),
         .s0_data_o(s0_data_o),
         .s0_data_i(s0_data_i),
-        .s0_ack_i(s0_ack_i),
-        .s0_req_o(s0_req_o),
         .s0_we_o(s0_we_o),
 
         // slave 1 interface
         .s1_addr_o(s1_addr_o),
         .s1_data_o(s1_data_o),
         .s1_data_i(s1_data_i),
-        .s1_ack_i(s1_ack_i),
-        .s1_req_o(s1_req_o),
         .s1_we_o(s1_we_o),
 
         // slave 2 interface
         .s2_addr_o(s2_addr_o),
         .s2_data_o(s2_data_o),
         .s2_data_i(s2_data_i),
-        .s2_ack_i(s2_ack_i),
-        .s2_req_o(s2_req_o),
         .s2_we_o(s2_we_o),
 
         // slave 3 interface
         .s3_addr_o(s3_addr_o),
         .s3_data_o(s3_data_o),
         .s3_data_i(s3_data_i),
-        .s3_ack_i(s3_ack_i),
-        .s3_req_o(s3_req_o),
         .s3_we_o(s3_we_o),
 
         // slave 4 interface
         .s4_addr_o(s4_addr_o),
         .s4_data_o(s4_data_o),
         .s4_data_i(s4_data_i),
-        .s4_ack_i(s4_ack_i),
-        .s4_req_o(s4_req_o),
         .s4_we_o(s4_we_o),
 
         // slave 5 interface
         .s5_addr_o(s5_addr_o),
         .s5_data_o(s5_data_o),
         .s5_data_i(s5_data_i),
-        .s5_ack_i(s5_ack_i),
-        .s5_req_o(s5_req_o),
         .s5_we_o(s5_we_o),
 
         .hold_flag_o(rib_hold_flag_o)

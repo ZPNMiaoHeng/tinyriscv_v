@@ -22,12 +22,10 @@ module gpio(
 	input wire rst,
 
     input wire we_i,
-    input wire req_i,
     input wire[31:0] addr_i,
     input wire[31:0] data_i,
 
     output reg[31:0] data_o,
-    output reg ack_o,
 
     input wire[1:0] io_pin_i,
     output wire[31:0] reg_ctrl,

@@ -26,11 +26,9 @@ module timer(
     input wire[31:0] data_i,
     input wire[31:0] addr_i,
     input wire we_i,
-    input wire req_i,
 
     output reg[31:0] data_o,
-    output wire int_sig_o,
-    output reg ack_o
+    output wire int_sig_o
 
     );
 
