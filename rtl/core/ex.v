@@ -44,9 +44,8 @@ module ex(
 
     // from div
     input wire div_ready_i,                 // 除法运算完成标志
-    input wire[`DoubleRegBus] div_result_i, // 除法运算结果
+    input wire[`RegBus] div_result_i,       // 除法运算结果
     input wire div_busy_i,                  // 除法运算忙标志
-    input wire[2:0] div_op_i,               // 具体是哪一条除法指令
     input wire[`RegAddrBus] div_reg_waddr_i,// 除法运算结束后要写的寄存器地址
 
     // to mem
@@ -67,7 +66,7 @@ module ex(
     output wire[`MemAddrBus] csr_waddr_o,   // 写CSR寄存器地址
 
     // to div
-    output wire div_start_o,                 // 开始除法运算标志
+    output wire div_start_o,                // 开始除法运算标志
     output reg[`RegBus] div_dividend_o,     // 被除数
     output reg[`RegBus] div_divisor_o,      // 除数
     output reg[2:0] div_op_o,               // 具体是哪一条除法指令
@@ -251,23 +250,9 @@ module ex(
                     div_start = `DivStop;
                     div_hold_flag = `HoldDisable;
                     if (div_ready_i == `DivResultReady) begin
-                        case (div_op_i)
-                            `INST_DIV, `INST_DIVU: begin
-                                div_wdata = div_result_i[31:0];
-                                div_waddr = div_reg_waddr_i;
-                                div_we = `WriteEnable;
-                            end
-                            `INST_REM, `INST_REMU: begin
-                                div_wdata = div_result_i[63:32];
-                                div_waddr = div_reg_waddr_i;
-                                div_we = `WriteEnable;
-                            end
-                            default: begin
-                                div_wdata = `ZeroWord;
-                                div_waddr = `ZeroWord;
-                                div_we = `WriteDisable;
-                            end
-                        endcase
+                        div_wdata = div_result_i;
+                        div_waddr = div_reg_waddr_i;
+                        div_we = `WriteEnable;
                     end else begin
                         div_we = `WriteDisable;
                         div_wdata = `ZeroWord;
@@ -822,7 +807,7 @@ module ex(
                         end
                     endcase
                 end
-                `INST_JAL: begin
+                `INST_JAL, `INST_JALR: begin
                     hold_flag = `HoldDisable;
                     mem_wdata_o = `ZeroWord;
                     mem_raddr_o = `ZeroWord;
@@ -832,27 +817,7 @@ module ex(
                     jump_addr = op1_jump_add_op2_jump_res;
                     reg_wdata = op1_add_op2_res;
                 end
-                `INST_JALR: begin
-                    hold_flag = `HoldDisable;
-                    mem_wdata_o = `ZeroWord;
-                    mem_raddr_o = `ZeroWord;
-                    mem_waddr_o = `ZeroWord;
-                    mem_we = `WriteDisable;
-                    jump_flag = `JumpEnable;
-                    jump_addr = op1_jump_add_op2_jump_res;
-                    reg_wdata = op1_add_op2_res;
-                end
-                `INST_LUI: begin
-                    hold_flag = `HoldDisable;
-                    mem_wdata_o = `ZeroWord;
-                    mem_raddr_o = `ZeroWord;
-                    mem_waddr_o = `ZeroWord;
-                    mem_we = `WriteDisable;
-                    jump_addr = `ZeroWord;
-                    jump_flag = `JumpDisable;
-                    reg_wdata = op1_add_op2_res;
-                end
-                `INST_AUIPC: begin
+                `INST_LUI, `INST_AUIPC: begin
                     hold_flag = `HoldDisable;
                     mem_wdata_o = `ZeroWord;
                     mem_raddr_o = `ZeroWord;

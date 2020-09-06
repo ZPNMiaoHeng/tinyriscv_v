@@ -124,10 +124,9 @@ module tinyriscv(
     wire[`InstAddrBus] ctrl_jump_addr_o;
 
     // div模块输出信号
-    wire[`DoubleRegBus] div_result_o;
+    wire[`RegBus] div_result_o;
 	wire div_ready_o;
     wire div_busy_o;
-    wire[2:0] div_op_o;
     wire[`RegAddrBus] div_reg_waddr_o;
 
     // clint模块输出信号
@@ -313,7 +312,6 @@ module tinyriscv(
         .div_ready_i(div_ready_o),
         .div_result_i(div_result_o),
         .div_busy_i(div_busy_o),
-        .div_op_i(div_op_o),
         .div_reg_waddr_i(div_reg_waddr_o),
         .div_start_o(ex_div_start_o),
         .div_dividend_o(ex_div_dividend_o),
@@ -340,7 +338,6 @@ module tinyriscv(
         .result_o(div_result_o),
         .ready_o(div_ready_o),
         .busy_o(div_busy_o),
-        .op_o(div_op_o),
         .reg_waddr_o(div_reg_waddr_o)
     );
 
