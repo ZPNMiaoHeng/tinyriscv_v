@@ -93,7 +93,7 @@ module rib(
 
 
     // 访问地址的最高4位决定要访问的是哪一个从设备
-    // 因此最高支持16个从设备
+    // 因此最多支持16个从设备
     parameter [3:0]slave_0 = 4'b0000;
     parameter [3:0]slave_1 = 4'b0001;
     parameter [3:0]slave_2 = 4'b0010;
@@ -115,257 +115,226 @@ module rib(
 
     // 仲裁逻辑
     // 固定优先级仲裁机制
-    // 优先级由高到低：主设备0，主设备2，主设备1
+    // 优先级由高到低：主设备3，主设备0，主设备2，主设备1
     always @ (*) begin
-        if (rst == `RstEnable) begin
+        if (req[3]) begin
+            grant = grant3;
+            hold_flag_o = `HoldEnable;
+        end else if (req[0]) begin
+            grant = grant0;
+            hold_flag_o = `HoldEnable;
+        end else if (req[2]) begin
+            grant = grant2;
+            hold_flag_o = `HoldEnable;
+        end else begin
             grant = grant1;
             hold_flag_o = `HoldDisable;
-        end else begin
-            if (req[3]) begin
-                grant = grant3;
-                hold_flag_o = `HoldEnable;
-            end else if (req[0]) begin
-                grant = grant0;
-                hold_flag_o = `HoldEnable;
-            end else if (req[2]) begin
-                grant = grant2;
-                hold_flag_o = `HoldEnable;
-            end else begin
-                grant = grant1;
-                hold_flag_o = `HoldDisable;
-            end
         end
     end
 
     // 根据仲裁结果，选择(访问)对应的从设备
     always @ (*) begin
-        if (rst == `RstEnable) begin
-            m0_data_o = `ZeroWord;
-            m1_data_o = `INST_NOP;
-            m2_data_o = `ZeroWord;
-            m3_data_o = `ZeroWord;
+        m0_data_o = `ZeroWord;
+        m1_data_o = `INST_NOP;
+        m2_data_o = `ZeroWord;
+        m3_data_o = `ZeroWord;
 
-            s0_addr_o = `ZeroWord;
-            s1_addr_o = `ZeroWord;
-            s2_addr_o = `ZeroWord;
-            s3_addr_o = `ZeroWord;
-            s4_addr_o = `ZeroWord;
-            s5_addr_o = `ZeroWord;
-            s0_data_o = `ZeroWord;
-            s1_data_o = `ZeroWord;
-            s2_data_o = `ZeroWord;
-            s3_data_o = `ZeroWord;
-            s4_data_o = `ZeroWord;
-            s5_data_o = `ZeroWord;
-            s0_we_o = `WriteDisable;
-            s1_we_o = `WriteDisable;
-            s2_we_o = `WriteDisable;
-            s3_we_o = `WriteDisable;
-            s4_we_o = `WriteDisable;
-            s5_we_o = `WriteDisable;
-        end else begin
-            m0_data_o = `ZeroWord;
-            m1_data_o = `INST_NOP;
-            m2_data_o = `ZeroWord;
-            m3_data_o = `ZeroWord;
+        s0_addr_o = `ZeroWord;
+        s1_addr_o = `ZeroWord;
+        s2_addr_o = `ZeroWord;
+        s3_addr_o = `ZeroWord;
+        s4_addr_o = `ZeroWord;
+        s5_addr_o = `ZeroWord;
+        s0_data_o = `ZeroWord;
+        s1_data_o = `ZeroWord;
+        s2_data_o = `ZeroWord;
+        s3_data_o = `ZeroWord;
+        s4_data_o = `ZeroWord;
+        s5_data_o = `ZeroWord;
+        s0_we_o = `WriteDisable;
+        s1_we_o = `WriteDisable;
+        s2_we_o = `WriteDisable;
+        s3_we_o = `WriteDisable;
+        s4_we_o = `WriteDisable;
+        s5_we_o = `WriteDisable;
 
-            s0_addr_o = `ZeroWord;
-            s1_addr_o = `ZeroWord;
-            s2_addr_o = `ZeroWord;
-            s3_addr_o = `ZeroWord;
-            s4_addr_o = `ZeroWord;
-            s5_addr_o = `ZeroWord;
-            s0_data_o = `ZeroWord;
-            s1_data_o = `ZeroWord;
-            s2_data_o = `ZeroWord;
-            s3_data_o = `ZeroWord;
-            s4_data_o = `ZeroWord;
-            s5_data_o = `ZeroWord;
-            s0_we_o = `WriteDisable;
-            s1_we_o = `WriteDisable;
-            s2_we_o = `WriteDisable;
-            s3_we_o = `WriteDisable;
-            s4_we_o = `WriteDisable;
-            s5_we_o = `WriteDisable;
+        case (grant)
+            grant0: begin
+                case (m0_addr_i[31:28])
+                    slave_0: begin
+                        s0_we_o = m0_we_i;
+                        s0_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s0_data_o = m0_data_i;
+                        m0_data_o = s0_data_i;
+                    end
+                    slave_1: begin
+                        s1_we_o = m0_we_i;
+                        s1_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s1_data_o = m0_data_i;
+                        m0_data_o = s1_data_i;
+                    end
+                    slave_2: begin
+                        s2_we_o = m0_we_i;
+                        s2_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s2_data_o = m0_data_i;
+                        m0_data_o = s2_data_i;
+                    end
+                    slave_3: begin
+                        s3_we_o = m0_we_i;
+                        s3_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s3_data_o = m0_data_i;
+                        m0_data_o = s3_data_i;
+                    end
+                    slave_4: begin
+                        s4_we_o = m0_we_i;
+                        s4_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s4_data_o = m0_data_i;
+                        m0_data_o = s4_data_i;
+                    end
+                    slave_5: begin
+                        s5_we_o = m0_we_i;
+                        s5_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
+                        s5_data_o = m0_data_i;
+                        m0_data_o = s5_data_i;
+                    end
+                    default: begin
 
-            case (grant)
-                grant0: begin
-                    case (m0_addr_i[31:28])
-                        slave_0: begin
-                            s0_we_o = m0_we_i;
-                            s0_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
-                            s0_data_o = m0_data_i;
-                            m0_data_o = s0_data_i;
-                        end
-                        slave_1: begin
-                            s1_we_o = m0_we_i;
-                            s1_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
-                            s1_data_o = m0_data_i;
-                            m0_data_o = s1_data_i;
-                        end
-                        slave_2: begin
-                            s2_we_o = m0_we_i;
-                            s2_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
-                            s2_data_o = m0_data_i;
-                            m0_data_o = s2_data_i;
-                        end
-                        slave_3: begin
-                            s3_we_o = m0_we_i;
-                            s3_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
-                            s3_data_o = m0_data_i;
-                            m0_data_o = s3_data_i;
-                        end
-                        slave_4: begin
-                            s4_we_o = m0_we_i;
-                            s4_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
-                            s4_data_o = m0_data_i;
-                            m0_data_o = s4_data_i;
-                        end
-                        slave_5: begin
-                            s5_we_o = m0_we_i;
-                            s5_addr_o = {{4'h0}, {m0_addr_i[27:0]}};
-                            s5_data_o = m0_data_i;
-                            m0_data_o = s5_data_i;
-                        end
-                        default: begin
+                    end
+                endcase
+            end
+            grant1: begin
+                case (m1_addr_i[31:28])
+                    slave_0: begin
+                        s0_we_o = m1_we_i;
+                        s0_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                        s0_data_o = m1_data_i;
+                        m1_data_o = s0_data_i;
+                    end
+                    slave_1: begin
+                        s1_we_o = m1_we_i;
+                        s1_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                        s1_data_o = m1_data_i;
+                        m1_data_o = s1_data_i;
+                    end
+                    slave_2: begin
+                        s2_we_o = m1_we_i;
+                        s2_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                        s2_data_o = m1_data_i;
+                        m1_data_o = s2_data_i;
+                    end
+                    slave_3: begin
+                        s3_we_o = m1_we_i;
+                        s3_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                        s3_data_o = m1_data_i;
+                        m1_data_o = s3_data_i;
+                    end
+                    slave_4: begin
+                        s4_we_o = m1_we_i;
+                        s4_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                        s4_data_o = m1_data_i;
+                        m1_data_o = s4_data_i;
+                    end
+                    slave_5: begin
+                        s5_we_o = m1_we_i;
+                        s5_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
+                        s5_data_o = m1_data_i;
+                        m1_data_o = s5_data_i;
+                    end
+                    default: begin
 
-                        end
-                    endcase
-                end
-                grant1: begin
-                    case (m1_addr_i[31:28])
-                        slave_0: begin
-                            s0_we_o = m1_we_i;
-                            s0_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
-                            s0_data_o = m1_data_i;
-                            m1_data_o = s0_data_i;
-                        end
-                        slave_1: begin
-                            s1_we_o = m1_we_i;
-                            s1_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
-                            s1_data_o = m1_data_i;
-                            m1_data_o = s1_data_i;
-                        end
-                        slave_2: begin
-                            s2_we_o = m1_we_i;
-                            s2_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
-                            s2_data_o = m1_data_i;
-                            m1_data_o = s2_data_i;
-                        end
-                        slave_3: begin
-                            s3_we_o = m1_we_i;
-                            s3_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
-                            s3_data_o = m1_data_i;
-                            m1_data_o = s3_data_i;
-                        end
-                        slave_4: begin
-                            s4_we_o = m1_we_i;
-                            s4_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
-                            s4_data_o = m1_data_i;
-                            m1_data_o = s4_data_i;
-                        end
-                        slave_5: begin
-                            s5_we_o = m1_we_i;
-                            s5_addr_o = {{4'h0}, {m1_addr_i[27:0]}};
-                            s5_data_o = m1_data_i;
-                            m1_data_o = s5_data_i;
-                        end
-                        default: begin
+                    end
+                endcase
+            end
+            grant2: begin
+                case (m2_addr_i[31:28])
+                    slave_0: begin
+                        s0_we_o = m2_we_i;
+                        s0_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                        s0_data_o = m2_data_i;
+                        m2_data_o = s0_data_i;
+                    end
+                    slave_1: begin
+                        s1_we_o = m2_we_i;
+                        s1_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                        s1_data_o = m2_data_i;
+                        m2_data_o = s1_data_i;
+                    end
+                    slave_2: begin
+                        s2_we_o = m2_we_i;
+                        s2_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                        s2_data_o = m2_data_i;
+                        m2_data_o = s2_data_i;
+                    end
+                    slave_3: begin
+                        s3_we_o = m2_we_i;
+                        s3_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                        s3_data_o = m2_data_i;
+                        m2_data_o = s3_data_i;
+                    end
+                    slave_4: begin
+                        s4_we_o = m2_we_i;
+                        s4_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                        s4_data_o = m2_data_i;
+                        m2_data_o = s4_data_i;
+                    end
+                    slave_5: begin
+                        s5_we_o = m2_we_i;
+                        s5_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
+                        s5_data_o = m2_data_i;
+                        m2_data_o = s5_data_i;
+                    end
+                    default: begin
 
-                        end
-                    endcase
-                end
-                grant2: begin
-                    case (m2_addr_i[31:28])
-                        slave_0: begin
-                            s0_we_o = m2_we_i;
-                            s0_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
-                            s0_data_o = m2_data_i;
-                            m2_data_o = s0_data_i;
-                        end
-                        slave_1: begin
-                            s1_we_o = m2_we_i;
-                            s1_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
-                            s1_data_o = m2_data_i;
-                            m2_data_o = s1_data_i;
-                        end
-                        slave_2: begin
-                            s2_we_o = m2_we_i;
-                            s2_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
-                            s2_data_o = m2_data_i;
-                            m2_data_o = s2_data_i;
-                        end
-                        slave_3: begin
-                            s3_we_o = m2_we_i;
-                            s3_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
-                            s3_data_o = m2_data_i;
-                            m2_data_o = s3_data_i;
-                        end
-                        slave_4: begin
-                            s4_we_o = m2_we_i;
-                            s4_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
-                            s4_data_o = m2_data_i;
-                            m2_data_o = s4_data_i;
-                        end
-                        slave_5: begin
-                            s5_we_o = m2_we_i;
-                            s5_addr_o = {{4'h0}, {m2_addr_i[27:0]}};
-                            s5_data_o = m2_data_i;
-                            m2_data_o = s5_data_i;
-                        end
-                        default: begin
+                    end
+                endcase
+            end
+            grant3: begin
+                case (m3_addr_i[31:28])
+                    slave_0: begin
+                        s0_we_o = m3_we_i;
+                        s0_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
+                        s0_data_o = m3_data_i;
+                        m3_data_o = s0_data_i;
+                    end
+                    slave_1: begin
+                        s1_we_o = m3_we_i;
+                        s1_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
+                        s1_data_o = m3_data_i;
+                        m3_data_o = s1_data_i;
+                    end
+                    slave_2: begin
+                        s2_we_o = m3_we_i;
+                        s2_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
+                        s2_data_o = m3_data_i;
+                        m3_data_o = s2_data_i;
+                    end
+                    slave_3: begin
+                        s3_we_o = m3_we_i;
+                        s3_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
+                        s3_data_o = m3_data_i;
+                        m3_data_o = s3_data_i;
+                    end
+                    slave_4: begin
+                        s4_we_o = m3_we_i;
+                        s4_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
+                        s4_data_o = m3_data_i;
+                        m3_data_o = s4_data_i;
+                    end
+                    slave_5: begin
+                        s5_we_o = m3_we_i;
+                        s5_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
+                        s5_data_o = m3_data_i;
+                        m3_data_o = s5_data_i;
+                    end
+                    default: begin
 
-                        end
-                    endcase
-                end
-                grant3: begin
-                    case (m3_addr_i[31:28])
-                        slave_0: begin
-                            s0_we_o = m3_we_i;
-                            s0_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
-                            s0_data_o = m3_data_i;
-                            m3_data_o = s0_data_i;
-                        end
-                        slave_1: begin
-                            s1_we_o = m3_we_i;
-                            s1_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
-                            s1_data_o = m3_data_i;
-                            m3_data_o = s1_data_i;
-                        end
-                        slave_2: begin
-                            s2_we_o = m3_we_i;
-                            s2_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
-                            s2_data_o = m3_data_i;
-                            m3_data_o = s2_data_i;
-                        end
-                        slave_3: begin
-                            s3_we_o = m3_we_i;
-                            s3_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
-                            s3_data_o = m3_data_i;
-                            m3_data_o = s3_data_i;
-                        end
-                        slave_4: begin
-                            s4_we_o = m3_we_i;
-                            s4_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
-                            s4_data_o = m3_data_i;
-                            m3_data_o = s4_data_i;
-                        end
-                        slave_5: begin
-                            s5_we_o = m3_we_i;
-                            s5_addr_o = {{4'h0}, {m3_addr_i[27:0]}};
-                            s5_data_o = m3_data_i;
-                            m3_data_o = s5_data_i;
-                        end
-                        default: begin
+                    end
+                endcase
+            end
+            default: begin
 
-                        end
-                    endcase
-                end
-                default: begin
-
-                end
-            endcase
-        end
+            end
+        endcase
     end
 
 endmodule

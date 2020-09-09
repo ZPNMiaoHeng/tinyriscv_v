@@ -58,22 +58,22 @@ module uart_debug(
 
 
     // 状态
-    localparam S_IDLE = 1;
-    localparam S_INIT_UART_BAUD = 2;
-    localparam S_CLEAR_UART_RX_OVER_FLAG = 3;
-    localparam S_WAIT_BYTE = 4;
-    localparam S_WAIT_BYTE2 = 5;
-    localparam S_GET_BYTE = 6;
-    localparam S_REC_FIRST_PACKET = 7;
-    localparam S_REC_REMAIN_PACKET = 8;
-    localparam S_SEND_ACK = 9;
-    localparam S_SEND_NAK = 10;
-    localparam S_CRC_START = 11;
-    localparam S_CRC_CALC = 12;
-    localparam S_CRC_END = 13;
-    localparam S_WRITE_MEM = 14;
+    localparam S_IDLE                    = 14'h0001;
+    localparam S_INIT_UART_BAUD          = 14'h0002;
+    localparam S_CLEAR_UART_RX_OVER_FLAG = 14'h0004;
+    localparam S_WAIT_BYTE               = 14'h0008;
+    localparam S_WAIT_BYTE2              = 14'h0010;
+    localparam S_GET_BYTE                = 14'h0020;
+    localparam S_REC_FIRST_PACKET        = 14'h0040;
+    localparam S_REC_REMAIN_PACKET       = 14'h0080;
+    localparam S_SEND_ACK                = 14'h0100;
+    localparam S_SEND_NAK                = 14'h0200;
+    localparam S_CRC_START               = 14'h0400;
+    localparam S_CRC_CALC                = 14'h0800;
+    localparam S_CRC_END                 = 14'h1000;
+    localparam S_WRITE_MEM               = 14'h2000;
 
-    reg[3:0] state;
+    reg[13:0] state;
 
     // 存放串口接收到的数据
     reg[7:0] rx_data[0:131];
@@ -83,7 +83,10 @@ module uart_debug(
     reg[31:0] fw_file_size;
     reg[31:0] write_mem_addr;
     reg[31:0] write_mem_data;
-    reg[7:0] write_mem_byte_index;
+    reg[7:0] write_mem_byte_index0;
+    reg[7:0] write_mem_byte_index1;
+    reg[7:0] write_mem_byte_index2;
+    reg[7:0] write_mem_byte_index3;
 
     reg[15:0] crc_result;
     reg[3:0] crc_bit_index;
@@ -177,7 +180,7 @@ module uart_debug(
                     end
                 end
                 S_WRITE_MEM: begin
-                    if (write_mem_byte_index == (need_to_rec_bytes + 2)) begin
+                    if (write_mem_byte_index0 == (need_to_rec_bytes + 2)) begin
                         state <= S_SEND_ACK;
                     end else begin
                         mem_addr_o <= write_mem_addr;
@@ -262,25 +265,107 @@ module uart_debug(
     always @ (posedge clk) begin
         if (rst == 1'b0 || debug_en_i == 1'b0) begin
             write_mem_addr <= 32'h0;
-            write_mem_data <= 32'h0;
-            write_mem_byte_index <= 8'h0;
         end else begin
             case (state)
                 S_REC_FIRST_PACKET: begin
                     write_mem_addr <= `ROM_START_ADDR;
-                    write_mem_data <= 32'h0;
-                    write_mem_byte_index <= 8'h0;
                 end
                 S_CRC_END: begin
-                    write_mem_data <= {rx_data[4], rx_data[3], rx_data[2], rx_data[1]};
-                    write_mem_byte_index <= 8'h5;
                     if (write_mem_addr > 0)
                         write_mem_addr <= write_mem_addr - 4;
                 end
                 S_WRITE_MEM: begin
                     write_mem_addr <= write_mem_addr + 4;
-                    write_mem_data <= {rx_data[write_mem_byte_index + 3], rx_data[write_mem_byte_index + 2], rx_data[write_mem_byte_index + 1], rx_data[write_mem_byte_index]};
-                    write_mem_byte_index <= write_mem_byte_index + 4;
+                end
+            endcase
+        end
+    end
+
+    always @ (posedge clk) begin
+        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+            write_mem_data <= 32'h0;
+        end else begin
+            case (state)
+                S_REC_FIRST_PACKET: begin
+                    write_mem_data <= 32'h0;
+                end
+                S_CRC_END: begin
+                    write_mem_data <= {rx_data[4], rx_data[3], rx_data[2], rx_data[1]};
+                end
+                S_WRITE_MEM: begin
+                    write_mem_data <= {rx_data[write_mem_byte_index3], rx_data[write_mem_byte_index2], rx_data[write_mem_byte_index1], rx_data[write_mem_byte_index0]};
+                end
+            endcase
+        end
+    end
+
+    always @ (posedge clk) begin
+        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+            write_mem_byte_index0 <= 8'h0;
+        end else begin
+            case (state)
+                S_REC_FIRST_PACKET: begin
+                    write_mem_byte_index0 <= 8'h0;
+                end
+                S_CRC_END: begin
+                    write_mem_byte_index0 <= 8'h5;
+                end
+                S_WRITE_MEM: begin
+                    write_mem_byte_index0 <= write_mem_byte_index0 + 4;
+                end
+            endcase
+        end
+    end
+
+    always @ (posedge clk) begin
+        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+            write_mem_byte_index1 <= 8'h0;
+        end else begin
+            case (state)
+                S_REC_FIRST_PACKET: begin
+                    write_mem_byte_index1 <= 8'h0;
+                end
+                S_CRC_END: begin
+                    write_mem_byte_index1 <= 8'h6;
+                end
+                S_WRITE_MEM: begin
+                    write_mem_byte_index1 <= write_mem_byte_index1 + 4;
+                end
+            endcase
+        end
+    end
+
+    always @ (posedge clk) begin
+        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+            write_mem_byte_index2 <= 8'h0;
+        end else begin
+            case (state)
+                S_REC_FIRST_PACKET: begin
+                    write_mem_byte_index2 <= 8'h0;
+                end
+                S_CRC_END: begin
+                    write_mem_byte_index2 <= 8'h7;
+                end
+                S_WRITE_MEM: begin
+                    write_mem_byte_index2 <= write_mem_byte_index2 + 4;
+                end
+            endcase
+        end
+    end
+
+    always @ (posedge clk) begin
+        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+            write_mem_byte_index3 <= 8'h0;
+        end else begin
+            case (state)
+                S_REC_FIRST_PACKET: begin
+                    write_mem_byte_index3 <= 8'h0;
+                end
+                S_CRC_END: begin
+                    write_mem_byte_index3 <= 8'h8;
+                end
+                S_WRITE_MEM: begin
+                    write_mem_byte_index3 <= write_mem_byte_index3 + 4;
                 end
             endcase
         end
@@ -290,31 +375,58 @@ module uart_debug(
     always @ (posedge clk) begin
         if (rst == 1'b0 || debug_en_i == 1'b0) begin
             crc_result <= 16'h0;
-            crc_bit_index <= 4'h0;
-            crc_byte_index <= 8'h0;
         end else begin
             case (state)
                 S_CRC_START: begin
                     crc_result <= 16'hffff;
-                    crc_bit_index <= 4'h0;
-                    crc_byte_index <= 8'h1;
                 end
                 S_CRC_CALC: begin
                     if (crc_bit_index == 4'h0) begin
                         crc_result <= crc_result ^ rx_data[crc_byte_index];
-                        crc_byte_index <= crc_byte_index + 1'b1;
-                        crc_bit_index <= crc_bit_index + 1'b1;
                     end else begin
                         if (crc_bit_index < 4'h9) begin
-                            crc_bit_index <= crc_bit_index + 1'b1;
                             if (crc_result[0] == 1'b1) begin
                                 crc_result <= {1'b0, crc_result[15:1]} ^ 16'ha001;
                             end else begin
                                 crc_result <= {1'b0, crc_result[15:1]};
                             end
-                        end else begin
-                            crc_bit_index <= 4'h0;
                         end
+                    end
+                end
+            endcase
+        end
+    end
+
+    always @ (posedge clk) begin
+        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+            crc_bit_index <= 4'h0;
+        end else begin
+            case (state)
+                S_CRC_START: begin
+                    crc_bit_index <= 4'h0;
+                end
+                S_CRC_CALC: begin
+                    if (crc_bit_index < 4'h9) begin
+                        crc_bit_index <= crc_bit_index + 1'b1;
+                    end else begin
+                        crc_bit_index <= 4'h0;
+                    end
+                end
+            endcase
+        end
+    end
+
+    always @ (posedge clk) begin
+        if (rst == 1'b0 || debug_en_i == 1'b0) begin
+            crc_byte_index <= 8'h0;
+        end else begin
+            case (state)
+                S_CRC_START: begin
+                    crc_byte_index <= 8'h1;
+                end
+                S_CRC_CALC: begin
+                    if (crc_bit_index == 4'h0) begin
+                        crc_byte_index <= crc_byte_index + 1'b1;
                     end
                 end
             endcase
