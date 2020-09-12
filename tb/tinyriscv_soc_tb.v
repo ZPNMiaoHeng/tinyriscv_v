@@ -2,7 +2,7 @@
 
 `include "defines.v"
 
-
+// select one option only
 `define TEST_PROG  1
 //`define TEST_JTAG  1
 
@@ -471,6 +471,16 @@ module tinyriscv_soc_tb;
         #100
 
         $display("shift_reg = 0x%x", shift_reg[33:2]);
+
+        if (dmstatus == shift_reg[33:2]) begin
+            $display("######################");
+            $display("### jtag test pass ###");
+            $display("######################");
+        end else begin
+            $display("######################");
+            $display("!!! jtag test fail !!!");
+            $display("######################");
+        end
 `endif
 
         $finish;
@@ -497,11 +507,14 @@ module tinyriscv_soc_tb;
     tinyriscv_soc_top tinyriscv_soc_top_0(
         .clk(clk),
         .rst(rst),
-        .uart_debug_pin(1'b0)/*
+        .uart_debug_pin(1'b0)
+`ifdef TEST_JTAG
+        ,
         .jtag_TCK(TCK),
         .jtag_TMS(TMS),
         .jtag_TDI(TDI),
-        .jtag_TDO(TDO)*/
+        .jtag_TDO(TDO)
+`endif
     );
 
 endmodule
