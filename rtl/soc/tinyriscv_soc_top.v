@@ -116,8 +116,6 @@ module tinyriscv_soc_top(
     // jtag
     wire jtag_halt_req_o;
     wire jtag_reset_req_o;
-    reg jtag_rst;
-    reg[2:0] jtag_rst_cnt;
     wire[`RegAddrBus] jtag_reg_addr_o;
     wire[`RegBus] jtag_reg_data_o;
     wire jtag_reg_we_o;
@@ -337,25 +335,14 @@ module tinyriscv_soc_top(
         .mem_rdata_i(m3_data_o)
     );
 
-    // jtag模块复位逻辑
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            jtag_rst <= 1'b1;
-            jtag_rst_cnt <= 3'h0;
-        end else begin
-            if (jtag_rst_cnt < 3'h5) begin
-                jtag_rst <= ~jtag_rst;
-                jtag_rst_cnt <= jtag_rst_cnt + 1'b1;
-            end else begin
-                jtag_rst <= 1'b1;
-            end
-        end
-    end
-
     // jtag模块例化
-    jtag_top u_jtag_top(
+    jtag_top #(
+        .DMI_ADDR_BITS(6),
+        .DMI_DATA_BITS(32),
+        .DMI_OP_BITS(2)
+    ) u_jtag_top(
         .clk(clk),
-        .jtag_rst_n(jtag_rst),
+        .jtag_rst_n(rst),
         .jtag_pin_TCK(jtag_TCK),
         .jtag_pin_TMS(jtag_TMS),
         .jtag_pin_TDI(jtag_TDI),

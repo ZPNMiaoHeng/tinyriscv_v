@@ -20,7 +20,10 @@
 `define DTM_REQ_INVALID   1'b0
 
 
-module jtag_driver(
+module jtag_driver #(
+    parameter DMI_ADDR_BITS = 6,
+    parameter DMI_DATA_BITS = 32,
+    parameter DMI_OP_BITS = 2)(
 
     rst_n,
 
@@ -43,9 +46,6 @@ module jtag_driver(
     parameter DTM_VERSION  = 4'h1;
     parameter IR_BITS = 5;
 
-    parameter DMI_ADDR_BITS = 6;
-    parameter DMI_DATA_BITS = 32;
-    parameter DMI_OP_BITS = 2;
     parameter DM_RESP_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
     parameter DTM_REQ_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
     parameter SHIFT_REG_BITS = DTM_REQ_BITS;
@@ -100,7 +100,7 @@ module jtag_driver(
     wire dtm_reset;
 
     assign dtm_reset = shift_reg[16];
-    assign idcode  = {IDCODE_VERSION, IDCODE_PART_NUMBER, IDCODE_MANUFLD, 1'h1};
+    assign idcode = {IDCODE_VERSION, IDCODE_PART_NUMBER, IDCODE_MANUFLD, 1'h1};
     assign dtmcs = {14'b0,
                     1'b0,  // dmihardreset
                     1'b0,  // dmireset
@@ -110,7 +110,7 @@ module jtag_driver(
                     addr_bits,    // abits
                     DTM_VERSION}; // version
 
-    assign busy_response  = {{(DMI_ADDR_BITS +  DMI_DATA_BITS){1'b0}}, {(DMI_OP_BITS){1'b1}}};  // op = 2'b11
+    assign busy_response = {{(DMI_ADDR_BITS + DMI_DATA_BITS){1'b0}}, {(DMI_OP_BITS){1'b1}}};  // op = 2'b11
     assign none_busy_response = dm_resp_data;
     assign is_busy = sticky_busy | dm_is_busy;
     assign dmi_stat = is_busy ? 2'b01 : 2'b00;
@@ -171,7 +171,7 @@ module jtag_driver(
     always @(posedge jtag_TCK or negedge rst_n) begin
         if (!rst_n) begin
             dtm_req_valid <= `DTM_REQ_INVALID;
-            dtm_req_data <= 40'h0;
+            dtm_req_data <= {DTM_REQ_BITS{1'b0}};
         end else begin
             if (jtag_state == UPDATE_DR) begin
                 if (ir_reg == REG_DMI) begin
@@ -226,6 +226,5 @@ module jtag_driver(
             jtag_TDO <= 1'b0;
         end
     end
-
 
 endmodule
