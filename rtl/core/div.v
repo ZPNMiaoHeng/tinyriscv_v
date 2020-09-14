@@ -18,7 +18,7 @@
 
 // 除法模块
 // 试商法实现32位整数除法
-// 每次除法运算需要33个时钟周期才能完成
+// 每次除法运算至少需要33个时钟周期才能完成
 module div(
 
     input wire clk,
@@ -32,344 +32,180 @@ module div(
     input wire[`RegAddrBus] reg_waddr_i, // 运算结束后需要写的寄存器
 
     // to ex
-    output reg[`RegBus] result_o,        // 除法结果
+    output reg[`RegBus] result_o,        // 除法结果，高32位是余数，低32位是商
     output reg ready_o,                  // 运算结束信号
-    output reg busy_o,                   // 正在运算信号
+    output reg busy_o,                  // 正在运算信号
     output reg[`RegAddrBus] reg_waddr_o  // 运算结束后需要写的寄存器
 
     );
 
     // 状态定义
-    localparam STATE_IDLE   = 5'b00001;
-    localparam STATE_START  = 5'b00010;
-    localparam STATE_CALC   = 5'b00100;
-    localparam STATE_INVERT = 5'b01000;
-    localparam STATE_END    = 5'b10000;
+    localparam STATE_IDLE  = 4'b0001;
+    localparam STATE_START = 4'b0010;
+    localparam STATE_CALC  = 4'b0100;
+    localparam STATE_END   = 4'b1000;
 
-    reg[4:0] state;
-    reg[4:0] next_state;
     reg[`RegBus] dividend_r;
     reg[`RegBus] divisor_r;
     reg[2:0] op_r;
+    reg[3:0] state;
     reg[31:0] count;
     reg[`RegBus] div_result;
     reg[`RegBus] div_remain;
     reg[`RegBus] minuend;
     reg invert_result;
 
-    wire[31:0] dividend_invert = (-dividend_r);
-    wire[31:0] divisor_invert = (-divisor_r);
-    wire[31:0] minuend_sub_res = (minuend - divisor_r);
-    wire minuend_ge_divisor = (minuend >= divisor_r);
-
     wire op_div = (op_r == `INST_DIV);
     wire op_divu = (op_r == `INST_DIVU);
     wire op_rem = (op_r == `INST_REM);
     wire op_remu = (op_r == `INST_REMU);
-    wire is_divisor_zero = (divisor_r == `ZeroWord);
 
+    wire[31:0] dividend_invert = (-dividend_r);
+    wire[31:0] divisor_invert = (-divisor_r);
+    wire minuend_ge_divisor = minuend >= divisor_r;
+    wire[31:0] minuend_sub_res = minuend - divisor_r;
+    wire[31:0] div_result_tmp = minuend_ge_divisor? ({div_result[30:0], 1'b1}): ({div_result[30:0], 1'b0});
+    wire[31:0] minuend_tmp = minuend_ge_divisor? minuend_sub_res[30:0]: minuend[30:0];
 
-    // 当前状态切换
+    // 状态机实现
     always @ (posedge clk) begin
         if (rst == `RstEnable) begin
             state <= STATE_IDLE;
-        end else begin
-            state <= next_state;
-        end
-    end
-
-    // 下一个状态切换
-    always @ (*) begin
-        if (start_i == `DivStart) begin
-            case (state)
-                STATE_IDLE: begin
-                    next_state = STATE_START;
-                end
-                STATE_START: begin
-                    if (is_divisor_zero) begin
-                        next_state = STATE_IDLE;
-                    end else begin
-                        next_state = STATE_CALC;
-                    end
-                end
-                STATE_CALC: begin
-                    if (count == `ZeroWord) begin
-                        next_state = STATE_INVERT;
-                    end else begin
-                        next_state = STATE_CALC;
-                    end
-                end
-                STATE_INVERT: begin
-                    next_state = STATE_END;
-                end
-                STATE_END: begin
-                    next_state = STATE_IDLE;
-                end
-                default: begin
-                    next_state = STATE_IDLE;
-                end
-            endcase
-        end else begin
-            next_state = STATE_IDLE;
-        end
-    end
-
-    // 具体操作
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            op_r <= 3'h0;
-        end else begin
-            if (start_i == `DivStart && state == STATE_IDLE) begin
-                op_r <= op_i;
-            end
-        end
-    end
-
-    // 运算完后要写的寄存器地址
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            reg_waddr_o <= `ZeroReg;
-        end else begin
-            if (start_i == `DivStart && state == STATE_IDLE) begin
-                reg_waddr_o <= reg_waddr_i;
-            end
-        end
-    end
-
-    // 被除数
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            dividend_r <= `ZeroWord;
-        end else begin
-            case (state)
-                STATE_IDLE: begin
-                    if (start_i == `DivStart) begin
-                        dividend_r <= dividend_i;
-                    end
-                end
-                STATE_START: begin
-                    // 除数不为0
-                    if (!is_divisor_zero) begin
-                        // DIV和REM这两条指令是有符号数运算
-                        if ((op_div | op_rem) & dividend_r[31]) begin
-                            // 被除数求补码
-                            dividend_r <= dividend_invert;
-                        end
-                    end
-                end
-                STATE_CALC: begin
-                    if (|count) begin
-                        dividend_r <= {dividend_r[30:0], 1'b0};
-                    end
-                end
-            endcase
-        end
-    end
-
-    // 除数
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            divisor_r <= `ZeroWord;
-        end else begin
-            case (state)
-                STATE_IDLE: begin
-                    if (start_i == `DivStart) begin
-                        divisor_r <= divisor_i;
-                    end
-                end
-                STATE_START: begin
-                    // 除数不为0
-                    if (!is_divisor_zero) begin
-                        // DIV和REM这两条指令是有符号数运算
-                        if ((op_div | op_rem) & divisor_r[31]) begin
-                            // 除数求补码
-                            divisor_r <= divisor_invert;
-                        end
-                    end
-                end
-            endcase
-        end
-    end
-
-    // 运算结束
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
             ready_o <= `DivResultNotReady;
-        end else begin
-            case (state)
-                STATE_IDLE: begin
-                    ready_o <= `DivResultNotReady;
-                end
-                STATE_START: begin
-                    // 除数为0
-                    if (is_divisor_zero) begin
-                        ready_o <= `DivResultReady;
-                    end
-                end
-                STATE_END: begin
-                    ready_o <= `DivResultReady;
-                end
-            endcase
-        end
-    end
-
-    // 最终结果
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
             result_o <= `ZeroWord;
-        end else begin
-            case (state)
-                STATE_IDLE: begin
-                    result_o <= `ZeroWord;
-                end
-                STATE_START: begin
-                    // 除数为0
-                    if (is_divisor_zero) begin
-                        if (op_div | op_divu) begin
-                            result_o <= 32'hffffffff;
-                        end else begin
-                            result_o <= dividend_r;
-                        end
-                    end
-                end
-                STATE_END: begin
-                    if (op_div | op_divu) begin
-                        result_o <= div_result;
-                    end else begin
-                        result_o <= div_remain;
-                    end
-                end
-            endcase
-        end
-    end
-
-    // bit计数
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
+            div_result <= `ZeroWord;
+            div_remain <= `ZeroWord;
+            op_r <= 3'h0;
+            reg_waddr_o <= `ZeroWord;
+            dividend_r <= `ZeroWord;
+            divisor_r <= `ZeroWord;
+            minuend <= `ZeroWord;
+            invert_result <= 1'b0;
+            busy_o <= `False;
             count <= `ZeroWord;
         end else begin
             case (state)
-                STATE_START: begin
-                    // 除数不为0
-                    if (!is_divisor_zero) begin
-                        count <= 32'h80000000;
+                STATE_IDLE: begin
+                    if (start_i == `DivStart) begin
+                        op_r <= op_i;
+                        dividend_r <= dividend_i;
+                        divisor_r <= divisor_i;
+                        reg_waddr_o <= reg_waddr_i;
+                        state <= STATE_START;
+                        busy_o <= `True;
+                    end else begin
+                        op_r <= 3'h0;
+                        reg_waddr_o <= `ZeroWord;
+                        dividend_r <= `ZeroWord;
+                        divisor_r <= `ZeroWord;
+                        ready_o <= `DivResultNotReady;
+                        result_o <= `ZeroWord;
+                        busy_o <= `False;
                     end
                 end
+
+                STATE_START: begin
+                    if (start_i == `DivStart) begin
+                        // 除数为0
+                        if (divisor_r == `ZeroWord) begin
+                            if (op_div | op_divu) begin
+                                result_o <= 32'hffffffff;
+                            end else begin
+                                result_o <= dividend_r;
+                            end
+                            ready_o <= `DivResultReady;
+                            state <= STATE_IDLE;
+                            busy_o <= `False;
+                        // 除数不为0
+                        end else begin
+                            busy_o <= `True;
+                            count <= 32'h40000000;
+                            state <= STATE_CALC;
+                            div_result <= `ZeroWord;
+                            div_remain <= `ZeroWord;
+
+                            // DIV和REM这两条指令是有符号数运算指令
+                            if (op_div | op_rem) begin
+                                // 被除数求补码
+                                if (dividend_r[31] == 1'b1) begin
+                                    dividend_r <= dividend_invert;
+                                    minuend <= dividend_invert[31];
+                                end else begin
+                                    minuend <= dividend_r[31];
+                                end
+                                // 除数求补码
+                                if (divisor_r[31] == 1'b1) begin
+                                    divisor_r <= divisor_invert;
+                                end
+                            end else begin
+                                minuend <= dividend_r[31];
+                            end
+
+                            // 运算结束后是否要对结果取补码
+                            if ((op_div && (dividend_r[31] ^ divisor_r[31] == 1'b1))
+                                || (op_rem && (dividend_r[31] == 1'b1))) begin
+                                invert_result <= 1'b1;
+                            end else begin
+                                invert_result <= 1'b0;
+                            end
+                        end
+                    end else begin
+                        state <= STATE_IDLE;
+                        result_o <= `ZeroWord;
+                        ready_o <= `DivResultNotReady;
+                        busy_o <= `False;
+                    end
+                end
+
                 STATE_CALC: begin
-                    if (|count) begin
+                    if (start_i == `DivStart) begin
+                        dividend_r <= {dividend_r[30:0], 1'b0};
+                        div_result <= div_result_tmp;
                         count <= {1'b0, count[31:1]};
-                    end
-                end
-            endcase
-        end
-    end
-
-    // 结果是否取补码
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            invert_result <= 1'b0;
-        end else begin
-            case (state)
-                STATE_START: begin
-                    // 除数不为0
-                    if (!is_divisor_zero) begin
-                        // 运算结束后是否要对结果取补码
-                        if (((op_div) && (dividend_r[31] ^ divisor_r[31] == 1'b1))
-                            || ((op_rem) && (dividend_r[31] == 1'b1))) begin
-                            invert_result <= 1'b1;
+                        if (|count) begin
+                            minuend <= {minuend_tmp[30:0], dividend_r[30]};
                         end else begin
-                            invert_result <= 1'b0;
+                            state <= STATE_END;
+                            if (minuend_ge_divisor) begin
+                                div_remain <= minuend_sub_res;
+                            end else begin
+                                div_remain <= minuend;
+                            end
                         end
+                    end else begin
+                        state <= STATE_IDLE;
+                        result_o <= `ZeroWord;
+                        ready_o <= `DivResultNotReady;
+                        busy_o <= `False;
                     end
                 end
-            endcase
-        end
-    end
 
-    // 被减数
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            minuend <= `ZeroWord;
-        end else begin
-            case (state)
-                STATE_START: begin
-                    // 除数不为0
-                    if (!is_divisor_zero) begin
-                        // DIV和REM这两条指令是有符号数运算
-                        if ((op_div | op_rem) & dividend_r[31]) begin
-                            minuend <= dividend_invert[31];
+                STATE_END: begin
+                    if (start_i == `DivStart) begin
+                        ready_o <= `DivResultReady;
+                        state <= STATE_IDLE;
+                        busy_o <= `False;
+                        if (op_div | op_divu) begin
+                            if (invert_result) begin
+                                result_o <= (-div_result);
+                            end else begin
+                                result_o <= div_result;
+                            end
                         end else begin
-                            minuend <= dividend_r[31];
+                            if (invert_result) begin
+                                result_o <= (-div_remain);
+                            end else begin
+                                result_o <= div_remain;
+                            end
                         end
+                    end else begin
+                        state <= STATE_IDLE;
+                        result_o <= `ZeroWord;
+                        ready_o <= `DivResultNotReady;
+                        busy_o <= `False;
                     end
                 end
-                STATE_CALC: begin
-                    if (|count) begin
-                        if (minuend_ge_divisor) begin
-                            minuend <= {minuend_sub_res[30:0], dividend_r[31]};
-                        end else begin
-                            minuend <= {minuend[30:0], dividend_r[31]};
-                        end
-                    end
-                end
-            endcase
-        end
-    end
 
-    // 商
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            div_result <= `ZeroWord;
-        end else begin
-            case (state)
-                STATE_CALC: begin
-                    div_result <= {div_result[30:0], minuend_ge_divisor};
-                end
-                STATE_INVERT: begin
-                    if (invert_result == 1'b1) begin
-                        div_result <= -div_result;
-                    end
-                end
-            endcase
-        end
-    end
-
-    // 余数
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            div_remain <= `ZeroWord;
-        end else begin
-            case (state)
-                STATE_CALC: begin
-                    if (count == `ZeroWord) begin
-                        if (minuend_ge_divisor) begin
-                            div_remain <= minuend_sub_res;
-                        end else begin
-                            div_remain <= minuend;
-                        end
-                    end
-                end
-                STATE_INVERT: begin
-                    if (invert_result == 1'b1) begin
-                        div_remain <= -div_remain;
-                    end
-                end
-            endcase
-        end
-    end
-
-    // busy信号要比ready信号提前一个时钟撤销
-    always @ (posedge clk) begin
-        if (rst == `RstEnable) begin
-            busy_o <= `False;
-        end else begin
-            case (state)
-                STATE_CALC, STATE_INVERT: begin
-                    busy_o <= `True;
-                end
-                default: begin
-                    busy_o <= `False;
-                end
             endcase
         end
     end
