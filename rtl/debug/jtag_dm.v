@@ -144,6 +144,9 @@ module jtag_dm #(
                     state_next = STATE_RESP;
                 end
             end
+            default: begin
+                state_next = STATE_IDLE;
+            end
         endcase
     end
 
