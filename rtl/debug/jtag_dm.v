@@ -31,12 +31,16 @@ module jtag_dm #(
 
     clk,
     rst_n,
+
+    // rx
+    dm_ack_o,
     dtm_req_valid_i,
     dtm_req_data_i,
 
-    dm_is_busy_o,
+    // tx
+    dtm_ack_i,
     dm_resp_data_o,
-    dm_resp_ready_i,
+    dm_resp_valid_o,
 
     dm_reg_we_o,
     dm_reg_addr_o,
@@ -46,8 +50,8 @@ module jtag_dm #(
     dm_mem_addr_o,
     dm_mem_wdata_o,
     dm_mem_rdata_i,
-    dm_op_req_o,
 
+    dm_op_req_o,
     dm_halt_req_o,
     dm_reset_req_o
 
@@ -60,10 +64,12 @@ module jtag_dm #(
     // 输入输出信号
     input wire clk;
     input wire rst_n;
+    output wire dm_ack_o;
     input wire dtm_req_valid_i;
     input wire[DTM_REQ_BITS-1:0] dtm_req_data_i;
-    output wire dm_is_busy_o;
+    input wire dtm_ack_i;
     output wire[DM_RESP_BITS-1:0] dm_resp_data_o;
+    output wire dm_resp_valid_o;
     output wire dm_reg_we_o;
     output wire[4:0] dm_reg_addr_o;
     output wire[31:0] dm_reg_wdata_o;
@@ -75,14 +81,6 @@ module jtag_dm #(
     output wire dm_op_req_o;
     output wire dm_halt_req_o;
     output wire dm_reset_req_o;
-    input wire dm_resp_ready_i;
-
-    localparam STATE_IDLE  = 3'b001;
-    localparam STATE_EXE   = 3'b010;
-    localparam STATE_RESP  = 3'b100;
-
-    reg[2:0] state;
-    reg[2:0] state_next;
 
     // DM模块寄存器
     reg[31:0] dcsr;
@@ -97,451 +95,248 @@ module jtag_dm #(
     reg[31:0] command;
 
     // DM模块寄存器地址
-    localparam DCSR = 16'h7b0;
-    localparam DMSTATUS = 6'h11;
-    localparam DMCONTROL = 6'h10;
-    localparam HARTINFO = 6'h12;
+    localparam DCSR       = 16'h7b0;
+    localparam DMSTATUS   = 6'h11;
+    localparam DMCONTROL  = 6'h10;
+    localparam HARTINFO   = 6'h12;
     localparam ABSTRACTCS = 6'h16;
-    localparam DATA0 = 6'h04;
-    localparam SBCS = 6'h38;
+    localparam DATA0      = 6'h04;
+    localparam SBCS       = 6'h38;
     localparam SBADDRESS0 = 6'h39;
-    localparam SBDATA0 = 6'h3C;
-    localparam COMMAND = 6'h17;
-    localparam DPC = 16'h7b1;
+    localparam SBDATA0    = 6'h3C;
+    localparam COMMAND    = 6'h17;
+    localparam DPC        = 16'h7b1;
 
     localparam OP_SUCC = 2'b00;
 
-    // 当前状态切换
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            state <= STATE_IDLE;
-        end else begin
-            state <= state_next;
-        end
-    end
-
-    // 下一个状态切换
-    always @ (*) begin
-        case (state)
-            STATE_IDLE: begin
-                if (dtm_req_valid_i == `DTM_REQ_VALID) begin
-                    state_next = STATE_EXE;
-                end else begin
-                    state_next = STATE_IDLE;
-                end
-            end
-            STATE_EXE: begin
-                if (access_core) begin
-                    state_next = STATE_RESP;
-                end else begin
-                    state_next = STATE_IDLE;
-                end
-            end
-            STATE_RESP: begin
-                if (dm_resp_ready_i == 1'b1) begin
-                    state_next = STATE_IDLE;
-                end else begin
-                    state_next = STATE_RESP;
-                end
-            end
-            default: begin
-                state_next = STATE_IDLE;
-            end
-        endcase
-    end
-
-    reg[31:0] mem_rdata;
-    reg[31:0] reg_rdata;
-
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            mem_rdata <= 32'h0;
-            reg_rdata <= 32'h0;
-        end else begin
-            if (state == STATE_RESP && dm_resp_ready_i == 1'b1) begin
-                mem_rdata <= dm_mem_rdata_i;
-                reg_rdata <= dm_reg_rdata_i;
-            end
-        end
-    end
-
-    reg[DTM_REQ_BITS-1:0] dtm_req_data;
-
-    // 锁存jtag_dirver模块传过来的数据
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            dtm_req_data <= {DTM_REQ_BITS{1'b0}};
-        end else begin
-            if ((state == STATE_IDLE) && (dtm_req_valid_i == `DTM_REQ_VALID)) begin
-                dtm_req_data <= dtm_req_data_i;
-            end
-        end
-    end
-
-    wire[DMI_OP_BITS-1:0] op = dtm_req_data[DMI_OP_BITS-1:0];
-    wire[DMI_DATA_BITS-1:0] data = dtm_req_data[DMI_DATA_BITS+DMI_OP_BITS-1:DMI_OP_BITS];
-    wire[DMI_ADDR_BITS-1:0] address = dtm_req_data[DTM_REQ_BITS-1:DMI_DATA_BITS+DMI_OP_BITS];
-
-    wire op_write = (op == `DTM_OP_WRITE);
-    wire op_read = (op == `DTM_OP_READ);
-    wire op_nop = (op == `DTM_OP_NOP);
-    wire access_dmstatus = (address == DMSTATUS);
-    wire access_dmcontrol = (address == DMCONTROL);
-    wire access_hartinfo = (address == HARTINFO);
-    wire access_abstractcs = (address == ABSTRACTCS);
-    wire access_data0 = (address == DATA0);
-    wire access_sbcs = (address == SBCS);
-    wire access_sbaddress0 = (address == SBADDRESS0);
-    wire access_sbdata0 = (address == SBDATA0);
-    wire access_command = (address == COMMAND);
-
-    wire access_core = (~op_nop) & (~access_dmcontrol) & (~access_dmstatus) & (~access_hartinfo);
-
-    reg dm_op_req;
-
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            dm_op_req <= 1'b0;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (access_core) begin
-                        dm_op_req <= 1'b1;
-                    end
-                end
-                STATE_IDLE: begin
-                    dm_op_req <= 1'b0;
-                end
-            endcase
-        end
-    end
-
-    assign dm_op_req_o = dm_op_req;
-
-    reg[31:0] rdata;
-    // 返回数据给jtag driver模块
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            rdata <= 32'h0;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    case (op)
-                        `DTM_OP_READ: begin
-                            case (address)
-                                DMSTATUS: begin
-                                    rdata <= dmstatus;
-                                end
-                                DMCONTROL: begin
-                                    rdata <= dmcontrol;
-                                end
-                                HARTINFO: begin
-                                    rdata <= 32'h0;
-                                end
-                                SBCS: begin
-                                    rdata <= sbcs;
-                                end
-                                ABSTRACTCS: begin
-                                    rdata <= abstractcs;
-                                end
-                                DATA0: begin
-                                    if (is_read_reg == 1'b1) begin
-                                        rdata <= reg_rdata;
-                                    end else begin
-                                        rdata <= data0;
-                                    end
-                                end
-                                SBDATA0: begin
-                                    rdata <= mem_rdata;
-                                end
-                                default: begin
-                                    rdata <= 32'h0;
-                                end
-                            endcase
-                        end
-                        default: begin
-                            rdata <= 32'h0;
-                        end
-                    endcase
-                end
-            endcase
-        end
-    end
-
-    assign dm_resp_data_o = {address, rdata, OP_SUCC};
-
-    wire dm_reset = (state == STATE_EXE) & op_write & (access_dmcontrol) & (data[0] == 1'b0);
-
-    // dmcontrol
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            dmcontrol <= 32'h0;
-        end else if (dm_reset) begin
-            dmcontrol <= data;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_dmcontrol) begin
-                        dmcontrol <= (data & ~(32'h3fffc0)) | 32'h10000;
-                    end
-                end
-                default: begin
-                    
-                end
-            endcase
-        end
-    end
-
-    // dmstatus
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            dmstatus <= 32'h430c82;  // not halted, all running
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_dmcontrol) begin
-                        // halt
-                        if (data[31] == 1'b1) begin
-                            // clear ALLRUNNING ANYRUNNING and set ALLHALTED
-                            dmstatus <= {dmstatus[31:12], 4'h3, dmstatus[7:0]};
-                        // resume
-                        end else if (dm_halt_req == 1'b1 && data[30] == 1'b1) begin
-                            // set ALLRUNNING ANYRUNNING and clear ALLHALTED
-                            dmstatus <= {dmstatus[31:12], 4'hc, dmstatus[7:0]};
-                        end
-                    end else if (core_reset) begin
-                        // set ALLRUNNING ANYRUNNING and clear ALLHALTED
-                        dmstatus <= {dmstatus[31:12], 4'hc, dmstatus[7:0]};
-                    end
-                end
-                default: begin
-                    
-                end
-            endcase
-        end
-    end
-
-    wire access_reg = (data[31:24] == 8'h0);
-
-    // command
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            abstractcs <= 32'h1000003;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_command & access_reg) begin
-                        if (data[22:20] > 3'h2) begin
-                            abstractcs <= abstractcs | 32'h200;
-                        end else begin
-                            abstractcs <= abstractcs & (~(3'h7 << 8));
-                        end
-                    end
-                end
-                default: begin
-                    
-                end
-            endcase
-        end
-    end
-
-    // data0
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            data0 <= 32'h0;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_data0) begin
-                        data0 <= data;
-                    end
-                end
-                default: begin
-                    
-                end
-            endcase
-        end
-    end
-
-    // sbcs
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            sbcs <= 32'h20040404;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_sbcs) begin
-                        sbcs <= data;
-                    end
-                end
-                default: begin
-                    
-                end
-            endcase
-        end
-    end
-
-    // sbaddress0
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            sbaddress0 <= 32'h0;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_sbaddress0) begin
-                        sbaddress0 <= data;
-                    end
-                    if ((op_write | op_read) & access_sbdata0 & (sbcs[16] == 1'b1)) begin
-                        sbaddress0 <= sbaddress0 + 4;
-                    end
-                end
-                default: begin
-                    
-                end
-            endcase
-        end
-    end
-
-    // sbdata0
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            sbdata0 <= 32'h0;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_sbdata0) begin
-                        sbdata0 <= data;
-                    end
-                end
-                default: begin
-                    
-                end
-            endcase
-        end
-    end
-
-    reg dm_halt_req;
-
-    // dm_halt_req
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            dm_halt_req <= 1'b0;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_dmcontrol) begin
-                        // halt
-                        if (data[31] == 1'b1) begin
-                            dm_halt_req <= 1'b1;
-                        // resume
-                        end else if ((dm_halt_req == 1'b1) && (data[30] == 1'b1)) begin
-                            dm_halt_req <= 1'b0;
-                        end
-                    end else if (core_reset) begin
-                        dm_halt_req <= 1'b0;
-                    end
-                end
-                default: begin
-                    
-                end
-            endcase
-        end
-    end
-
-    assign dm_halt_req_o = dm_halt_req;
-
-    wire core_reset = (state == STATE_EXE) & op_write & access_command & access_reg & (data[22:20] <= 3'h2) &
-                      (data[18] == 1'b0) & (data[16] == 1'b1) & (data[15:0] == DPC);
-
-    assign dm_reset_req_o = core_reset;
-
+    reg[31:0] read_data;
+    reg dm_reg_we;
+    reg[4:0] dm_reg_addr;
+    reg[31:0] dm_reg_wdata;
+    reg dm_mem_we;
     reg[31:0] dm_mem_addr;
     reg[31:0] dm_mem_wdata;
-    reg dm_mem_we;
+    reg dm_halt_req;
+    reg dm_reset_req;
+    reg need_resp;
+    reg is_read_reg;
+    wire rx_valid;
+    wire[DTM_REQ_BITS-1:0] rx_data;
+
+    wire[31:0] sbaddress0_next = sbaddress0 + 4;
+    wire[DM_RESP_BITS-1:0] dm_resp_data;
+
+    wire[DMI_OP_BITS-1:0] op = rx_data[DMI_OP_BITS-1:0];
+    wire[DMI_DATA_BITS-1:0] data = rx_data[DMI_DATA_BITS+DMI_OP_BITS-1:DMI_OP_BITS];
+    wire[DMI_ADDR_BITS-1:0] address = rx_data[DTM_REQ_BITS-1:DMI_DATA_BITS+DMI_OP_BITS];
+
+    wire read_dmstatus = (op == `DTM_OP_READ) & (address == DMSTATUS);
 
     always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            dm_mem_addr <= 32'h0;
-            dm_mem_wdata <= 32'h0;
+        if (!rst_n) begin
             dm_mem_we <= 1'b0;
+            dm_reg_we <= 1'b0;
+            dm_halt_req <= 1'b0;
+            dm_reset_req <= 1'b0;
+            dm_mem_addr <= 32'h0;
+            dm_reg_addr <= 5'h0;
+            sbaddress0 <= 32'h0;
+            dcsr <= 32'h0;
+            hartinfo <= 32'h0;
+            sbcs <= 32'h20040404;
+            dmcontrol <= 32'h0;
+            abstractcs <= 32'h1000003;
+            data0 <= 32'h0;
+            sbdata0 <= 32'h0;
+            command <= 32'h0;
+            dm_reg_wdata <= 32'h0;
+            dm_mem_wdata <= 32'h0;
+            dmstatus <= 32'h430c82;
+            is_read_reg <= 1'b0;
+            read_data <= 32'h0;
+            need_resp <= 1'b0;
         end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write) begin
+            if (rx_valid) begin
+                need_resp <= 1'b1;
+                case (op)
+                    `DTM_OP_READ: begin
                         case (address)
+                            DMSTATUS: begin
+                                read_data <= dmstatus;
+                            end
+                            DMCONTROL: begin
+                                read_data <= dmcontrol;
+                            end
+                            HARTINFO: begin
+                                read_data <= hartinfo;
+                            end
+                            SBCS: begin
+                                read_data <= sbcs;
+                            end
+                            ABSTRACTCS: begin
+                                read_data <= abstractcs;
+                            end
+                            DATA0: begin
+                                if (is_read_reg == 1'b1) begin
+                                    read_data <= dm_reg_rdata_i;
+                                end else begin
+                                    read_data <= data0;
+                                end
+                                is_read_reg <= 1'b0;
+                            end
                             SBDATA0: begin
-                                dm_mem_addr <= sbaddress0;
-                                dm_mem_wdata <= data;
-                                dm_mem_we <= 1'b1;
+                                read_data <= dm_mem_rdata_i;
+                                if (sbcs[16] == 1'b1) begin
+                                    sbaddress0 <= sbaddress0_next;
+                                end
+                                if (sbcs[15] == 1'b1) begin
+                                    dm_mem_addr <= sbaddress0_next;
+                                end
+                            end
+                            default: begin
+                                read_data <= {(DMI_DATA_BITS){1'b0}};
+                            end
+                        endcase
+                    end
+
+                    `DTM_OP_WRITE: begin
+                        read_data <= {(DMI_DATA_BITS){1'b0}};
+                        case (address)
+                            DMCONTROL: begin
+                                // reset DM module
+                                if (data[0] == 1'b0) begin
+                                    dcsr <= 32'hc0;
+                                    dmstatus <= 32'h430c82;  // not halted, all running
+                                    hartinfo <= 32'h0;
+                                    sbcs <= 32'h20040404;
+                                    abstractcs <= 32'h1000003;
+                                    dmcontrol <= data;
+                                    dm_halt_req <= 1'b0;
+                                    dm_reset_req <= 1'b0;
+                                // DM is active
+                                end else begin
+                                    // we have only one hart
+                                    dmcontrol <= (data & ~(32'h3fffc0)) | 32'h10000;
+                                    // halt
+                                    if (data[31] == 1'b1) begin
+                                        dm_halt_req <= 1'b1;
+                                        // clear ALLRUNNING ANYRUNNING and set ALLHALTED
+                                        dmstatus <= {dmstatus[31:12], 4'h3, dmstatus[7:0]};
+                                    // resume
+                                    end else if (dm_halt_req == 1'b1 && data[30] == 1'b1) begin
+                                        dm_halt_req <= 1'b0;
+                                        // set ALLRUNNING ANYRUNNING and clear ALLHALTED
+                                        dmstatus <= {dmstatus[31:12], 4'hc, dmstatus[7:0]};
+                                    end
+                                end
+                            end
+                            COMMAND: begin
+                                // access reg
+                                if (data[31:24] == 8'h0) begin
+                                    if (data[22:20] > 3'h2) begin
+                                        abstractcs <= abstractcs | (1'b1 << 9);
+                                    end else begin
+                                        abstractcs <= abstractcs & (~(3'h7 << 8));
+                                        // read or write
+                                        if (data[18] == 1'b0) begin
+                                            dm_reg_addr <= data[15:0] - 16'h1000;
+                                            // read
+                                            if (data[16] == 1'b0) begin
+                                                if (data[15:0] == DCSR) begin
+                                                    data0 <= dcsr;
+                                                end else if (data[15:0] < 16'h1020) begin
+                                                    is_read_reg <= 1'b1;
+                                                end
+                                            // write
+                                            end else begin
+                                                // when write dpc, we reset cpu here
+                                                if (data[15:0] == DPC) begin
+                                                    dm_reset_req <= 1'b1;
+                                                    dm_halt_req <= 1'b0;
+                                                    dmstatus <= {dmstatus[31:12], 4'hc, dmstatus[7:0]};
+                                                end else if (data[15:0] < 16'h1020) begin
+                                                    dm_reg_we <= 1'b1;
+                                                    dm_reg_wdata <= data0;
+                                                end
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                            DATA0: begin
+                                data0 <= data;
+                            end
+                            SBCS: begin
+                                sbcs <= data;
                             end
                             SBADDRESS0: begin
+                                sbaddress0 <= data;
                                 if (sbcs[20] == 1'b1) begin
                                     dm_mem_addr <= data;
                                 end
                             end
-                        endcase
-                    end else if (op_read) begin
-                        if (access_sbdata0 & (sbcs[15] == 1'b1)) begin
-                            dm_mem_addr <= sbaddress0 + 4;
-                        end
-                    end
-                end
-                STATE_IDLE: begin
-                    dm_mem_we <= 1'b0;
-                end
-            endcase
-        end
-    end
-
-    assign dm_mem_addr_o = dm_mem_addr;
-    assign dm_mem_wdata_o = dm_mem_wdata;
-    assign dm_mem_we_o = dm_mem_we;
-
-    reg dm_reg_we;
-    reg[4:0] dm_reg_addr;
-    reg[31:0] dm_reg_wdata;
-    reg is_read_reg;
-
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n | dm_reset) begin
-            dm_reg_we <= 1'b0;
-            dm_reg_addr <= 5'h0;
-            dm_reg_wdata <= 32'h0;
-            is_read_reg <= 1'b0;
-        end else begin
-            case (state)
-                STATE_EXE: begin
-                    if (op_write & access_command) begin
-                        // 访问寄存器
-                        if (access_reg & (data[22:20] <= 3'h2)) begin
-                            // 读或写, 目前只支持通用寄存器读写
-                            if ((data[18] == 1'b0) & (data[15:0] < 16'h1020) & (data[15:0] != DPC)) begin
-                                dm_reg_addr <= data[15:0] - 16'h1000;
-                                // 读
-                                if (data[16] == 1'b0) begin
-                                    is_read_reg <= 1'b1;
-                                // 写
-                                end else begin
-                                    dm_reg_we <= 1'b1;
-                                    dm_reg_wdata <= data0;
+                            SBDATA0: begin
+                                sbdata0 <= data;
+                                dm_mem_addr <= sbaddress0;
+                                dm_mem_wdata <= data;
+                                dm_mem_we <= 1'b1;
+                                if (sbcs[16] == 1'b1) begin
+                                    sbaddress0 <= sbaddress0_next;
                                 end
                             end
-                        end
-                    end else if (op_read & access_data0) begin
-                        is_read_reg <= 1'b0;
+                        endcase
                     end
-                end
-                STATE_IDLE: begin
-                    dm_reg_we <= 1'b0;
-                end
-            endcase
+
+                    `DTM_OP_NOP: begin
+                        read_data <= {(DMI_DATA_BITS){1'b0}};
+                    end
+                endcase
+            end else begin
+                need_resp <= 1'b0;
+                dm_mem_we <= 1'b0;
+                dm_reg_we <= 1'b0;
+                dm_reset_req <= 1'b0;
+            end
         end
     end
 
     assign dm_reg_we_o = dm_reg_we;
     assign dm_reg_addr_o = dm_reg_addr;
     assign dm_reg_wdata_o = dm_reg_wdata;
+    assign dm_mem_we_o = dm_mem_we;
+    assign dm_mem_addr_o = dm_mem_addr;
+    assign dm_mem_wdata_o = dm_mem_wdata;
 
-    assign dm_is_busy_o = (state != STATE_IDLE);
+    assign dm_op_req_o = (rx_valid & (~read_dmstatus)) | need_resp;
+    assign dm_halt_req_o = dm_halt_req;
+    assign dm_reset_req_o = dm_reset_req;
+
+    assign dm_resp_data = {address, read_data, OP_SUCC};
+
+
+    full_handshake_tx #(
+        .DW(DM_RESP_BITS)
+    ) tx(
+        .clk(clk),
+        .rst_n(rst_n),
+        .ack_i(dtm_ack_i),
+        .req_i(need_resp),
+        .req_data_i(dm_resp_data),
+        .idle_o(tx_idle),
+        .req_o(dm_resp_valid_o),
+        .req_data_o(dm_resp_data_o)
+    );
+
+    full_handshake_rx #(
+        .DW(DTM_REQ_BITS)
+    ) rx(
+        .clk(clk),
+        .rst_n(rst_n),
+        .req_i(dtm_req_valid_i),
+        .req_data_i(dtm_req_data_i),
+        .ack_o(dm_ack_o),
+        .recv_data_o(rx_data),
+        .recv_rdy_o(rx_valid)
+    );
 
 endmodule

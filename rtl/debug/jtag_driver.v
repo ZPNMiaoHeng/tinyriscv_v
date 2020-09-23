@@ -32,10 +32,15 @@ module jtag_driver #(
     jtag_TMS,
     jtag_TDO,
 
-    dm_is_busy,
-    dm_resp_data,
-    dtm_req_valid,
-    dtm_req_data
+    // rx
+    dm_resp_i,
+    dm_resp_data_i,
+    dtm_ack_o,
+
+    // tx
+    dm_ack_i,
+    dtm_req_valid_o,
+    dtm_req_data_o
 
     );
 
@@ -56,10 +61,12 @@ module jtag_driver #(
     input wire jtag_TDI;
     input wire jtag_TMS;
     output reg jtag_TDO;
-    input wire dm_is_busy;
-    input wire[DM_RESP_BITS - 1:0] dm_resp_data;
-    output reg dtm_req_valid;
-    output reg[DTM_REQ_BITS - 1:0] dtm_req_data;
+    input wire dm_resp_i;
+    input wire[DM_RESP_BITS - 1:0] dm_resp_data_i;
+    output wire dtm_ack_o;
+    input wire dm_ack_i;
+    output wire dtm_req_valid_o;
+    output wire[DTM_REQ_BITS - 1:0] dtm_req_data_o;
 
     // JTAG StateMachine
     parameter TEST_LOGIC_RESET  = 4'h0;
@@ -90,6 +97,10 @@ module jtag_driver #(
     reg[3:0] jtag_state;
     wire is_busy;
     reg sticky_busy;
+    reg dtm_req_valid;
+    reg[DTM_REQ_BITS - 1:0] dtm_req_data;
+    reg[DM_RESP_BITS - 1:0] dm_resp_data;
+    reg dm_is_busy;
 
     wire[5:0] addr_bits = DMI_ADDR_BITS[5:0];
     wire [SHIFT_REG_BITS - 1:0] busy_response;
@@ -98,6 +109,11 @@ module jtag_driver #(
     wire[31:0] dtmcs;
     wire[1:0] dmi_stat;
     wire dtm_reset;
+    wire tx_idle;
+    wire rx_valid;
+    wire[DM_RESP_BITS - 1:0] rx_data;
+    wire tx_valid;
+    wire[DTM_REQ_BITS - 1:0] tx_data;
 
     assign dtm_reset = shift_reg[16];
     assign idcode = {IDCODE_VERSION, IDCODE_PART_NUMBER, IDCODE_MANUFLD, 1'h1};
@@ -176,17 +192,19 @@ module jtag_driver #(
             if (jtag_state == UPDATE_DR) begin
                 if (ir_reg == REG_DMI) begin
                     // if DM can be access
-                    if (!is_busy) begin
+                    if (!is_busy & tx_idle) begin
                         dtm_req_valid <= `DTM_REQ_VALID;
                         dtm_req_data <= shift_reg;
                     end
                 end
-            end
-            if (is_busy) begin
+            end else begin
                 dtm_req_valid <= `DTM_REQ_INVALID;
             end
         end
     end
+
+    assign tx_valid = dtm_req_valid;
+    assign tx_data = dtm_req_data;
 
     // DTM reset
     always @ (posedge jtag_TCK or negedge rst_n) begin
@@ -194,15 +212,37 @@ module jtag_driver #(
             sticky_busy <= 1'b0;
         end else begin
             if (jtag_state == UPDATE_DR) begin
-                if (ir_reg == REG_DTMCS) begin
-                    if (dtm_reset) begin
-                        sticky_busy <= 1'b0;
-                    end
+                if (ir_reg == REG_DTMCS & dtm_reset) begin
+                    sticky_busy <= 1'b0;
                 end
             end else if (jtag_state == CAPTURE_DR) begin
                 if (ir_reg == REG_DMI) begin
                     sticky_busy <= is_busy;
                 end
+            end
+        end
+    end
+
+    // receive DM response data
+    always @ (posedge jtag_TCK or negedge rst_n) begin
+        if (!rst_n) begin
+            dm_resp_data <= {DM_RESP_BITS{1'b0}};
+        end else begin
+            if (rx_valid) begin
+                dm_resp_data <= rx_data;
+            end
+        end
+    end
+
+    // tx busy
+    always @ (posedge jtag_TCK or negedge rst_n) begin
+        if (!rst_n) begin
+            dm_is_busy <= 1'b0;
+        end else begin
+            if (dtm_req_valid) begin
+                dm_is_busy <= 1'b1;
+            end else if (rx_valid) begin
+                dm_is_busy <= 1'b0;
             end
         end
     end
@@ -226,5 +266,30 @@ module jtag_driver #(
             jtag_TDO <= 1'b0;
         end
     end
+
+    full_handshake_tx #(
+        .DW(DTM_REQ_BITS)
+    ) tx(
+        .clk(jtag_TCK),
+        .rst_n(rst_n),
+        .ack_i(dm_ack_i),
+        .req_i(tx_valid),
+        .req_data_i(tx_data),
+        .idle_o(tx_idle),
+        .req_o(dtm_req_valid_o),
+        .req_data_o(dtm_req_data_o)
+    );
+
+    full_handshake_rx #(
+        .DW(DM_RESP_BITS)
+    ) rx(
+        .clk(jtag_TCK),
+        .rst_n(rst_n),
+        .req_i(dm_resp_i),
+        .req_data_i(dm_resp_data_i),
+        .ack_o(dtm_ack_o),
+        .recv_data_o(rx_data),
+        .recv_rdy_o(rx_valid)
+    );
 
 endmodule
