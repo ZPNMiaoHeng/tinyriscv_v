@@ -42,6 +42,11 @@ iverilog_cmd.append(r'..\..\rtl\debug\jtag_dm.v')
 iverilog_cmd.append(r'..\..\rtl\debug\jtag_driver.v')
 iverilog_cmd.append(r'..\..\rtl\debug\jtag_top.v')
 iverilog_cmd.append(r'..\..\rtl\debug\uart_debug.v')
+# ..rtl\utils
+iverilog_cmd.append(r'..\..\rtl\utils\full_handshake_rx.v')
+iverilog_cmd.append(r'..\..\rtl\utils\full_handshake_tx.v')
+iverilog_cmd.append(r'..\..\rtl\utils\gen_buf.v')
+iverilog_cmd.append(r'..\..\rtl\utils\gen_dff.v')
 # ..\rtl\soc
 iverilog_cmd.append(r'..\..\rtl\soc\tinyriscv_soc_top.v')
 
