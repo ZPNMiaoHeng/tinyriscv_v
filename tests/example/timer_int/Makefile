@@ -7,7 +7,7 @@ TARGET = timer_int
 
 
 CFLAGS += -DSIMULATION
-CFLAGS += -Os
+#CFLAGS += -Os
 #ASM_SRCS +=
 #LDFLAGS +=
 #INCLUDES += -I.

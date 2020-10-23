@@ -11,14 +11,14 @@
 module tinyriscv_soc_tb;
 
     reg clk;
-    reg rst;
+    reg rst_n;
 
 
     always #10 clk = ~clk;     // 50MHz
 
-    wire[`RegBus] x3 = tinyriscv_soc_top_0.u_tinyriscv.u_regs.regs[3];
-    wire[`RegBus] x26 = tinyriscv_soc_top_0.u_tinyriscv.u_regs.regs[26];
-    wire[`RegBus] x27 = tinyriscv_soc_top_0.u_tinyriscv.u_regs.regs[27];
+    wire[31:0] x3 = tinyriscv_soc_top_0.u_tinyriscv_core.u_gpr_reg.regs[3];
+    wire[31:0] x26 = tinyriscv_soc_top_0.u_tinyriscv_core.u_gpr_reg.regs[26];
+    wire[31:0] x27 = tinyriscv_soc_top_0.u_tinyriscv_core.u_gpr_reg.regs[27];
 
     integer r;
 
@@ -39,7 +39,7 @@ module tinyriscv_soc_tb;
 
     initial begin
         clk = 0;
-        rst = `RstEnable;
+        rst_n = 1'b0;
 `ifdef TEST_JTAG
         TCK = 1;
         TMS = 1;
@@ -47,7 +47,7 @@ module tinyriscv_soc_tb;
 `endif
         $display("test running...");
         #40
-        rst = `RstDisable;
+        rst_n = 1'b1;
         #200
 
 `ifdef TEST_PROG
@@ -75,7 +75,7 @@ module tinyriscv_soc_tb;
             $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             $display("fail testnum = %2d", x3);
             for (r = 0; r < 32; r = r + 1)
-                $display("x%2d = 0x%x", r, tinyriscv_soc_top_0.u_tinyriscv.u_regs.regs[r]);
+                $display("x%2d = 0x%x", r, tinyriscv_soc_top_0.u_tinyriscv_core.u_gpr_reg.regs[r]);
         end
 `endif
 
@@ -488,14 +488,14 @@ module tinyriscv_soc_tb;
 
     // sim timeout
     initial begin
-        #500000
+        #1000000
         $display("Time Out.");
         $finish;
     end
 
     // read mem data
     initial begin
-        $readmemh ("inst.data", tinyriscv_soc_top_0.u_rom._rom);
+        $readmemh ("inst.data", tinyriscv_soc_top_0.u_rom.u_gen_ram.ram);
     end
 
     // generate wave file, used by gtkwave
@@ -506,8 +506,7 @@ module tinyriscv_soc_tb;
 
     tinyriscv_soc_top tinyriscv_soc_top_0(
         .clk(clk),
-        .rst(rst),
-        .uart_debug_pin(1'b0)
+        .rst_n(rst_n)
 `ifdef TEST_JTAG
         ,
         .jtag_TCK(TCK),

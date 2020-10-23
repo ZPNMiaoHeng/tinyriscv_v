@@ -13,7 +13,7 @@ int main()
     count = 0;
 
 #ifdef SIMULATION
-    TIMER0_REG(TIMER0_VALUE) = 500;     // 10us period
+    TIMER0_REG(TIMER0_VALUE) = 5000;    // 100us period
     TIMER0_REG(TIMER0_CTRL) = 0x07;     // enable interrupt and start timer
 
     while (1) {

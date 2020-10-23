@@ -1,3 +1,0 @@
-test running...
-WARNING: ..\..\tb\compliance_test\tinyriscv_soc_tb.v:502: $readmemh(inst.data): Not enough words in the file for the requested range [0:4095].
-VCD info: dumpfile tinyriscv_soc_tb.vcd opened for output.
