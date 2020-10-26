@@ -52,16 +52,16 @@ module gen_ram #(
     genvar i;
 
     generate
-        for (i = 0; i < MW; i = i + 1) begin
-            if ((8 * i + 8) > DW) begin
-                always @ (posedge clk) begin
-                    if (wen[i]) begin
+        for (i = 0; i < MW; i = i + 1) begin: sel_width
+            if ((8 * i + 8) > DW) begin: i_gt_8
+                always @ (posedge clk) begin: i_gt_8_ff
+                    if (wen[i]) begin: gt_8_wen
                         ram[addr_i][DW-1:8*i] <= data_i[DW-1:8*i];
                     end
                 end
-            end else begin
-                always @ (posedge clk) begin
-                    if (wen[i]) begin
+            end else begin: i_lt_8
+                always @ (posedge clk) begin: i_lt_8_ff
+                    if (wen[i]) begin: lt_8_wen
                         ram[addr_i][8*i+7:8*i] <= data_i[8*i+7:8*i];
                     end
                 end
