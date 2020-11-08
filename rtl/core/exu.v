@@ -41,12 +41,9 @@ module exu(
     output wire[3:0] mem_sel_o,             // 字节位
     output wire mem_req_valid_o,
     output wire mem_rsp_ready_o,
+    output wire mem_access_misaligned_o,
 
     // gpr_reg
-    input wire[31:0] reg1_rdata_i,          // 通用寄存器1输入数据
-    input wire[31:0] reg2_rdata_i,          // 通用寄存器2输入数据
-    output wire[4:0] reg1_raddr_o,          // 读通用寄存器1地址
-    output wire[4:0] reg2_raddr_o,          // 读通用寄存器2地址
     output wire[31:0] reg_wdata_o,          // 写寄存器数据
     output wire reg_we_o,                   // 是否要写通用寄存器
     output wire[4:0] reg_waddr_o,           // 写通用寄存器地址
@@ -68,9 +65,9 @@ module exu(
     input wire[31:0] dec_imm_i,
     input wire[31:0] dec_pc_i,
     input wire[31:0] next_pc_i,
-    input wire[4:0] rs1_raddr_i,
-    input wire[4:0] rs2_raddr_i,
     input wire[4:0] rd_waddr_i,
+    input wire[31:0] reg1_rdata_i,          // 通用寄存器1输入数据
+    input wire[31:0] reg2_rdata_i,          // 通用寄存器2输入数据
     input wire rd_we_i
 
     );
@@ -300,6 +297,7 @@ module exu(
         .mem_op_sb_i(mem_op_sb_o),
         .mem_op_sh_i(mem_op_sh_o),
         .mem_op_sw_i(mem_op_sw_o),
+        .mem_access_misaligned_o(mem_access_misaligned_o),
         .mem_stall_o(mem_stall_o),
         .mem_addr_o(mem_addr_o),
         .mem_wdata_o(mem_wdata),
@@ -362,9 +360,6 @@ module exu(
     );
 
     assign reg_we_o = commit_reg_we_o;
-
-    assign reg1_raddr_o = rs1_raddr_i;
-    assign reg2_raddr_o = rs2_raddr_i;
 
     assign jump_flag_o = bjp_cmp_res_o | bjp_op_jump_o | sys_op_fence_o | int_assert_i;
     assign jump_addr_o = int_assert_i? int_addr_i:

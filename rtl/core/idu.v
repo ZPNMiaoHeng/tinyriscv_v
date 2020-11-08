@@ -27,6 +27,10 @@ module idu(
     input wire[31:0] inst_i,            // 指令内容
     input wire[31:0] inst_addr_i,       // 指令地址
 
+    // from gpr_reg
+    input wire[31:0] rs1_rdata_i,      // 通用寄存器1输入数据
+    input wire[31:0] rs2_rdata_i,      // 通用寄存器2输入数据
+
     output wire stall_o,
 
     // to id_ex
@@ -36,12 +40,16 @@ module idu(
     output wire[31:0] dec_pc_o,
     output wire[4:0] rs1_raddr_o,
     output wire[4:0] rs2_raddr_o,
+    output wire[31:0] rs1_rdata_o,
+    output wire[31:0] rs2_rdata_o,
     output wire[4:0] rd_waddr_o,
     output wire rd_we_o
 
     );
 
     assign inst_o = inst_i;
+    assign rs1_rdata_o = rs1_rdata_i;
+    assign rs2_rdata_o = rs2_rdata_i;
 
     // 取出指令中的每一个域
     wire[6:0] opcode = inst_i[6:0];

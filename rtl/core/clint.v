@@ -32,6 +32,7 @@ module clint(
     input wire inst_mret_i,                     // mret指令
     input wire[31:0] inst_addr_i,               // 指令地址
     input wire jump_flag_i,
+    input wire mem_access_misaligned_i,
 
     // from csr_reg
     input wire[31:0] csr_mtvec_i,               // mtvec寄存器
@@ -93,7 +94,7 @@ module clint(
     // 中断仲裁逻辑
     always @ (*) begin
         // 同步中断
-        if (inst_ecall_i | inst_ebreak_i) begin
+        if (inst_ecall_i | inst_ebreak_i | mem_access_misaligned_i) begin
             int_state = S_INT_SYNC_ASSERT;
         // 异步中断
         end else if ((int_flag_i != `INT_NONE) & global_int_en & inst_addr_valid) begin
@@ -124,6 +125,7 @@ module clint(
                             inst_addr <= inst_addr_i;
                             cause <= inst_ebreak_i? 32'd3:
                                      inst_ecall_i? 32'd11:
+                                     mem_access_misaligned_i? 32'd4:
                                      32'd10;
                         end
                         // 异步中断

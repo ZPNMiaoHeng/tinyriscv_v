@@ -29,8 +29,8 @@ module idu_exu(
     input wire[`DECINFO_WIDTH-1:0] dec_info_bus_i,
     input wire[31:0] dec_imm_i,
     input wire[31:0] dec_pc_i,
-    input wire[4:0] rs1_raddr_i,
-    input wire[4:0] rs2_raddr_i,
+    input wire[31:0] rs1_rdata_i,
+    input wire[31:0] rs2_rdata_i,
     input wire[4:0] rd_waddr_i,
     input wire rd_we_i,
 
@@ -38,8 +38,8 @@ module idu_exu(
     output wire[`DECINFO_WIDTH-1:0] dec_info_bus_o,
     output wire[31:0] dec_imm_o,
     output wire[31:0] dec_pc_o,
-    output wire[4:0] rs1_raddr_o,
-    output wire[4:0] rs2_raddr_o,
+    output wire[31:0] rs1_rdata_o,
+    output wire[31:0] rs2_rdata_o,
     output wire[4:0] rd_waddr_o,
     output wire rd_we_o
 
@@ -62,15 +62,15 @@ module idu_exu(
     gen_en_dff #(32) pc_ff(clk, rst_n, en, i_dec_pc, dec_pc);
     assign dec_pc_o = dec_pc;
 
-    wire[4:0] i_rs1_raddr = flush_i? 5'h0: rs1_raddr_i;
-    wire[4:0] rs1_raddr;
-    gen_en_dff #(5) rs1_raddr_ff(clk, rst_n, en, i_rs1_raddr, rs1_raddr);
-    assign rs1_raddr_o = rs1_raddr;
+    wire[31:0] i_rs1_rdata = flush_i? 32'h0: rs1_rdata_i;
+    wire[31:0] rs1_rdata;
+    gen_en_dff #(32) rs1_rdata_ff(clk, rst_n, en, i_rs1_rdata, rs1_rdata);
+    assign rs1_rdata_o = rs1_rdata;
 
-    wire[4:0] i_rs2_raddr = flush_i? 5'h0: rs2_raddr_i;
-    wire[4:0] rs2_raddr;
-    gen_en_dff #(5) rs2_raddr_ff(clk, rst_n, en, i_rs2_raddr, rs2_raddr);
-    assign rs2_raddr_o = rs2_raddr;
+    wire[31:0] i_rs2_rdata = flush_i? 32'h0: rs2_rdata_i;
+    wire[31:0] rs2_rdata;
+    gen_en_dff #(32) rs2_rdata_ff(clk, rst_n, en, i_rs2_rdata, rs2_rdata);
+    assign rs2_rdata_o = rs2_rdata;
 
     wire[4:0] i_rd_waddr = flush_i? 5'h0: rd_waddr_i;
     wire[4:0] rd_waddr;

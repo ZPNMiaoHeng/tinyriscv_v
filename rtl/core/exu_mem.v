@@ -37,6 +37,7 @@ module exu_mem(
     input wire mem_op_sh_i,
     input wire mem_op_sw_i,
 
+    output wire mem_access_misaligned_o,
     output wire mem_stall_o,
     output wire[31:0] mem_addr_o,
     output wire[31:0] mem_wdata_o,
@@ -118,5 +119,9 @@ module exu_mem(
 
     // 写内存使能
     assign mem_mem_we_o = (mem_op_sb_i | mem_op_sh_i | mem_op_sw_i) & mem_rsp_hsked_r;
+
+    assign mem_access_misaligned_o = (mem_op_sw_i | mem_op_lw_i)? (mem_addr_i[0] | mem_addr_i[1]):
+                                     (mem_op_sh_i | mem_op_lh_i | mem_op_lhu_i)? mem_addr_i[0]:
+                                     0;
 
 endmodule

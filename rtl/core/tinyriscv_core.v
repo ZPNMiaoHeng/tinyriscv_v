@@ -68,6 +68,8 @@ module tinyriscv_core(
     wire[4:0] id_rd_waddr_o;
     wire id_rd_we_o;
     wire id_stall_o;
+    wire[31:0] id_rs1_rdata_o;
+    wire[31:0] id_rs2_rdata_o;
 
     // idu_exu模块输出信号
     wire[31:0] ie_inst_o;
@@ -75,8 +77,8 @@ module tinyriscv_core(
     wire[`DECINFO_WIDTH-1:0] ie_dec_info_bus_o;
     wire[31:0] ie_dec_imm_o;
     wire[31:0] ie_dec_pc_o;
-    wire[4:0] ie_rs1_raddr_o;
-    wire[4:0] ie_rs2_raddr_o;
+    wire[31:0] ie_rs1_rdata_o;
+    wire[31:0] ie_rs2_rdata_o;
     wire[4:0] ie_rd_waddr_o;
     wire ie_rd_we_o;
 
@@ -87,11 +89,10 @@ module tinyriscv_core(
     wire[3:0] ex_mem_sel_o;
     wire ex_mem_req_valid_o;
     wire ex_mem_rsp_ready_o;
+    wire ex_mem_access_misaligned_o;
     wire[31:0] ex_reg_wdata_o;
     wire ex_reg_we_o;
     wire[4:0] ex_reg_waddr_o;
-    wire[4:0] ex_reg1_raddr_o;
-    wire[4:0] ex_reg2_raddr_o;
     wire ex_hold_flag_o;
     wire ex_jump_flag_o;
     wire[31:0] ex_jump_addr_o;
@@ -176,9 +177,9 @@ module tinyriscv_core(
         .we_i(ex_reg_we_o),
         .waddr_i(ex_reg_waddr_o),
         .wdata_i(ex_reg_wdata_o),
-        .raddr1_i(ex_reg1_raddr_o),
+        .raddr1_i(id_rs1_raddr_o),
         .rdata1_o(regs_rdata1_o),
-        .raddr2_i(ex_reg2_raddr_o),
+        .raddr2_i(id_rs2_raddr_o),
         .rdata2_o(regs_rdata2_o)
     );
 
@@ -214,8 +215,12 @@ module tinyriscv_core(
         .clk(clk),
         .rst_n(rst_n),
         .inst_i(if_inst_o),
+        .rs1_rdata_i(regs_rdata1_o),
+        .rs2_rdata_i(regs_rdata2_o),
         .inst_o(id_inst_o),
         .inst_addr_i(if_inst_addr_o),
+        .rs1_rdata_o(id_rs1_rdata_o),
+        .rs2_rdata_o(id_rs2_rdata_o),
         .stall_o(id_stall_o),
         .dec_info_bus_o(id_dec_info_bus_o),
         .dec_imm_o(id_dec_imm_o),
@@ -235,16 +240,16 @@ module tinyriscv_core(
         .dec_info_bus_i(id_dec_info_bus_o),
         .dec_imm_i(id_dec_imm_o),
         .dec_pc_i(id_dec_pc_o),
-        .rs1_raddr_i(id_rs1_raddr_o),
-        .rs2_raddr_i(id_rs2_raddr_o),
+        .rs1_rdata_i(id_rs1_rdata_o),
+        .rs2_rdata_i(id_rs2_rdata_o),
         .rd_waddr_i(id_rd_waddr_o),
         .rd_we_i(id_rd_we_o),
         .inst_o(ie_inst_o),
         .dec_info_bus_o(ie_dec_info_bus_o),
         .dec_imm_o(ie_dec_imm_o),
         .dec_pc_o(ie_dec_pc_o),
-        .rs1_raddr_o(ie_rs1_raddr_o),
-        .rs2_raddr_o(ie_rs2_raddr_o),
+        .rs1_rdata_o(ie_rs1_rdata_o),
+        .rs2_rdata_o(ie_rs2_rdata_o),
         .rd_waddr_o(ie_rd_waddr_o),
         .rd_we_o(ie_rd_we_o)
     );
@@ -252,10 +257,8 @@ module tinyriscv_core(
     exu u_exu(
         .clk(clk),
         .rst_n(rst_n),
-        .reg1_raddr_o(ex_reg1_raddr_o),
-        .reg2_raddr_o(ex_reg2_raddr_o),
-        .reg1_rdata_i(regs_rdata1_o),
-        .reg2_rdata_i(regs_rdata2_o),
+        .reg1_rdata_i(ie_rs1_rdata_o),
+        .reg2_rdata_i(ie_rs2_rdata_o),
         .mem_rdata_i(dbus_data_i),
         .mem_req_ready_i(dbus_req_ready_i),
         .mem_rsp_valid_i(dbus_rsp_valid_i),
@@ -265,6 +268,7 @@ module tinyriscv_core(
         .mem_sel_o(ex_mem_sel_o),
         .mem_req_valid_o(ex_mem_req_valid_o),
         .mem_rsp_ready_o(ex_mem_rsp_ready_o),
+        .mem_access_misaligned_o(ex_mem_access_misaligned_o),
         .reg_wdata_o(ex_reg_wdata_o),
         .reg_we_o(ex_reg_we_o),
         .reg_waddr_o(ex_reg_waddr_o),
@@ -286,8 +290,6 @@ module tinyriscv_core(
         .dec_imm_i(ie_dec_imm_o),
         .dec_pc_i(ie_dec_pc_o),
         .next_pc_i(if_inst_addr_o),
-        .rs1_raddr_i(ie_rs1_raddr_o),
-        .rs2_raddr_i(ie_rs2_raddr_o),
         .rd_waddr_i(ie_rd_waddr_o),
         .rd_we_i(ie_rd_we_o)
     );
@@ -301,6 +303,7 @@ module tinyriscv_core(
         .inst_mret_i(ex_inst_mret_o),
         .inst_addr_i(ie_dec_pc_o),
         .jump_flag_i(ex_jump_flag_o),
+        .mem_access_misaligned_i(ex_mem_access_misaligned_o),
         .csr_mtvec_i(csr_mtvec_o),
         .csr_mepc_i(csr_mepc_o),
         .csr_mstatus_i(csr_mstatus_o),

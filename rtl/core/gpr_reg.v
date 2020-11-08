@@ -40,20 +40,20 @@ module gpr_reg(
     genvar i;
 
     generate
-        for (i = 0; i < 32; i = i + 1) begin
+        for (i = 0; i < 32; i = i + 1) begin: gpr_rw
             // x0 cannot be wrote since it is constant-zeros
-            if (i == 0) begin
+            if (i == 0) begin: is_x0
                 assign we[i] = 1'b0;
                 assign regs[i] = 32'h0;
-            end else begin
+            end else begin: not_x0
                 assign we[i] = we_i & (waddr_i == i);
                 gen_en_dffnr #(32) rf_dff(clk, we[i], wdata_i, regs[i]);
             end
         end
     endgenerate
 
-    assign rdata1_o = regs[raddr1_i];
-    assign rdata2_o = regs[raddr2_i];
+    assign rdata1_o = (|raddr1_i)? ((we_i & (waddr_i == raddr1_i))? wdata_i: regs[raddr1_i]): 32'h0;
+    assign rdata2_o = (|raddr2_i)? ((we_i & (waddr_i == raddr2_i))? wdata_i: regs[raddr2_i]): 32'h0;
 
     // for debug
     wire[31:0] ra = regs[1];
