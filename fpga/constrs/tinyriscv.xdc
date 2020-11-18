@@ -7,16 +7,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports clk]
 set_property PACKAGE_PIN N14 [get_ports clk]
 
 # 复位引脚
-set_property IOSTANDARD LVCMOS33 [get_ports rst_n]
-set_property PACKAGE_PIN L13 [get_ports rst_n]
-
-# 程序执行完毕指示引脚
-set_property IOSTANDARD LVCMOS33 [get_ports over]
-set_property PACKAGE_PIN M16 [get_ports over]
-
-# 程序执行成功指示引脚
-set_property IOSTANDARD LVCMOS33 [get_ports succ]
-set_property PACKAGE_PIN N16 [get_ports succ]
+set_property IOSTANDARD LVCMOS33 [get_ports rst_ext_i]
+set_property PACKAGE_PIN L13 [get_ports rst_ext_i]
 
 # CPU停住指示引脚
 set_property IOSTANDARD LVCMOS33 [get_ports halted_ind]

@@ -44,14 +44,16 @@ module tinyriscv_soc_tb;
 
     initial begin
         clk = 0;
-        rst_n = 1'b0;
+        rst_n = 1'b1;
 `ifdef TEST_JTAG
         TCK = 1;
         TMS = 1;
         TDI = 1;
 `endif
         $display("test running...");
-        #40
+        #100
+        rst_n = 1'b0;
+        #100
         rst_n = 1'b1;
         #200
 /*
@@ -520,7 +522,7 @@ module tinyriscv_soc_tb;
 
     tinyriscv_soc_top tinyriscv_soc_top_0(
         .clk(clk),
-        .rst_n(rst_n)
+        .rst_ext_i(rst_n)
 `ifdef TEST_JTAG
         ,
         .jtag_TCK(TCK),

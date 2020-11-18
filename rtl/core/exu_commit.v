@@ -59,16 +59,34 @@ module exu_commit(
 
     assign reg_we_o = muldiv_reg_we_i | mem_reg_we_i | csr_reg_we_i | use_alu_res | bjp_reg_we_i;
 
-    assign reg_waddr_o = ({5{muldiv_reg_we_i}} & muldiv_reg_waddr_i) |
-                         ({5{mem_reg_we_i}} & mem_reg_waddr_i) |
-                         ({5{csr_reg_we_i}} & csr_reg_waddr_i) |
-                         ({5{bjp_reg_we_i}} & bjp_reg_waddr_i) |
-                         ({5{rd_we_i}} & rd_waddr_i);
+    reg[4:0] reg_waddr;
 
-    assign reg_wdata_o = ({32{muldiv_reg_we_i}} & muldiv_reg_wdata_i) |
-                         ({32{mem_reg_we_i}} & mem_reg_wdata_i) |
-                         ({32{csr_reg_we_i}} & csr_reg_wdata_i) |
-                         ({32{bjp_reg_we_i}} & bjp_reg_wdata_i) |
-                         ({32{use_alu_res}} & alu_reg_wdata_i);
+    always @ (*) begin
+        reg_waddr = 5'h0;
+        case (1'b1)
+            muldiv_reg_we_i: reg_waddr = muldiv_reg_waddr_i;
+            mem_reg_we_i:    reg_waddr = mem_reg_waddr_i;
+            csr_reg_we_i:    reg_waddr = csr_reg_waddr_i;
+            bjp_reg_we_i:    reg_waddr = bjp_reg_waddr_i;
+            rd_we_i:         reg_waddr = rd_waddr_i;
+        endcase
+    end
+
+    assign reg_waddr_o = reg_waddr;
+
+    reg[31:0] reg_wdata;
+
+    always @ (*) begin
+        reg_wdata = 32'h0;
+        case (1'b1)
+            muldiv_reg_we_i: reg_wdata = muldiv_reg_wdata_i;
+            mem_reg_we_i:    reg_wdata = mem_reg_wdata_i;
+            csr_reg_we_i:    reg_wdata = csr_reg_wdata_i;
+            bjp_reg_we_i:    reg_wdata = bjp_reg_wdata_i;
+            use_alu_res:     reg_wdata = alu_reg_wdata_i;
+        endcase
+    end
+
+    assign reg_wdata_o = reg_wdata;
 
 endmodule

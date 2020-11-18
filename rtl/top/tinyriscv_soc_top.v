@@ -20,10 +20,8 @@
 module tinyriscv_soc_top(
 
     input wire clk,
-    input wire rst_n,
+    input wire rst_ext_i,
 
-    output reg over,         // 测试是否完成信号
-    output reg succ,         // 测试是否成功信号
     output wire halted_ind,  // jtag是否已经halt住CPU信号
 
     output wire uart_tx_pin, // UART发送引脚
@@ -147,6 +145,8 @@ module tinyriscv_soc_top(
 
     // tinyriscv
     wire[`INT_WIDTH-1:0] int_flag;
+    wire rst_n;
+    wire jtag_rst_n;
 
     // timer0
     wire timer0_int;
@@ -158,19 +158,18 @@ module tinyriscv_soc_top(
 
     assign int_flag = {{(`INT_WIDTH-1){1'b0}}, timer0_int};
 
+    // 复位控制模块例化
+    rst_ctrl u_rst_ctrl(
+        .clk(clk),
+        .rst_ext_i(rst_ext_i),
+        .rst_jtag_i(jtag_reset_req_o),
+        .core_rst_n_o(rst_n),
+        .jtag_rst_n_o(jtag_rst_n)
+    );
+
     // 低电平点亮LED
     // 低电平表示已经halt住CPU
     assign halted_ind = ~jtag_halt_req_o;
-
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            over <= 1'b1;
-            succ <= 1'b1;
-        end else begin
-            over <= ~u_tinyriscv_core.u_gpr_reg.regs[26];  // when = 1, run over
-            succ <= ~u_tinyriscv_core.u_gpr_reg.regs[27];  // when = 1, run succ, otherwise fail
-        end
-    end
 
     // tinyriscv处理器核模块例化
     tinyriscv_core u_tinyriscv_core(
@@ -302,7 +301,7 @@ module tinyriscv_soc_top(
         .DMI_OP_BITS(2)
     ) u_jtag_top(
         .clk(clk),
-        .jtag_rst_n(rst_n),
+        .jtag_rst_n(jtag_rst_n),
         .jtag_pin_TCK(jtag_TCK),
         .jtag_pin_TMS(jtag_TMS),
         .jtag_pin_TDI(jtag_TDI),

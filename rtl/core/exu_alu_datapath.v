@@ -128,15 +128,23 @@ module exu_alu_datapath(
     wire[31:0] slt_res = (~op1_ge_op2_signed)? 32'h1: 32'h0;
     wire[31:0] sltu_res = (~op1_ge_op2_unsigned)? 32'h1: 32'h0;
 
-    wire[31:0] alu_datapath_res = ({32{op_xor}} & xor_res) |
-                                  ({32{op_or}} & or_res) |
-                                  ({32{op_and}} & and_res) |
-                                  ({32{op_add | op_sub}} & add_sub_res) |
-                                  ({32{op_sll}} & sll_res) |
-                                  ({32{op_srl}} & srl_res) |
-                                  ({32{op_sra}} & sra_res) |
-                                  ({32{op_slt}} & slt_res) |
-                                  ({32{op_sltu}} & sltu_res);
+    reg[31:0] alu_datapath_res;
+
+    always @ (*) begin
+        alu_datapath_res = 32'h0;
+        case (1'b1)
+            op_xor:  alu_datapath_res = xor_res;
+            op_or:   alu_datapath_res = or_res;
+            op_and:  alu_datapath_res = and_res;
+            op_add:  alu_datapath_res = add_sub_res;
+            op_sub:  alu_datapath_res = add_sub_res;
+            op_sll:  alu_datapath_res = sll_res;
+            op_srl:  alu_datapath_res = srl_res;
+            op_sra:  alu_datapath_res = sra_res;
+            op_slt:  alu_datapath_res = slt_res;
+            op_sltu: alu_datapath_res = sltu_res;
+        endcase
+    end
 
     assign alu_res_o = alu_datapath_res;
 

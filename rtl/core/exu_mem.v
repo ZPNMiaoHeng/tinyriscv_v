@@ -61,36 +61,71 @@ module exu_mem(
     assign mem_sel_o[2] = mem_addr_index10 | mem_op_sw_i;
     assign mem_sel_o[3] = mem_addr_index11 | (mem_op_sh_i & mem_addr_index10) | mem_op_sw_i;
 
-    // store操作
-    wire[31:0] sb_res = ({32{mem_addr_index00}} & {24'h0, mem_rs2_data_i[7:0]}) |
-                        ({32{mem_addr_index01}} & {16'h0, mem_rs2_data_i[7:0], 8'h0}) |
-                        ({32{mem_addr_index10}} & {8'h0, mem_rs2_data_i[7:0], 16'h0}) |
-                        ({32{mem_addr_index11}} & {mem_rs2_data_i[7:0], 24'h0});
+    reg[31:0] sb_res;
 
-    wire[31:0] sh_res = ({32{mem_addr_index00}} & {16'h0, mem_rs2_data_i[15:0]}) |
-                        ({32{mem_addr_index10}} & {mem_rs2_data_i[15:0], 16'h0});
+    always @ (*) begin
+        sb_res = 32'h0;
+        case (1'b1)
+            mem_addr_index00: sb_res = {24'h0, mem_rs2_data_i[7:0]};
+            mem_addr_index01: sb_res = {16'h0, mem_rs2_data_i[7:0], 8'h0};
+            mem_addr_index10: sb_res = {8'h0, mem_rs2_data_i[7:0], 16'h0};
+            mem_addr_index11: sb_res = {mem_rs2_data_i[7:0], 24'h0};
+        endcase
+    end
+
+    reg[31:0] sh_res;
+
+    always @ (*) begin
+        sh_res = 32'h0;
+        case (1'b1)
+            mem_addr_index00: sh_res = {16'h0, mem_rs2_data_i[15:0]};
+            mem_addr_index10: sh_res = {mem_rs2_data_i[15:0], 16'h0};
+        endcase
+    end
 
     wire[31:0] sw_res = mem_rs2_data_i;
 
-    // load操作
-    wire[31:0] lb_res = ({32{mem_addr_index00}} & {{24{mem_op_lb_i & mem_rdata_i[7]}}, mem_rdata_i[7:0]}) |
-                        ({32{mem_addr_index01}} & {{24{mem_op_lb_i & mem_rdata_i[15]}}, mem_rdata_i[15:8]}) |
-                        ({32{mem_addr_index10}} & {{24{mem_op_lb_i & mem_rdata_i[23]}}, mem_rdata_i[23:16]}) |
-                        ({32{mem_addr_index11}} & {{24{mem_op_lb_i & mem_rdata_i[31]}}, mem_rdata_i[31:24]});
+    reg[31:0] lb_res;
 
-    wire[31:0] lh_res = ({32{mem_addr_index00}} & {{24{mem_op_lh_i & mem_rdata_i[15]}}, mem_rdata_i[15:0]}) |
-                        ({32{mem_addr_index10}} & {{24{mem_op_lh_i & mem_rdata_i[31]}}, mem_rdata_i[31:16]});
+    always @ (*) begin
+        lb_res = 32'h0;
+        case (1'b1)
+            mem_addr_index00: lb_res = {{24{mem_op_lb_i & mem_rdata_i[7]}}, mem_rdata_i[7:0]};
+            mem_addr_index01: lb_res = {{24{mem_op_lb_i & mem_rdata_i[15]}}, mem_rdata_i[15:8]};
+            mem_addr_index10: lb_res = {{24{mem_op_lb_i & mem_rdata_i[23]}}, mem_rdata_i[23:16]};
+            mem_addr_index11: lb_res = {{24{mem_op_lb_i & mem_rdata_i[31]}}, mem_rdata_i[31:24]};
+        endcase
+    end
+
+    reg[31:0] lh_res;
+
+    always @ (*) begin
+        lh_res = 32'h0;
+        case (1'b1)
+            mem_addr_index00: lh_res = {{24{mem_op_lh_i & mem_rdata_i[15]}}, mem_rdata_i[15:0]};
+            mem_addr_index10: lh_res = {{24{mem_op_lh_i & mem_rdata_i[31]}}, mem_rdata_i[31:16]};
+        endcase
+    end
 
     wire[31:0] lw_res = mem_rdata_i;
 
-    // 写回内存或者寄存器的数据
-    assign mem_wdata_o = ({32{mem_op_sb_i}} & sb_res) |
-                         ({32{mem_op_sh_i}} & sh_res) |
-                         ({32{mem_op_sw_i}} & sw_res) |
-                         ({32{mem_op_lb_i | mem_op_lbu_i}} & lb_res) |
-                         ({32{mem_op_lh_i | mem_op_lhu_i}} & lh_res) |
-                         ({32{mem_op_lw_i}} & lw_res);
+    reg[31:0] mem_wdata;
 
+    always @ (*) begin
+        mem_wdata = 32'h0;
+        case (1'b1)
+            mem_op_sb_i:  mem_wdata = sb_res;
+            mem_op_sh_i:  mem_wdata = sh_res;
+            mem_op_sw_i:  mem_wdata = sw_res;
+            mem_op_lb_i:  mem_wdata = lb_res;
+            mem_op_lbu_i: mem_wdata = lb_res;
+            mem_op_lh_i:  mem_wdata = lh_res;
+            mem_op_lhu_i: mem_wdata = lh_res;
+            mem_op_lw_i:  mem_wdata = lw_res;
+        endcase
+    end
+
+    assign mem_wdata_o = mem_wdata;
 
     wire mem_req_hsked = (mem_req_valid_o & mem_req_ready_i);
     wire mem_rsp_hsked = (mem_rsp_valid_i & mem_rsp_ready_o);

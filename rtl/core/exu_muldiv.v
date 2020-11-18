@@ -86,10 +86,17 @@ module exu_muldiv(
     wire[31:0] mulh_res = (op1_is_signed ^ op2_is_signed)? mul_res_tmp_complcode[63:32]: mul_res_tmp[63:32];
     wire[31:0] mulhsu_res = (op1_is_signed)? mul_res_tmp_complcode[63:32]: mul_res_tmp[63:32];
 
-    wire[31:0] mul_op_res = ({32{muldiv_op_mul_i}} & mul_res) |
-                            ({32{muldiv_op_mulhu_i}} & mulhu_res) |
-                            ({32{muldiv_op_mulh_i}} & mulh_res) |
-                            ({32{muldiv_op_mulhsu_i}} & mulhsu_res);
+    reg[31:0] mul_op_res;
+
+    always @ (*) begin
+        mul_op_res = 32'h0;
+        case (1'b1)
+            muldiv_op_mul_i:    mul_op_res = mul_res;
+            muldiv_op_mulhu_i:  mul_op_res = mulhu_res;
+            muldiv_op_mulh_i:   mul_op_res = mulh_res;
+            muldiv_op_mulhsu_i: mul_op_res = mulhsu_res;
+        endcase
+    end
 
     // 运算结果
     assign muldiv_reg_wdata_o = div_result | mul_op_res;

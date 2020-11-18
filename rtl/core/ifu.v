@@ -46,6 +46,7 @@ module ifu(
     assign req_valid_o = (~rst_n)? 1'b0:
                          (flush_i)? 1'b0:
                          stall_i[`STALL_PC]? 1'b0:
+                         jtag_halt_i? 1'b0:
                          1'b1;
     assign rsp_ready_o = (~rst_n)? 1'b0: 1'b1;
 
@@ -53,7 +54,7 @@ module ifu(
     wire ifu_rsp_hsked = (rsp_valid_i & rsp_ready_o);
 
     // 在执行多周期指令或者请求不到总线时需要暂停
-    wire stall = stall_i[`STALL_PC] | (~ifu_req_hsked) | jtag_halt_i;
+    wire stall = stall_i[`STALL_PC] | (~ifu_req_hsked);
 
     reg[31:0] pc;
     reg[31:0] pc_prev;
