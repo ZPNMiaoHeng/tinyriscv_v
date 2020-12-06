@@ -40,3 +40,11 @@ Linux系统下：
 
 `python test_all_isa.py`
 
+# test_jtag.py
+
+测试JTAG的内存读、写功能。
+
+使用方法：
+
+`python test_jtag.py`
+
