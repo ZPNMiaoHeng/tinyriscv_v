@@ -14,6 +14,8 @@
  limitations under the License.                                          
  */
 
+`include "defines.v"
+
 // 复位控制模块
 module rst_ctrl(
 
@@ -39,17 +41,19 @@ module rst_ctrl(
         .dout(ext_rst_r)
     );
 
-    reg jtag_rst_r;
+    reg[`JTAG_RESET_FF_LEVELS-1:0] jtag_rst_r;
 
-    always @ (posedge clk or posedge rst_jtag_i) begin
-        if (rst_jtag_i) begin
-            jtag_rst_r <= 1'b0;
+    always @ (posedge clk) begin
+        if (!rst_ext_i) begin
+            jtag_rst_r[`JTAG_RESET_FF_LEVELS-1:0] <= {`JTAG_RESET_FF_LEVELS{1'b1}};
+        end if (rst_jtag_i) begin
+            jtag_rst_r[`JTAG_RESET_FF_LEVELS-1:0] <= {`JTAG_RESET_FF_LEVELS{1'b0}};
         end else begin
-            jtag_rst_r <= 1'b1;
+            jtag_rst_r[`JTAG_RESET_FF_LEVELS-1:0] <= {jtag_rst_r[`JTAG_RESET_FF_LEVELS-2:0], 1'b1};
         end
     end
 
-    assign core_rst_n_o = ext_rst_r & jtag_rst_r;
+    assign core_rst_n_o = ext_rst_r & jtag_rst_r[`JTAG_RESET_FF_LEVELS-1];
     assign jtag_rst_n_o = ext_rst_r;
 
 endmodule

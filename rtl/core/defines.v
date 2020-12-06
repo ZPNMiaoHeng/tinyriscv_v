@@ -18,6 +18,7 @@
 `define CPU_CLOCK_HZ         50000000        // CPU时钟(50MHZ)
 `define INST_MEM_START_ADDR  32'h0           // 指令存储器起始地址
 `define INST_MEM_END_ADDR    32'h0fffffff    // 指令存储器结束地址
+`define JTAG_RESET_FF_LEVELS 5
 
 `define ROM_DEPTH     8192                   // 指令存储器深度，单位为word(4字节)
 `define RAM_DEPTH     4096                   // 数据存储器深度，单位为word(4字节)

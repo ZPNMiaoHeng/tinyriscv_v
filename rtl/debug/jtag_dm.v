@@ -147,7 +147,7 @@ module jtag_dm #(
     wire[DMI_DATA_BITS-1:0] data = rx_data_r[DMI_DATA_BITS+DMI_OP_BITS-1:DMI_OP_BITS];
     wire[DMI_ADDR_BITS-1:0] address = rx_data_r[DTM_REQ_BITS-1:DMI_DATA_BITS+DMI_OP_BITS];
 
-    wire read_dmstatus = (op == `DTM_OP_READ) & (address == DMSTATUS);
+    wire req_sys_bus = ~(address == DMSTATUS);
 
     always @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -250,6 +250,11 @@ module jtag_dm #(
                                             dm_halt_req <= 1'b1;
                                             // clear ALLRUNNING ANYRUNNING and set ALLHALTED
                                             dmstatus <= {dmstatus[31:12], 4'h3, dmstatus[7:0]};
+                                        // reset
+                                        end else if (data[1] == 1'b1) begin
+                                            dm_reset_req <= 1'b1;
+                                            dm_halt_req <= 1'b0;
+                                            dmstatus <= {dmstatus[31:12], 4'hc, dmstatus[7:0]};
                                         // resume
                                         end else if (dm_halt_req == 1'b1 && data[30] == 1'b1) begin
                                             dm_halt_req <= 1'b0;
@@ -277,12 +282,7 @@ module jtag_dm #(
                                                     end
                                                 // write
                                                 end else begin
-                                                    // when write dpc, we reset cpu here
-                                                    if (data[15:0] == DPC) begin
-                                                        dm_reset_req <= 1'b1;
-                                                        dm_halt_req <= 1'b0;
-                                                        dmstatus <= {dmstatus[31:12], 4'hc, dmstatus[7:0]};
-                                                    end else if (data[15:0] < 16'h1020) begin
+                                                    if (data[15:0] < 16'h1020) begin
                                                         dm_reg_we <= 1'b1;
                                                         dm_reg_wdata <= data0;
                                                     end
@@ -346,7 +346,7 @@ module jtag_dm #(
     assign dm_mem_addr_o = dm_mem_addr;
     assign dm_mem_wdata_o = dm_mem_wdata;
 
-    assign req_valid_o = (state != STATE_IDLE) & (~read_dmstatus);
+    assign req_valid_o = (state != STATE_IDLE) & req_sys_bus;
     assign dm_halt_req_o = dm_halt_req;
     assign dm_reset_req_o = dm_reset_req;
 
