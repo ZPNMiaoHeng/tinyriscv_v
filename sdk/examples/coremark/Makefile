@@ -16,6 +16,5 @@ CFLAGS := -O2 -fno-common -funroll-loops -finline-functions --param max-inline-i
 CFLAGS += -DFLAGS_STR=\""$(CFLAGS)"\"
 CFLAGS += -DITERATIONS=10000 -DPERFORMANCE_RUN=1
 
-COMMON_DIR = ../../bsp
-TOOLCHAIN_DIR = ../../..
-include ../../bsp/common.mk
+BSP_DIR = ../../bsp
+include ../../bsp/bsp.mk

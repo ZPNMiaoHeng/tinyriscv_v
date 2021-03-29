@@ -10,22 +10,22 @@ RISCV_AR      := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)ar)
 RISCV_OBJCOPY := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)objcopy)
 RISCV_READELF := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)readelf)
 
-BIN_TO_MEM    := $(COMMON_DIR)/../../tools/BinToMem.py
+BIN_TO_MEM    := $(BSP_DIR)/../../tools/BinToMem.py
 
 .PHONY: all
 all: $(TARGET)
 
-ASM_SRCS += $(COMMON_DIR)/start.S
-ASM_SRCS += $(COMMON_DIR)/trap_entry.S
-C_SRCS += $(COMMON_DIR)/init.c
-C_SRCS += $(COMMON_DIR)/trap_handler.c
-C_SRCS += $(COMMON_DIR)/lib/utils.c
-C_SRCS += $(COMMON_DIR)/lib/xprintf.c
-C_SRCS += $(COMMON_DIR)/lib/uart.c
+ASM_SRCS += $(BSP_DIR)/start.S
+ASM_SRCS += $(BSP_DIR)/trap_entry.S
+C_SRCS += $(BSP_DIR)/init.c
+C_SRCS += $(BSP_DIR)/trap_handler.c
+C_SRCS += $(BSP_DIR)/lib/utils.c
+C_SRCS += $(BSP_DIR)/lib/xprintf.c
+C_SRCS += $(BSP_DIR)/lib/uart.c
 
-LINKER_SCRIPT := $(COMMON_DIR)/link.lds
+LINKER_SCRIPT := $(BSP_DIR)/link.lds
 
-INCLUDES += -I$(COMMON_DIR)
+INCLUDES += -I$(BSP_DIR)
 
 LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl,--gc-sections -Wl,--check-sections
 

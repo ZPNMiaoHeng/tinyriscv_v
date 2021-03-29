@@ -23,6 +23,5 @@ C_SRCS := \
 	../../Source/portable/RISC-V/port.c \
 
 
-COMMON_DIR = ../../../../bsp
-TOOLCHAIN_DIR = ../../../../..
-include ../../../../bsp/common.mk
+BSP_DIR = ../../../../bsp
+include ../../../../bsp/bsp.mk

@@ -16,6 +16,5 @@ C_SRCS := \
 	main.c \
 
 
-COMMON_DIR = ../../bsp
-TOOLCHAIN_DIR = ../../..
-include ../../bsp/common.mk
+BSP_DIR = ../../bsp
+include ../../bsp/bsp.mk
