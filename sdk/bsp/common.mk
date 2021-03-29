@@ -1,6 +1,5 @@
-
-RISCV_TOOLS_PATH := $(TOOLCHAIN_DIR)/tools/gnu-mcu-eclipse-riscv-none-gcc-8.2.0-2.2-20190521-0004-win64/bin
-RISCV_TOOLS_PREFIX := riscv-none-embed-
+RISCV_TOOLS_PATH := /opt/riscv/bin
+RISCV_TOOLS_PREFIX := riscv32-unknown-elf-
 
 RISCV_GCC     := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)gcc)
 RISCV_AS      := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)as)
@@ -10,6 +9,8 @@ RISCV_GDB     := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)gdb)
 RISCV_AR      := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)ar)
 RISCV_OBJCOPY := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)objcopy)
 RISCV_READELF := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)readelf)
+
+BIN_TO_MEM    := $(COMMON_DIR)/../../tools/BinToMem.py
 
 .PHONY: all
 all: $(TARGET)
@@ -34,7 +35,7 @@ C_OBJS := $(C_SRCS:.c=.o)
 LINK_OBJS += $(ASM_OBJS) $(C_OBJS)
 LINK_DEPS += $(LINKER_SCRIPT)
 
-CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(TARGET).dump $(TARGET).bin
+CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(TARGET).dump $(TARGET).bin $(TARGET).hex $(TARGET).mem
 
 CFLAGS += -march=$(RISCV_ARCH)
 CFLAGS += -mabi=$(RISCV_ABI)
@@ -44,6 +45,7 @@ $(TARGET): $(LINK_OBJS) $(LINK_DEPS) Makefile
 	$(RISCV_GCC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)
 	$(RISCV_OBJCOPY) -O binary $@ $@.bin
 	$(RISCV_OBJDUMP) --disassemble-all $@ > $@.dump
+	$(BIN_TO_MEM) $@.bin $@.mem
 
 $(ASM_OBJS): %.o: %.S
 	$(RISCV_GCC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
