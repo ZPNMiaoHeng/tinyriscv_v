@@ -51,7 +51,6 @@ int main(int argc, char **argv, char **env)
     top->trace(tfp, 99);
     tfp->open("verilator_tb.vcd");
 #endif
-    top->fetch_enable_i = 1;
     top->clk_i          = 0;
     top->rst_ni         = 0;
 
@@ -67,8 +66,8 @@ int main(int argc, char **argv, char **env)
         tfp->dump(t);
 #endif
         t += 5;
-        if (t > 1000)
-            break;
+        //if (t > 5000)
+        //    break;
     }
 #ifdef VCD_TRACE
     tfp->close();

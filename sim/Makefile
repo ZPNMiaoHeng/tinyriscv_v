@@ -8,9 +8,7 @@ VERILATOR := verilator
 VERI_FLAGS += +vcd
 VERI_CFLAGS +=
 
-VERI_VFLAGS += -DRVFI
-
-TRACE_ENABLE := 1
+VERI_VFLAGS += -DTRACE_ENABLED
 
 RTL_FILES = ../rtl.flist
 

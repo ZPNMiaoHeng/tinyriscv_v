@@ -315,4 +315,10 @@ module tinyriscv_core(
         .int_assert_o(clint_int_assert_o)
     );
 
+`ifdef TRACE_ENABLED
+    tracer u_tracer(
+
+    );
+`endif
+
 endmodule

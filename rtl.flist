@@ -19,6 +19,7 @@
 ../rtl/core/pipe_ctrl.sv
 ../rtl/core/rst_ctrl.sv
 ../rtl/core/tinyriscv_core.sv
+../rtl/core/tracer.sv
 
 ../rtl/debug/jtag_dm.sv
 ../rtl/debug/jtag_driver.sv

@@ -16,13 +16,11 @@ module tb_top_verilator #(
 
     ) (
        input   clk_i,
-       input   rst_ni,
-       input   fetch_enable_i
+       input   rst_ni
     );
 
-
-
-
+    wire[31:0] x26 = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[26];
+    wire[31:0] x27 = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[27];
 
     initial begin: load_prog
         automatic logic [1023:0] firmware;
@@ -32,13 +30,41 @@ module tb_top_verilator #(
                 $display("[TESTBENCH] %t: loading firmware %0s ...",
                          $time, firmware);
             $readmemh (firmware, u_tinyriscv_soc_top.u_rom.u_gen_ram.ram);
-            //$display("mem[0x80]=0x%x", u_ram.ram.mem[32]);
-            //$display("mem[0x84]=0x%x", u_ram.ram.mem[33]);
         end else begin
             $display("No firmware specified");
         end
     end
 
+    always @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+
+        end else begin
+            if (x26 == 32'b1) begin
+                if (x27 == 32'b1) begin
+                    $display("~~~~~~~~~~~~~~~~~~~ TEST_PASS ~~~~~~~~~~~~~~~~~~~");
+                    $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    $display("~~~~~~~~~ #####     ##     ####    #### ~~~~~~~~~");
+                    $display("~~~~~~~~~ #    #   #  #   #       #     ~~~~~~~~~");
+                    $display("~~~~~~~~~ #    #  #    #   ####    #### ~~~~~~~~~");
+                    $display("~~~~~~~~~ #####   ######       #       #~~~~~~~~~");
+                    $display("~~~~~~~~~ #       #    #  #    #  #    #~~~~~~~~~");
+                    $display("~~~~~~~~~ #       #    #   ####    #### ~~~~~~~~~");
+                    $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                end else begin
+                    $display("~~~~~~~~~~~~~~~~~~~ TEST_FAIL ~~~~~~~~~~~~~~~~~~~~");
+                    $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    $display("~~~~~~~~~~######    ##       #    #     ~~~~~~~~~~");
+                    $display("~~~~~~~~~~#        #  #      #    #     ~~~~~~~~~~");
+                    $display("~~~~~~~~~~#####   #    #     #    #     ~~~~~~~~~~");
+                    $display("~~~~~~~~~~#       ######     #    #     ~~~~~~~~~~");
+                    $display("~~~~~~~~~~#       #    #     #    #     ~~~~~~~~~~");
+                    $display("~~~~~~~~~~#       #    #     #    ######~~~~~~~~~~");
+                    $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                end
+                $finish;
+            end
+        end
+    end
 
     tinyriscv_soc_top u_tinyriscv_soc_top(
         .clk(clk_i),
