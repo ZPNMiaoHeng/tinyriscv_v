@@ -60,7 +60,12 @@ module exu(
     output wire jump_flag_o,                // 是否跳转标志
     output wire[31:0] jump_addr_o,          // 跳转目的地址
 
+    //
+    output wire inst_valid_o,
+
     // from idu_exu
+    input wire inst_valid_i,
+    input wire[31:0] inst_i,
     input wire[`DECINFO_WIDTH-1:0] dec_info_bus_i,
     input wire[31:0] dec_imm_i,
     input wire[31:0] dec_pc_i,
@@ -374,5 +379,7 @@ module exu(
 
     assign mem_we_o = mem_mem_we_o;
     assign mem_wdata_o = mem_wdata;
+
+    assign inst_valid_o = hold_flag_o? 1'b0: inst_valid_i;
 
 endmodule

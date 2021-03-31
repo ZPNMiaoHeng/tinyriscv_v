@@ -28,6 +28,7 @@ module ifu_idu(
     input wire flush_i,                     // 流水线冲刷
     input wire inst_valid_i,
 
+    output wire inst_valid_o,
     output wire[31:0] inst_o,               // 指令内容
     output wire[31:0] inst_addr_o           // 指令地址
 
@@ -44,5 +45,10 @@ module ifu_idu(
     wire[31:0] inst_addr;
     gen_en_dff #(32) inst_addr_ff(clk, rst_n, en, i_inst_addr, inst_addr);
     assign inst_addr_o = inst_addr;
+
+    wire i_inst_valid = flush_i? 1'b0: inst_valid_i;
+    wire inst_valid;
+    gen_en_dff #(1) inst_valid_ff(clk, rst_n, 1'b1, i_inst_valid, inst_valid);
+    assign inst_valid_o = inst_valid;
 
 endmodule

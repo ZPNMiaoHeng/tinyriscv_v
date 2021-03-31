@@ -116,6 +116,7 @@ module ifu(
     assign ibus_addr_o = pc;
     assign pc_o = pc_r;
     wire inst_valid = ifu_rsp_hsked & (~flush_i) & (~bus_switched);
+    assign inst_valid_o = inst_valid;
     assign inst_o = inst_valid? ibus_data_i: `INST_NOP;
 
     assign ibus_sel_o = 4'b1111;

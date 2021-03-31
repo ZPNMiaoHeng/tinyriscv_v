@@ -584,12 +584,14 @@ module tracer(
 
         $display("Writing execution trace to %s", file_name);
         file_handle = $fopen(file_name, "w");
-        $fwrite(file_handle, "Time\tCycle\tPC\tInsn\tDecoded instruction\n");
+        $fwrite(file_handle, "\t\t\tTime\tCycle\tPC\tInsn\tDecoded instruction\n");
     end
 
 
     function automatic void printbuffer_dumpline();
-        $fwrite(file_handle, "%15t\t%d\t%h\t%s\t%s", $time, cycle, pc_i, inst_i, decoded_str);
+        string insn_str = $sformatf("%h", inst_i);
+
+        $fwrite(file_handle, "%15t\t%d\t%h\t%s\t%s", $time, cycle, pc_i, insn_str, decoded_str);
         $fwrite(file_handle, "\n");
     endfunction
 

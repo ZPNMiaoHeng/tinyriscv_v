@@ -56,6 +56,7 @@ module tinyriscv_core(
 	wire[31:0] if_inst_o;
     wire[31:0] if_inst_addr_o;
     wire[`INT_WIDTH-1:0] if_int_flag_o;
+    wire if_inst_valid_o;
 
     // idu模块输出信号
     wire[31:0] id_inst_o;
@@ -81,6 +82,7 @@ module tinyriscv_core(
     wire[31:0] ie_rs2_rdata_o;
     wire[4:0] ie_rd_waddr_o;
     wire ie_rd_we_o;
+    wire ie_inst_valid_o;
 
     // exu模块输出信号
     wire[31:0] ex_mem_wdata_o;
@@ -103,6 +105,7 @@ module tinyriscv_core(
     wire ex_inst_ecall_o;
     wire ex_inst_ebreak_o;
     wire ex_inst_mret_o;
+    wire ex_inst_valid_o;
 
     // gpr_reg模块输出信号
     wire[31:0] regs_rdata1_o;
@@ -207,6 +210,7 @@ module tinyriscv_core(
         .stall_i(ctrl_stall_o),
         .flush_i(ctrl_flush_o),
         .inst_valid_i(ifetch_inst_valid_o),
+        .inst_valid_o(if_inst_valid_o),
         .inst_o(if_inst_o),
         .inst_addr_o(if_inst_addr_o)
     );
@@ -244,6 +248,8 @@ module tinyriscv_core(
         .rs2_rdata_i(id_rs2_rdata_o),
         .rd_waddr_i(id_rd_waddr_o),
         .rd_we_i(id_rd_we_o),
+        .inst_valid_i(if_inst_valid_o),
+        .inst_valid_o(ie_inst_valid_o),
         .inst_o(ie_inst_o),
         .dec_info_bus_o(ie_dec_info_bus_o),
         .dec_imm_o(ie_dec_imm_o),
@@ -286,6 +292,9 @@ module tinyriscv_core(
         .csr_wdata_o(ex_csr_wdata_o),
         .csr_we_o(ex_csr_we_o),
         .csr_waddr_o(ex_csr_waddr_o),
+        .inst_valid_o(ex_inst_valid_o),
+        .inst_valid_i(ie_inst_valid_o),
+        .inst_i(ie_inst_o),
         .dec_info_bus_i(ie_dec_info_bus_o),
         .dec_imm_i(ie_dec_imm_o),
         .dec_pc_i(ie_dec_pc_o),
@@ -317,7 +326,11 @@ module tinyriscv_core(
 
 `ifdef TRACE_ENABLED
     tracer u_tracer(
-
+        .clk(clk),
+        .rst_n(rst_n),
+        .inst_i(ie_inst_o),
+        .pc_i(ie_dec_pc_o),
+        .inst_valid_i(ex_inst_valid_o)
     );
 `endif
 

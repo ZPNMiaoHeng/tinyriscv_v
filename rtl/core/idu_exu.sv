@@ -26,6 +26,7 @@ module idu_exu(
     input wire flush_i,                       // 流水线冲刷
 
     input wire[31:0] inst_i,
+    input wire inst_valid_i,
     input wire[`DECINFO_WIDTH-1:0] dec_info_bus_i,
     input wire[31:0] dec_imm_i,
     input wire[31:0] dec_pc_i,
@@ -35,6 +36,7 @@ module idu_exu(
     input wire rd_we_i,
 
     output wire[31:0] inst_o,
+    output wire inst_valid_o,
     output wire[`DECINFO_WIDTH-1:0] dec_info_bus_o,
     output wire[31:0] dec_imm_o,
     output wire[31:0] dec_pc_o,
@@ -86,5 +88,10 @@ module idu_exu(
     wire[31:0] inst;
     gen_en_dff #(32) inst_ff(clk, rst_n, en, i_inst, inst);
     assign inst_o = inst;
+
+    wire i_inst_valid = flush_i? 1'b0: inst_valid_i;
+    wire inst_valid;
+    gen_en_dff #(1) inst_valid_ff(clk, rst_n, 1'b1, i_inst_valid, inst_valid);
+    assign inst_valid_o = inst_valid;
 
 endmodule
