@@ -89,7 +89,7 @@ module idu_exu(
     gen_en_dff #(32) inst_ff(clk, rst_n, en, i_inst, inst);
     assign inst_o = inst;
 
-    wire i_inst_valid = flush_i? 1'b0: inst_valid_i;
+    wire i_inst_valid = flush_i? 1'b0: stall_i[`STALL_EX]? 1'b1: inst_valid_i;
     wire inst_valid;
     gen_en_dff #(1) inst_valid_ff(clk, rst_n, 1'b1, i_inst_valid, inst_valid);
     assign inst_valid_o = inst_valid;

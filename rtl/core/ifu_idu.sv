@@ -46,7 +46,7 @@ module ifu_idu(
     gen_en_dff #(32) inst_addr_ff(clk, rst_n, en, i_inst_addr, inst_addr);
     assign inst_addr_o = inst_addr;
 
-    wire i_inst_valid = flush_i? 1'b0: inst_valid_i;
+    wire i_inst_valid = flush_i? 1'b0: stall_i[`STALL_ID]? 1'b1: inst_valid_i;
     wire inst_valid;
     gen_en_dff #(1) inst_valid_ff(clk, rst_n, 1'b1, i_inst_valid, inst_valid);
     assign inst_valid_o = inst_valid;

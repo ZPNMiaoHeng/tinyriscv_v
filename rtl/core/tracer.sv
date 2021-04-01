@@ -365,16 +365,16 @@ module tracer(
 
 
     function automatic void decode_u_insn(input string mnemonic);
-        decoded_str = $sformatf("%s\tx%0d,0x%0x", mnemonic, rd_addr, {inst_i[31:12]});
+        decoded_str = $sformatf("%s x%0d,0x%0x", mnemonic, rd_addr, {inst_i[31:12]});
     endfunction
 
     function automatic void decode_j_insn(input string mnemonic);
-        decoded_str = $sformatf("%s\tx%0d,%0x", mnemonic, rd_addr, 
+        decoded_str = $sformatf("%s x%0d,%0x", mnemonic, rd_addr, 
             {{12{inst_i[31]}}, inst_i[19:12], inst_i[20], inst_i[30:21], 1'b0});
     endfunction
 
     function automatic void decode_i_jalr_insn(input string mnemonic);
-        decoded_str = $sformatf("%s\tx%0d,%0d(x%0d)", mnemonic, rd_addr,
+        decoded_str = $sformatf("%s x%0d,%0d(x%0d)", mnemonic, rd_addr,
             $signed({{20 {inst_i[31]}}, inst_i[31:20]}), rs1_addr);
     endfunction
 
@@ -387,11 +387,11 @@ module tracer(
                  inst_i[30:25], inst_i[11:8], 1'b0 });
         branch_target = pc_i + imm;
 
-        decoded_str = $sformatf("%s\tx%0d,x%0d,%0x", mnemonic, rs1_addr, rs2_addr, branch_target);
+        decoded_str = $sformatf("%s x%0d,x%0d,%0x", mnemonic, rs1_addr, rs2_addr, branch_target);
     endfunction
 
     function automatic void decode_i_insn(input string mnemonic);
-        decoded_str = $sformatf("%s\tx%0d,x%0d,%0d", mnemonic, rd_addr, rs1_addr,
+        decoded_str = $sformatf("%s x%0d,x%0d,%0d", mnemonic, rd_addr, rs1_addr,
                         $signed({{20 {inst_i[31]}}, inst_i[31:20]}));
     endfunction
 
@@ -399,11 +399,11 @@ module tracer(
         logic [4:0] shamt;
 
         shamt = {inst_i[24:20]};
-        decoded_str = $sformatf("%s\tx%0d,x%0d,0x%0x", mnemonic, rd_addr, rs1_addr, shamt);
+        decoded_str = $sformatf("%s x%0d,x%0d,0x%0x", mnemonic, rd_addr, rs1_addr, shamt);
     endfunction
 
     function automatic void decode_r_insn(input string mnemonic);
-        decoded_str = $sformatf("%s\tx%0d,x%0d,x%0d", mnemonic, rd_addr, rs1_addr, rs2_addr);
+        decoded_str = $sformatf("%s x%0d,x%0d,x%0d", mnemonic, rd_addr, rs1_addr, rs2_addr);
     endfunction
 
     function automatic void decode_csr_insn(input string mnemonic);
@@ -414,9 +414,9 @@ module tracer(
         csr_name = get_csr_name(csr);
 
         if (!inst_i[14]) begin
-            decoded_str = $sformatf("%s\tx%0d,%s,x%0d", mnemonic, rd_addr, csr_name, rs1_addr);
+            decoded_str = $sformatf("%s x%0d,%s,x%0d", mnemonic, rd_addr, csr_name, rs1_addr);
         end else begin
-            decoded_str = $sformatf("%s\tx%0d,%s,%0d", mnemonic, rd_addr, csr_name, { 27'b0, inst_i[19:15]});
+            decoded_str = $sformatf("%s x%0d,%s,%0d", mnemonic, rd_addr, csr_name, { 27'b0, inst_i[19:15]});
         end
     endfunction
 
@@ -444,7 +444,7 @@ module tracer(
             return;
         end
 
-        decoded_str = $sformatf("%s\tx%0d,%0d(x%0d)", mnemonic, rd_addr,
+        decoded_str = $sformatf("%s x%0d,%0d(x%0d)", mnemonic, rd_addr,
                     $signed({{20 {inst_i[31]}}, inst_i[31:20]}), rs1_addr);
     endfunction
 
@@ -463,7 +463,7 @@ module tracer(
         end
 
         if (!inst_i[14]) begin
-            decoded_str = $sformatf("%s\tx%0d,%0d(x%0d)", mnemonic, rs2_addr,
+            decoded_str = $sformatf("%s x%0d,%0d(x%0d)", mnemonic, rs2_addr,
                         $signed({ {20 {inst_i[31]}}, inst_i[31:25], inst_i[11:7] }), rs1_addr);
         end else begin
             decode_mnemonic("INVALID");
@@ -494,7 +494,7 @@ module tracer(
 
         predecessor = get_fence_description(inst_i[27:24]);
         successor = get_fence_description(inst_i[23:20]);
-        decoded_str = $sformatf("fence\t%s,%s", predecessor, successor);
+        decoded_str = $sformatf("fence %s,%s", predecessor, successor);
     endfunction
 
 
@@ -516,11 +516,7 @@ module tracer(
             // OPIMM
             INSN_ADDI: begin
                 if (inst_i == 32'h00_00_00_13) begin
-                    // TODO: objdump doesn't decode this as nop currently, even though it would be helpful
-                    // Decide what to do here: diverge from objdump, or make the trace less readable to
-                    // users.
-                    //decode_mnemonic("nop");
-                    decode_i_insn("addi");
+                    decode_mnemonic("nop");
                 end else begin
                     decode_i_insn("addi");
                 end
@@ -584,14 +580,14 @@ module tracer(
 
         $display("Writing execution trace to %s", file_name);
         file_handle = $fopen(file_name, "w");
-        $fwrite(file_handle, "\t\t\tTime\tCycle\tPC\tInsn\tDecoded instruction\n");
+        $fwrite(file_handle, "\t\t\tTime\t\tCycle\tPC\t\t\tInsn\t\tDecoded instruction\n");
     end
 
 
     function automatic void printbuffer_dumpline();
         string insn_str = $sformatf("%h", inst_i);
 
-        $fwrite(file_handle, "%15t\t%d\t%h\t%s\t%s", $time, cycle, pc_i, insn_str, decoded_str);
+        $fwrite(file_handle, "%15t\t%d\t\t%h\t%s\t%s", $time, cycle, pc_i, insn_str, decoded_str);
         $fwrite(file_handle, "\n");
     endfunction
 
