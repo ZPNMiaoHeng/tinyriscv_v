@@ -33,14 +33,13 @@ module exu(
 
     // mem
     input wire[31:0] mem_rdata_i,           // 内存输入数据
-    input wire mem_req_ready_i,
-    input wire mem_rsp_valid_i,
+    input wire mem_gnt_i,
+    input wire mem_rvalid_i,
     output wire[31:0] mem_wdata_o,          // 写内存数据
     output wire[31:0] mem_addr_o,           // 读、写内存地址
     output wire mem_we_o,                   // 是否要写内存
-    output wire[3:0] mem_sel_o,             // 字节位
-    output wire mem_req_valid_o,
-    output wire mem_rsp_ready_o,
+    output wire[3:0] mem_be_o,              // 字节位
+    output wire mem_req_o,
     output wire mem_access_misaligned_o,
 
     // gpr_reg
@@ -291,8 +290,8 @@ module exu(
         .req_mem_i(req_mem_o),
         .mem_addr_i(alu_res_o),
         .mem_rs2_data_i(mem_rs2_data_o),
-        .mem_req_ready_i(mem_req_ready_i),
-        .mem_rsp_valid_i(mem_rsp_valid_i),
+        .mem_gnt_i(mem_gnt_i),
+        .mem_rvalid_i(mem_rvalid_i),
         .mem_rdata_i(mem_rdata_i),
         .mem_op_lb_i(mem_op_lb_o),
         .mem_op_lh_i(mem_op_lh_o),
@@ -308,9 +307,8 @@ module exu(
         .mem_wdata_o(mem_wdata),
         .mem_reg_we_o(mem_reg_we_o),
         .mem_mem_we_o(mem_mem_we_o),
-        .mem_sel_o(mem_sel_o),
-        .mem_req_valid_o(mem_req_valid_o),
-        .mem_rsp_ready_o(mem_rsp_ready_o)
+        .mem_be_o(mem_be_o),
+        .mem_req_o(mem_req_o)
     );
 
     wire[31:0] muldiv_reg_wdata_o;

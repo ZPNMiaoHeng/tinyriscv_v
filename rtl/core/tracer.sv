@@ -581,6 +581,7 @@ module tracer(
         $display("Writing execution trace to %s", file_name);
         file_handle = $fopen(file_name, "w");
         $fwrite(file_handle, "\t\t\tTime\t\tCycle\tPC\t\t\tInsn\t\tDecoded instruction\n");
+        $fflush(file_handle);
     end
 
 
@@ -589,6 +590,7 @@ module tracer(
 
         $fwrite(file_handle, "%15t\t%d\t\t%h\t%s\t%s", $time, cycle, pc_i, insn_str, decoded_str);
         $fwrite(file_handle, "\n");
+        $fflush(file_handle);
     endfunction
 
     // log execution

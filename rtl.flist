@@ -32,6 +32,9 @@
 ../rtl/perips/uart.sv
 
 ../rtl/sys_bus/rib.sv
+../rtl/sys_bus/obi_interconnect.sv
+../rtl/sys_bus/obi_interconnect_master_sel.sv
+../rtl/sys_bus/obi_interconnect_slave_sel.sv
 
 ../rtl/top/tinyriscv_soc_top.sv
 

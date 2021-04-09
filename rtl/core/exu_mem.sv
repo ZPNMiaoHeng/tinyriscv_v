@@ -26,8 +26,8 @@ module exu_mem(
     input wire[31:0] mem_addr_i,
     input wire[31:0] mem_rs2_data_i,
     input wire[31:0] mem_rdata_i,
-    input wire mem_req_ready_i,
-    input wire mem_rsp_valid_i,
+    input wire mem_gnt_i,
+    input wire mem_rvalid_i,
     input wire mem_op_lb_i,
     input wire mem_op_lh_i,
     input wire mem_op_lw_i,
@@ -43,9 +43,8 @@ module exu_mem(
     output wire[31:0] mem_wdata_o,
     output wire mem_reg_we_o,
     output wire mem_mem_we_o,
-    output wire[3:0] mem_sel_o,
-    output wire mem_req_valid_o,
-    output wire mem_rsp_ready_o
+    output wire[3:0] mem_be_o,
+    output wire mem_req_o
 
     );
 
@@ -56,10 +55,10 @@ module exu_mem(
     wire mem_addr_index10 = (mem_addr_index == 2'b10);
     wire mem_addr_index11 = (mem_addr_index == 2'b11);
 
-    assign mem_sel_o[0] = mem_addr_index00 | mem_op_sw_i;
-    assign mem_sel_o[1] = mem_addr_index01 | (mem_op_sh_i & mem_addr_index00) | mem_op_sw_i;
-    assign mem_sel_o[2] = mem_addr_index10 | mem_op_sw_i;
-    assign mem_sel_o[3] = mem_addr_index11 | (mem_op_sh_i & mem_addr_index10) | mem_op_sw_i;
+    assign mem_be_o[0] = mem_addr_index00 | mem_op_sw_i;
+    assign mem_be_o[1] = mem_addr_index01 | (mem_op_sh_i & mem_addr_index00) | mem_op_sw_i;
+    assign mem_be_o[2] = mem_addr_index10 | mem_op_sw_i;
+    assign mem_be_o[3] = mem_addr_index11 | (mem_op_sh_i & mem_addr_index10) | mem_op_sw_i;
 
     reg[31:0] sb_res;
 
@@ -127,6 +126,68 @@ module exu_mem(
 
     assign mem_wdata_o = mem_wdata;
 
+
+    wire op_load = mem_op_lb_i | mem_op_lh_i | mem_op_lw_i | mem_op_lbu_i | mem_op_lhu_i;
+    wire op_store = mem_op_sb_i | mem_op_sh_i | mem_op_sw_i;
+
+    localparam S_IDLE       = 2'b01;
+    localparam S_MEM        = 2'b10;
+
+    reg[1:0] state;
+    reg[1:0] next_state;
+
+    always @ (posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state <= S_IDLE;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    always @ (*) begin
+        case (state)
+            S_IDLE: begin
+                if (mem_req_o & mem_gnt_i) begin
+                    next_state = S_MEM;
+                end else begin
+                    next_state = S_IDLE;
+                end
+            end
+
+            S_MEM: begin
+                if (mem_rvalid_i) begin
+                    next_state = S_IDLE;
+                end else begin
+                    next_state = S_MEM;
+                end
+            end
+
+            default: begin
+                next_state = S_IDLE;
+            end
+        endcase
+    end
+
+    assign mem_req_o = req_mem_i;
+    assign mem_addr_o = mem_addr_i;
+
+    // 暂停流水线
+    assign mem_stall_o = ((state == S_IDLE) & req_mem_i) |
+                         ((state == S_MEM) & (~mem_rvalid_i));
+
+    // 写内存使能
+    assign mem_mem_we_o = op_store & (state == S_MEM) & mem_rvalid_i;
+
+    // 写寄存器使能
+    assign mem_reg_we_o = op_load & (state == S_MEM) & mem_rvalid_i;
+
+    assign mem_access_misaligned_o = (mem_op_sw_i | mem_op_lw_i)? (mem_addr_i[0] | mem_addr_i[1]):
+                                     (mem_op_sh_i | mem_op_lh_i | mem_op_lhu_i)? mem_addr_i[0]:
+                                     0;
+
+
+
+/*
     wire mem_req_hsked = (mem_req_valid_o & mem_req_ready_i);
     wire mem_rsp_hsked = (mem_rsp_valid_i & mem_rsp_ready_o);
 
@@ -158,5 +219,5 @@ module exu_mem(
     assign mem_access_misaligned_o = (mem_op_sw_i | mem_op_lw_i)? (mem_addr_i[0] | mem_addr_i[1]):
                                      (mem_op_sh_i | mem_op_lh_i | mem_op_lhu_i)? mem_addr_i[0]:
                                      0;
-
+*/
 endmodule

@@ -22,25 +22,22 @@ module tinyriscv_core(
     input wire clk,
     input wire rst_n,
 
-    output wire[31:0] dbus_addr_o,
-    input wire[31:0] dbus_data_i,
-    output wire[31:0] dbus_data_o,
-    output wire[3:0] dbus_sel_o,
-    output wire dbus_we_o,
-    output wire dbus_req_valid_o,
-    input wire dbus_req_ready_i,
-    input wire dbus_rsp_valid_i,
-    output wire dbus_rsp_ready_o,
+    output wire instr_req_o,
+    input wire instr_gnt_i,
+    input wire instr_rvalid_i,
+    output wire[31:0] instr_addr_o,
+    input wire[31:0] instr_rdata_i,
+    input wire instr_err_i,
 
-    output wire[31:0] ibus_addr_o,          // 取指地址
-    input wire[31:0] ibus_data_i,           // 取到的指令内容
-    output wire[31:0] ibus_data_o,
-    output wire[3:0] ibus_sel_o,
-    output wire ibus_we_o,
-    output wire ibus_req_valid_o,
-    input wire ibus_req_ready_i,
-    input wire ibus_rsp_valid_i,
-    output wire ibus_rsp_ready_o,
+    output wire data_req_o,
+    input wire data_gnt_i,
+    input wire data_rvalid_i,
+    output wire data_we_o,
+    output wire[3:0] data_be_o,
+    output wire[31:0] data_addr_o,
+    output wire[31:0] data_wdata_o,
+    input wire[31:0] data_rdata_i,
+    input wire data_err_i,
 
     input wire jtag_halt_i,
     input wire[`INT_WIDTH-1:0] int_i        // 中断输入信号
@@ -131,13 +128,6 @@ module tinyriscv_core(
     wire[31:0] clint_int_addr_o;
     wire clint_int_assert_o;
 
-    assign dbus_addr_o = ex_mem_addr_o;
-    assign dbus_data_o = ex_mem_wdata_o;
-    assign dbus_we_o = ex_mem_we_o;
-    assign dbus_sel_o = ex_mem_sel_o;
-    assign dbus_req_valid_o = ex_mem_req_valid_o;
-    assign dbus_rsp_ready_o = ex_mem_rsp_ready_o;
-
 
     ifu u_ifu(
         .clk(clk),
@@ -149,15 +139,13 @@ module tinyriscv_core(
         .inst_o(ifetch_inst_o),
         .pc_o(ifetch_pc_o),
         .inst_valid_o(ifetch_inst_valid_o),
-        .ibus_addr_o(ibus_addr_o),
-        .ibus_data_i(ibus_data_i),
-        .ibus_data_o(ibus_data_o),
-        .ibus_sel_o(ibus_sel_o),
-        .ibus_we_o(ibus_we_o),
-        .req_valid_o(ibus_req_valid_o),
-        .req_ready_i(ibus_req_ready_i),
-        .rsp_valid_i(ibus_rsp_valid_i),
-        .rsp_ready_o(ibus_rsp_ready_o)
+
+        .instr_req_o(instr_req_o),
+        .instr_gnt_i(instr_gnt_i),
+        .instr_rvalid_i(instr_rvalid_i),
+        .instr_addr_o(instr_addr_o),
+        .instr_rdata_i(instr_rdata_i),
+        .instr_err_i(instr_err_i)
     );
 
     pipe_ctrl u_pipe_ctrl(
@@ -265,15 +253,14 @@ module tinyriscv_core(
         .rst_n(rst_n),
         .reg1_rdata_i(ie_rs1_rdata_o),
         .reg2_rdata_i(ie_rs2_rdata_o),
-        .mem_rdata_i(dbus_data_i),
-        .mem_req_ready_i(dbus_req_ready_i),
-        .mem_rsp_valid_i(dbus_rsp_valid_i),
-        .mem_wdata_o(ex_mem_wdata_o),
-        .mem_addr_o(ex_mem_addr_o),
-        .mem_we_o(ex_mem_we_o),
-        .mem_sel_o(ex_mem_sel_o),
-        .mem_req_valid_o(ex_mem_req_valid_o),
-        .mem_rsp_ready_o(ex_mem_rsp_ready_o),
+        .mem_rdata_i(data_rdata_i),
+        .mem_gnt_i(data_gnt_i),
+        .mem_rvalid_i(data_rvalid_i),
+        .mem_wdata_o(data_wdata_o),
+        .mem_addr_o(data_addr_o),
+        .mem_we_o(data_we_o),
+        .mem_be_o(data_be_o),
+        .mem_req_o(data_req_o),
         .mem_access_misaligned_o(ex_mem_access_misaligned_o),
         .reg_wdata_o(ex_reg_wdata_o),
         .reg_we_o(ex_reg_we_o),

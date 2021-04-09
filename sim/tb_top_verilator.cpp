@@ -66,7 +66,7 @@ int main(int argc, char **argv, char **env)
         tfp->dump(t);
 #endif
         t += 5;
-        //if (t > 5000)
+        //if (t > 2000)
         //    break;
     }
 #ifdef VCD_TRACE
