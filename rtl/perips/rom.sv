@@ -26,12 +26,7 @@ module rom #(
     input wire[31:0] data_i,
     input wire[3:0] sel_i,
     input wire we_i,
-	output wire[31:0] data_o,
-
-    input wire req_valid_i,
-    output wire req_ready_o,
-    output wire rsp_valid_o,
-    input wire rsp_ready_i
+	output wire[31:0] data_o
 
     );
 
@@ -49,17 +44,6 @@ module rom #(
         .sel_i(sel_i),
         .we_i(we_i),
         .data_o(data_o)
-    );
-
-    vld_rdy #(
-        .CUT_READY(0)
-    ) u_vld_rdy(
-        .clk(clk),
-        .rst_n(rst_n),
-        .vld_i(req_valid_i),
-        .rdy_o(req_ready_o),
-        .rdy_i(rsp_ready_i),
-        .vld_o(rsp_valid_o)
     );
 
 endmodule
