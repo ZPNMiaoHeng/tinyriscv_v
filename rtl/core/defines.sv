@@ -14,14 +14,29 @@
  limitations under the License.                                          
  */
 
-`define CPU_RESET_ADDR       32'h0           // CPU复位地址
+`define CPU_RESET_ADDR       32'h00000000    // CPU复位地址
 `define CPU_CLOCK_HZ         50000000        // CPU时钟(50MHZ)
-`define INST_MEM_START_ADDR  32'h0           // 指令存储器起始地址
-`define INST_MEM_END_ADDR    32'h0fffffff    // 指令存储器结束地址
 `define JTAG_RESET_FF_LEVELS 5
 
 `define ROM_DEPTH     8192                   // 指令存储器深度，单位为word(4字节)
 `define RAM_DEPTH     4096                   // 数据存储器深度，单位为word(4字节)
+
+// 外设地址、大小
+// ROM
+`define ROM_ADDR_MASK       ~32'hfffff
+`define ROM_ADDR_BASE       32'h00000000
+// RAM
+`define RAM_ADDR_MASK       ~32'hfffff
+`define RAM_ADDR_BASE       32'h10000000
+// GPIO
+`define GPIO_ADDR_MASK      ~32'hffff
+`define GPIO_ADDR_BASE      32'h40000000
+// Timer
+`define TIMER_ADDR_MASK     ~32'hffff
+`define TIMER_ADDR_BASE     32'h20000000
+// UART
+`define UART_ADDR_MASK      ~32'hffff
+`define UART_ADDR_BASE      32'h30000000
 
 `define INT_WIDTH    8
 `define INT_NONE     8'h0

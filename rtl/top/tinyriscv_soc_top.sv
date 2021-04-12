@@ -96,8 +96,8 @@ module tinyriscv_soc_top(
     );
 
 
-    assign slave_addr_mask[Rom] = ~32'hfffff;
-    assign slave_addr_base[Rom] = 32'h00000000;
+    assign slave_addr_mask[Rom] = `ROM_ADDR_MASK;
+    assign slave_addr_base[Rom] = `ROM_ADDR_BASE;
     // 指令存储器
     rom #(
         .DP(`ROM_DEPTH)
@@ -111,8 +111,8 @@ module tinyriscv_soc_top(
         .data_o(slave_rdata[Rom])
     );
 
-    assign slave_addr_mask[Ram] = ~32'hfffff;
-    assign slave_addr_base[Ram] = 32'h10000000;
+    assign slave_addr_mask[Ram] = `RAM_ADDR_MASK;
+    assign slave_addr_base[Ram] = `RAM_ADDR_BASE;
     // 数据存储器
     ram #(
         .DP(`RAM_DEPTH)
