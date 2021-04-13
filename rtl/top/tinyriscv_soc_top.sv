@@ -20,7 +20,7 @@
 module tinyriscv_soc_top(
 
     input wire clk,
-    input wire rst_ext_i,
+    input wire rst_ext_ni,
 
     output wire halted_ind,  // jtag是否已经halt住CPU信号
 
@@ -69,13 +69,17 @@ module tinyriscv_soc_top(
     wire [31:0]    slave_addr_mask  [SLAVES];
     wire [31:0]    slave_addr_base  [SLAVES];
 
+    wire ndmreset;
+    wire ndmreset_n;
+
+    assign ndmreset = 1'b0;
 
     tinyriscv_core #(
         .DEBUG_HALT_ADDR(`DEBUG_ADDR_BASE + 16'h800),
         .DEBUG_EXCEPTION_ADDR(`DEBUG_ADDR_BASE + 16'h808)
     ) u_tinyriscv_core (
         .clk(clk),
-        .rst_n(rst_ext_i),
+        .rst_n(ndmreset_n),
 
         .instr_req_o(master_req[CoreI]),
         .instr_gnt_i(master_gnt[CoreI]),
@@ -111,7 +115,7 @@ module tinyriscv_soc_top(
         .DP(`ROM_DEPTH)
     ) u_rom(
         .clk(clk),
-        .rst_n(rst_ext_i),
+        .rst_n(ndmreset_n),
         .addr_i(slave_addr[Rom]),
         .data_i(slave_wdata[Rom]),
         .sel_i(slave_be[Rom]),
@@ -126,7 +130,7 @@ module tinyriscv_soc_top(
         .DP(`RAM_DEPTH)
     ) u_ram(
         .clk(clk),
-        .rst_n(rst_ext_i),
+        .rst_n(ndmreset_n),
         .addr_i(slave_addr[Ram]),
         .data_i(slave_wdata[Ram]),
         .sel_i(slave_be[Ram]),
@@ -139,7 +143,7 @@ module tinyriscv_soc_top(
         .SLAVES(SLAVES)
     ) bus (
         .clk_i(clk),
-        .rst_ni(rst_ext_i),
+        .rst_ni(ndmreset_n),
         .master_req_i(master_req),
         .master_gnt_o(master_gnt),
         .master_rvalid_o(master_rvalid),
@@ -159,5 +163,15 @@ module tinyriscv_soc_top(
         .slave_wdata_o(slave_wdata),
         .slave_rdata_i(slave_rdata)
     );
+
+
+    rst_gen #(
+        .RESET_FIFO_DEPTH(5)
+    ) u_rst (
+        .clk(clk),
+        .rst_ni(rst_ext_ni & (~ndmreset)),
+        .rst_no(ndmreset_n)
+    );
+
 
 endmodule

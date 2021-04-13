@@ -17,43 +17,27 @@
 `include "defines.sv"
 
 // 复位控制模块
-module rst_ctrl(
+module rst_gen #(
+    parameter RESET_FIFO_DEPTH = 5
+    )(
 
     input wire clk,
+    input wire rst_ni,
 
-    input wire rst_ext_i,
-    input wire rst_jtag_i,
-
-    output wire core_rst_n_o,
-    output wire jtag_rst_n_o
+    output wire rst_no
 
     );
 
-    wire ext_rst_r;
+    reg[RESET_FIFO_DEPTH-1:0] synch_regs_q;
 
-    gen_ticks_sync #(
-        .DP(2),
-        .DW(1)
-    ) ext_rst_sync(
-        .rst_n(rst_ext_i),
-        .clk(clk),
-        .din(1'b1),
-        .dout(ext_rst_r)
-    );
-
-    reg[`JTAG_RESET_FF_LEVELS-1:0] jtag_rst_r;
-
-    always @ (posedge clk) begin
-        if (!rst_ext_i) begin
-            jtag_rst_r[`JTAG_RESET_FF_LEVELS-1:0] <= {`JTAG_RESET_FF_LEVELS{1'b1}};
-        end if (rst_jtag_i) begin
-            jtag_rst_r[`JTAG_RESET_FF_LEVELS-1:0] <= {`JTAG_RESET_FF_LEVELS{1'b0}};
+    always @ (posedge clk or negedge rst_ni) begin
+        if (~rst_ni) begin
+            synch_regs_q <= 0;
         end else begin
-            jtag_rst_r[`JTAG_RESET_FF_LEVELS-1:0] <= {jtag_rst_r[`JTAG_RESET_FF_LEVELS-2:0], 1'b1};
+            synch_regs_q <= {synch_regs_q[RESET_FIFO_DEPTH-2:0], 1'b1};
         end
     end
 
-    assign core_rst_n_o = ext_rst_r & jtag_rst_r[`JTAG_RESET_FF_LEVELS-1];
-    assign jtag_rst_n_o = ext_rst_r;
+    assign rst_no = synch_regs_q[RESET_FIFO_DEPTH-1];
 
 endmodule

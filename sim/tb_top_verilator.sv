@@ -68,7 +68,7 @@ module tb_top_verilator #(
 
     tinyriscv_soc_top u_tinyriscv_soc_top(
         .clk(clk_i),
-        .rst_ext_i(rst_ni)
+        .rst_ext_ni(rst_ni)
     );
 
 endmodule // tb_top_verilator
