@@ -17,11 +17,15 @@
 `include "defines.sv"
 
 // tinyriscv处理器核顶层模块
-module tinyriscv_core(
+module tinyriscv_core #(
+    parameter int unsigned DEBUG_HALT_ADDR      = 32'h10000800,
+    parameter int unsigned DEBUG_EXCEPTION_ADDR = 32'h10000808
+    )(
 
     input wire clk,
     input wire rst_n,
 
+    // instr fetch interface
     output wire instr_req_o,
     input wire instr_gnt_i,
     input wire instr_rvalid_i,
@@ -29,6 +33,7 @@ module tinyriscv_core(
     input wire[31:0] instr_rdata_i,
     input wire instr_err_i,
 
+    // data access interface
     output wire data_req_o,
     input wire data_gnt_i,
     input wire data_rvalid_i,
@@ -39,8 +44,15 @@ module tinyriscv_core(
     input wire[31:0] data_rdata_i,
     input wire data_err_i,
 
-    input wire jtag_halt_i,
-    input wire[`INT_WIDTH-1:0] int_i        // 中断输入信号
+    // interrupt inputs
+    input wire irq_software_i,
+    input wire irq_timer_i,
+    input wire irq_external_i,
+    input wire[14:0] irq_fast_i,
+    input wire irq_nm_i,
+
+    // debug req signal
+    input wire debug_req_i
 
     );
 
@@ -135,11 +147,9 @@ module tinyriscv_core(
         .flush_addr_i(ctrl_flush_addr_o),
         .stall_i(ctrl_stall_o),
         .flush_i(ctrl_flush_o),
-        .jtag_halt_i(jtag_halt_i),
         .inst_o(ifetch_inst_o),
         .pc_o(ifetch_pc_o),
         .inst_valid_o(ifetch_inst_valid_o),
-
         .instr_req_o(instr_req_o),
         .instr_gnt_i(instr_gnt_i),
         .instr_rvalid_i(instr_rvalid_i),
@@ -293,7 +303,7 @@ module tinyriscv_core(
     clint u_clint(
         .clk(clk),
         .rst_n(rst_n),
-        .int_flag_i(int_i),
+        .int_flag_i(`INT_NONE),
         .inst_ecall_i(ex_inst_ecall_o),
         .inst_ebreak_i(ex_inst_ebreak_o),
         .inst_mret_i(ex_inst_mret_o),

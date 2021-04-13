@@ -25,18 +25,21 @@
 // ROM
 `define ROM_ADDR_MASK       ~32'hfffff
 `define ROM_ADDR_BASE       32'h00000000
+// DEBUG
+`define DEBUG_ADDR_MASK     ~32'hfffff
+`define DEBUG_ADDR_BASE     32'h10000000
 // RAM
 `define RAM_ADDR_MASK       ~32'hfffff
-`define RAM_ADDR_BASE       32'h10000000
+`define RAM_ADDR_BASE       32'h20000000
 // GPIO
 `define GPIO_ADDR_MASK      ~32'hffff
-`define GPIO_ADDR_BASE      32'h40000000
+`define GPIO_ADDR_BASE      32'h30000000
 // Timer
 `define TIMER_ADDR_MASK     ~32'hffff
-`define TIMER_ADDR_BASE     32'h20000000
+`define TIMER_ADDR_BASE     32'h40000000
 // UART
 `define UART_ADDR_MASK      ~32'hffff
-`define UART_ADDR_BASE      32'h30000000
+`define UART_ADDR_BASE      32'h50000000
 
 `define INT_WIDTH    8
 `define INT_NONE     8'h0

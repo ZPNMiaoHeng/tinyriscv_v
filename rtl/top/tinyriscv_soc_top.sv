@@ -70,7 +70,10 @@ module tinyriscv_soc_top(
     wire [31:0]    slave_addr_base  [SLAVES];
 
 
-    tinyriscv_core u_tinyriscv_core(
+    tinyriscv_core #(
+        .DEBUG_HALT_ADDR(`DEBUG_ADDR_BASE + 16'h800),
+        .DEBUG_EXCEPTION_ADDR(`DEBUG_ADDR_BASE + 16'h808)
+    ) u_tinyriscv_core (
         .clk(clk),
         .rst_n(rst_ext_i),
 
@@ -91,8 +94,13 @@ module tinyriscv_soc_top(
         .data_rdata_i(master_rdata[CoreD]),
         .data_err_i(1'b0),
 
-        .jtag_halt_i(1'b0),
-        .int_i(0)
+        .irq_software_i(1'b0),
+        .irq_timer_i(1'b0),
+        .irq_external_i(1'b0),
+        .irq_fast_i(15'b0),
+        .irq_nm_i(1'b0),
+
+        .debug_req_i(1'b0)
     );
 
 
