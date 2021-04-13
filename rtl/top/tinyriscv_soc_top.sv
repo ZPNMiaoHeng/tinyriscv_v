@@ -19,20 +19,20 @@
 // tinyriscv soc顶层模块
 module tinyriscv_soc_top(
 
-    input wire clk,
-    input wire rst_ext_ni,
+    input wire clk,                 // 时钟引脚
+    input wire rst_ext_ni,          // 复位引脚，低电平有效
 
-    output wire halted_ind,  // jtag是否已经halt住CPU信号
+    output wire halted_ind_pin,     // jtag是否已经halt住CPU，高电平有效
 
-    output wire uart_tx_pin, // UART发送引脚
-    input wire uart_rx_pin,  // UART接收引脚
+    output wire uart_tx_pin,        // UART发送引脚
+    input wire uart_rx_pin,         // UART接收引脚
 
-    inout wire[1:0] gpio,    // GPIO引脚
+    inout wire[1:0] gpio_pins,      // GPIO引脚，1bit代表一个GPIO
 
-    input wire jtag_TCK,     // JTAG TCK引脚
-    input wire jtag_TMS,     // JTAG TMS引脚
-    input wire jtag_TDI,     // JTAG TDI引脚
-    output wire jtag_TDO     // JTAG TDO引脚
+    input wire jtag_TCK_pin,        // JTAG TCK引脚
+    input wire jtag_TMS_pin,        // JTAG TMS引脚
+    input wire jtag_TDI_pin,        // JTAG TDI引脚
+    output wire jtag_TDO_pin        // JTAG TDO引脚
 
     );
 
@@ -68,6 +68,15 @@ module tinyriscv_soc_top(
 
     wire [31:0]    slave_addr_mask  [SLAVES];
     wire [31:0]    slave_addr_base  [SLAVES];
+
+`ifdef VERILATOR
+    wire          sim_jtag_tck;
+    wire          sim_jtag_tms;
+    wire          sim_jtag_tdi;
+    wire          sim_jtag_trstn;
+    wire          sim_jtag_tdo;
+    wire [31:0]   sim_jtag_exit;
+`endif
 
     wire ndmreset;
     wire ndmreset_n;
@@ -173,5 +182,32 @@ module tinyriscv_soc_top(
         .rst_no(ndmreset_n)
     );
 
+
+
+`ifdef VERILATOR
+    sim_jtag #(
+        .TICK_DELAY(1),
+        .PORT(9999)
+    ) u_sim_jtag (
+        .clock                ( clk                  ),
+        .reset                ( ~rst_ext_ni          ),
+        .enable               ( 1'b0                 ),
+        .init_done            ( rst_ext_ni           ),
+        .jtag_TCK             ( sim_jtag_tck         ),
+        .jtag_TMS             ( sim_jtag_tms         ),
+        .jtag_TDI             ( sim_jtag_tdi         ),
+        .jtag_TRSTn           ( sim_jtag_trstn       ),
+        .jtag_TDO_data        ( sim_jtag_tdo         ),
+        .jtag_TDO_driven      ( 1'b1                 ),
+        .exit                 ( sim_jtag_exit        )
+    );
+
+    always @ (*) begin
+        if (sim_jtag_exit) begin
+            $display("jtag exit...");
+            $finish(2);
+        end
+    end
+`endif
 
 endmodule
