@@ -33,23 +33,33 @@ module csr_reg(
     input wire clint_we_i,                  // clint模块写寄存器标志
     input wire[31:0] clint_waddr_i,         // clint模块写寄存器地址
     input wire[31:0] clint_wdata_i,         // clint模块写寄存器数据
+
     output wire[31:0] mtvec_o,              // mtvec寄存器值
     output wire[31:0] mepc_o,               // mepc寄存器值
     output wire[31:0] mstatus_o             // mstatus寄存器值
 
     );
 
-    reg[63:0] cycle;
-    reg[31:0] mtvec;
-    reg[31:0] mcause;
-    reg[31:0] mepc;
-    reg[31:0] mie;
-    reg[31:0] mstatus;
-    reg[31:0] mscratch;
+    reg[31:0] mtvec_d;
+    wire[31:0] mtvec_q;
+    reg mtvec_we;
+    reg[31:0] mcause_d;
+    wire[31:0] mcause_q;
+    reg mcause_we;
+    reg[31:0] mepc_d;
+    wire[31:0] mepc_q;
+    reg mepc_we;
+    reg[31:0] mie_d;
+    wire[31:0] mie_q;
+    reg mie_we;
+    reg[31:0] mstatus_d;
+    wire[31:0] mstatus_q;
+    reg mstatus_we;
+    reg[31:0] mscratch_d;
+    wire[31:0] mscratch_q;
+    reg mscratch_we;
 
-    assign mtvec_o = mtvec;
-    assign mepc_o = mepc;
-    assign mstatus_o = mstatus;
+    reg[63:0] cycle;
 
     // cycle counter
     // 复位撤销后就一直计数
@@ -61,44 +71,9 @@ module csr_reg(
         end
     end
 
-    wire we = exu_we_i | clint_we_i;
-    wire[31:0] waddr = exu_we_i? exu_waddr_i: clint_waddr_i;
-    wire[31:0] wdata = exu_we_i? exu_wdata_i: clint_wdata_i;
-
-    // 写寄存器
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            mtvec <= 32'h0;
-            mcause <= 32'h0;
-            mepc <= 32'h0;
-            mie <= 32'h0;
-            mstatus <= 32'h0;
-            mscratch <= 32'h0;
-        end else begin
-            if (we) begin
-                case (waddr[11:0])
-                    `CSR_MTVEC: begin
-                        mtvec <= wdata;
-                    end
-                    `CSR_MCAUSE: begin
-                        mcause <= wdata;
-                    end
-                    `CSR_MEPC: begin
-                        mepc <= wdata;
-                    end
-                    `CSR_MIE: begin
-                        mie <= wdata;
-                    end
-                    `CSR_MSTATUS: begin
-                        mstatus <= wdata;
-                    end
-                    `CSR_MSCRATCH: begin
-                        mscratch <= wdata;
-                    end
-                endcase
-            end
-        end
-    end
+    assign mtvec_o = mtvec_q;
+    assign mepc_o = mepc_q;
+    assign mstatus_o = mstatus_q;
 
     reg[31:0] exu_rdata;
 
@@ -112,22 +87,22 @@ module csr_reg(
                 exu_rdata = cycle[63:32];
             end
             `CSR_MTVEC: begin
-                exu_rdata = mtvec;
+                exu_rdata = mtvec_q;
             end
             `CSR_MCAUSE: begin
-                exu_rdata = mcause;
+                exu_rdata = mcause_q;
             end
             `CSR_MEPC: begin
-                exu_rdata = mepc;
+                exu_rdata = mepc_q;
             end
             `CSR_MIE: begin
-                exu_rdata = mie;
+                exu_rdata = mie_q;
             end
             `CSR_MSTATUS: begin
-                exu_rdata = mstatus;
+                exu_rdata = mstatus_q;
             end
             `CSR_MSCRATCH: begin
-                exu_rdata = mscratch;
+                exu_rdata = mscratch_q;
             end
             default: begin
                 exu_rdata = 32'h0;
@@ -136,5 +111,121 @@ module csr_reg(
     end
 
     assign exu_rdata_o = exu_rdata;
+
+    // 写CSR寄存器
+    wire we = exu_we_i | clint_we_i;
+    wire[31:0] waddr = exu_we_i? exu_waddr_i: clint_waddr_i;
+    wire[31:0] wdata = exu_we_i? exu_wdata_i: clint_wdata_i;
+
+    always @ (*) begin
+        mtvec_d = mtvec_q;
+        mtvec_we = 1'b0;
+        mcause_d = mcause_q;
+        mcause_we = 1'b0;
+        mepc_d = mepc_q;
+        mepc_we = 1'b0;
+        mie_d = mie_q;
+        mie_we = 1'b0;
+        mstatus_d = mstatus_q;
+        mstatus_we = 1'b0;
+        mscratch_d = mscratch_q;
+        mscratch_we = 1'b0;
+
+        if (we) begin
+            case (waddr[11:0])
+                `CSR_MTVEC: begin
+                    mtvec_d = wdata;
+                    mtvec_we = 1'b1;
+                end
+                `CSR_MCAUSE: begin
+                    mcause_d = wdata;
+                    mcause_we = 1'b1;
+                end
+                `CSR_MEPC: begin
+                    mepc_d = wdata;
+                    mepc_we = 1'b1;
+                end
+                `CSR_MIE: begin
+                    mie_d = wdata;
+                    mie_we = 1'b1;
+                end
+                `CSR_MSTATUS: begin
+                    mstatus_d = wdata;
+                    mstatus_we = 1'b1;
+                end
+                `CSR_MSCRATCH: begin
+                    mscratch_d = wdata;
+                    mscratch_we = 1'b1;
+                end
+                default:;
+            endcase
+        end
+    end
+
+    // mtvec
+    csr #(
+        .RESET_VAL(32'h0)
+    ) mtvec_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(mtvec_d),
+        .we_i(mtvec_we),
+        .rdata_o(mtvec_q)
+    );
+
+    // mcause
+    csr #(
+        .RESET_VAL(32'h0)
+    ) mcause_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(mcause_d),
+        .we_i(mcause_we),
+        .rdata_o(mcause_q)
+    );
+
+    // mepc
+    csr #(
+        .RESET_VAL(32'h0)
+    ) mepc_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(mepc_d),
+        .we_i(mepc_we),
+        .rdata_o(mepc_q)
+    );
+
+    // mie
+    csr #(
+        .RESET_VAL(32'h0)
+    ) mie_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(mie_d),
+        .we_i(mie_we),
+        .rdata_o(mie_q)
+    );
+
+    // mstatus
+    csr #(
+        .RESET_VAL(32'h0)
+    ) mstatus_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(mstatus_d),
+        .we_i(mstatus_we),
+        .rdata_o(mstatus_q)
+    );
+
+    // mscratch
+    csr #(
+        .RESET_VAL(32'h0)
+    ) mscratch_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(mscratch_d),
+        .we_i(mscratch_we),
+        .rdata_o(mscratch_q)
+    );
 
 endmodule

@@ -3,6 +3,7 @@
 
 ../rtl/core/clint.sv
 ../rtl/core/csr_reg.sv
+../rtl/core/csr.sv
 ../rtl/core/defines.sv
 ../rtl/core/divider.sv
 ../rtl/core/exu.sv
