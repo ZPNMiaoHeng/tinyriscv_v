@@ -137,4 +137,6 @@
 `define CSR_MIE         12'h304
 `define CSR_MSTATUS     12'h300
 `define CSR_MSCRATCH    12'h340
-
+`define CSR_DSCRATCH0   12'h7b2
+`define CSR_DSCRATCH1   12'h7b3
+`define CSR_MHARTID     12'hF14

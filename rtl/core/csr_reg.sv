@@ -58,6 +58,15 @@ module csr_reg(
     reg[31:0] mscratch_d;
     wire[31:0] mscratch_q;
     reg mscratch_we;
+    reg[31:0] dscratch0_d;
+    wire[31:0] dscratch0_q;
+    reg dscratch0_we;
+    reg[31:0] dscratch1_d;
+    wire[31:0] dscratch1_q;
+    reg dscratch1_we;
+    reg[31:0] mhartid_d;
+    wire[31:0] mhartid_q;
+    reg mhartid_we;
 
     reg[63:0] cycle;
 
@@ -104,6 +113,15 @@ module csr_reg(
             `CSR_MSCRATCH: begin
                 exu_rdata = mscratch_q;
             end
+            `CSR_DSCRATCH0: begin
+                exu_rdata = dscratch0_q;
+            end
+            `CSR_DSCRATCH1: begin
+                exu_rdata = dscratch1_q;
+            end
+            `CSR_MHARTID: begin
+                exu_rdata = mhartid_q;
+            end
             default: begin
                 exu_rdata = 32'h0;
             end
@@ -130,6 +148,12 @@ module csr_reg(
         mstatus_we = 1'b0;
         mscratch_d = mscratch_q;
         mscratch_we = 1'b0;
+        dscratch0_d = dscratch0_q;
+        dscratch0_we = 1'b0;
+        dscratch1_d = dscratch1_q;
+        dscratch1_we = 1'b0;
+        mhartid_d = mhartid_q;
+        mhartid_we = 1'b0;
 
         if (we) begin
             case (waddr[11:0])
@@ -156,6 +180,18 @@ module csr_reg(
                 `CSR_MSCRATCH: begin
                     mscratch_d = wdata;
                     mscratch_we = 1'b1;
+                end
+                `CSR_DSCRATCH0: begin
+                    dscratch0_d = wdata;
+                    dscratch0_we = 1'b1;
+                end
+                `CSR_DSCRATCH1: begin
+                    dscratch1_d = wdata;
+                    dscratch1_we = 1'b1;
+                end
+                `CSR_MHARTID: begin
+                    mhartid_d = wdata;
+                    mhartid_we = 1'b1;
                 end
                 default:;
             endcase
@@ -226,6 +262,39 @@ module csr_reg(
         .wdata_i(mscratch_d),
         .we_i(mscratch_we),
         .rdata_o(mscratch_q)
+    );
+
+    // dscratch0
+    csr #(
+        .RESET_VAL(32'h0)
+    ) dscratch0_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(dscratch0_d),
+        .we_i(dscratch0_we),
+        .rdata_o(dscratch0_q)
+    );
+
+    // dscratch1
+    csr #(
+        .RESET_VAL(32'h0)
+    ) dscratch1_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(dscratch1_d),
+        .we_i(dscratch1_we),
+        .rdata_o(dscratch1_q)
+    );
+
+    // mhartid
+    csr #(
+        .RESET_VAL(32'h0)
+    ) mhartid_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(mhartid_d),
+        .we_i(mhartid_we),
+        .rdata_o(mhartid_q)
     );
 
 endmodule
