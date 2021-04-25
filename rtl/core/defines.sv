@@ -54,6 +54,7 @@
 `define INST_MRET    32'h30200073
 `define INST_ECALL   32'h00000073
 `define INST_EBREAK  32'h00100073
+`define INST_DRET    32'h7b200073
 
 // 指令译码信息
 `define DECINFO_GRP_BUS           2:0
@@ -118,12 +119,13 @@
 `define DECINFO_MEM_SH            (`DECINFO_GRP_WIDTH+6)
 `define DECINFO_MEM_SW            (`DECINFO_GRP_WIDTH+7)
 
-`define DECINFO_SYS_BUS_WIDTH     (`DECINFO_GRP_WIDTH+5)
+`define DECINFO_SYS_BUS_WIDTH     (`DECINFO_GRP_WIDTH+6)
 `define DECINFO_SYS_ECALL         (`DECINFO_GRP_WIDTH+0)
 `define DECINFO_SYS_EBREAK        (`DECINFO_GRP_WIDTH+1)
 `define DECINFO_SYS_NOP           (`DECINFO_GRP_WIDTH+2)
 `define DECINFO_SYS_MRET          (`DECINFO_GRP_WIDTH+3)
 `define DECINFO_SYS_FENCE         (`DECINFO_GRP_WIDTH+4)
+`define DECINFO_SYS_DRET          (`DECINFO_GRP_WIDTH+5)
 
 // 最长的那组
 `define DECINFO_WIDTH             `DECINFO_CSR_BUS_WIDTH
@@ -137,6 +139,8 @@
 `define CSR_MIE         12'h304
 `define CSR_MSTATUS     12'h300
 `define CSR_MSCRATCH    12'h340
+`define CSR_MHARTID     12'hF14
+`define CSR_DCSR        12'h7b0
+`define CSR_DPC         12'h7b1
 `define CSR_DSCRATCH0   12'h7b2
 `define CSR_DSCRATCH1   12'h7b3
-`define CSR_MHARTID     12'hF14

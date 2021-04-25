@@ -1,5 +1,5 @@
  /*                                                                      
- Copyright 2020 Blue Liang, liangkangnan@163.com
+ Copyright 2021 Blue Liang, liangkangnan@163.com
                                                                          
  Licensed under the Apache License, Version 2.0 (the "License");         
  you may not use this file except in compliance with the License.        
@@ -14,104 +14,148 @@
  limitations under the License.                                          
  */
 
-`include "../core/defines.sv"
 
-// JTAG顶层模块
 module jtag_top #(
-    parameter DMI_ADDR_BITS = 6,
-    parameter DMI_DATA_BITS = 32,
-    parameter DMI_OP_BITS = 2)(
 
-    input wire clk,
-    input wire jtag_rst_n,
+    )(
 
-    input wire jtag_pin_TCK,
-    input wire jtag_pin_TMS,
-    input wire jtag_pin_TDI,
-    output wire jtag_pin_TDO,
+    input wire                      clk_i,
+    input wire                      rst_ni,
 
-    output wire reg_we_o,
-    output wire[4:0] reg_addr_o,
-    output wire[31:0] reg_wdata_o,
-    input wire[31:0] reg_rdata_i,
+    output wire                     debug_req_o,
+    output wire                     ndmreset_o,
 
-    output wire mem_we_o,
-    output wire[31:0] mem_addr_o,
-    output wire[31:0] mem_wdata_o,
-    input wire[31:0] mem_rdata_i,
-    output wire[3:0] mem_sel_o,
+    input wire                      jtag_tck_i,     // JTAG test clock pad
+    input wire                      jtag_tdi_i,     // JTAG test data input pad
+    input wire                      jtag_tms_i,     // JTAG test mode select pad
+    input wire                      jtag_trst_ni,   // JTAG test reset pad
+    output wire                     jtag_tdo_o,     // JTAG test data output pad
 
-    output wire req_valid_o,
-    input wire req_ready_i,
-    input wire rsp_valid_i,
-    output wire rsp_ready_o,
+    output wire                     master_req_o,
+    input  wire                     master_gnt_i,
+    input  wire                     master_rvalid_i,
+    output wire                     master_we_o,
+    output wire [3:0]               master_be_o,
+    output wire [31:0]              master_addr_o,
+    output wire [31:0]              master_wdata_o,
+    input  wire [31:0]              master_rdata_i,
+    input  wire                     master_err_i,
 
-    output wire halt_req_o,
-    output wire reset_req_o
+    input  wire                     slave_req_i,
+    input  wire                     slave_we_i,
+    input  wire [31:0]              slave_addr_i,
+    input  wire [3:0]               slave_be_i,
+    input  wire [31:0]              slave_wdata_i,
+    output wire [31:0]              slave_rdata_o
 
     );
 
-    parameter DM_RESP_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
-    parameter DTM_REQ_BITS = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS;
+    // addr + data + op = 6 + 32 + 2 = 40
+    localparam DMI_DATA_WIDTH = 40;
 
-    // jtag_driver输出信号
-    wire dtm_ack_o;
-    wire dtm_req_valid_o;
-    wire[DTM_REQ_BITS - 1:0] dtm_req_data_o;
 
-    // jtag_dm输出信号
-    wire dm_ack_o;
-    wire[DM_RESP_BITS-1:0] dm_resp_data_o;
-    wire dm_resp_valid_o;
-    wire dm_halt_req_o;
-    wire dm_reset_req_o;
-
-    jtag_driver #(
-        .DMI_ADDR_BITS(DMI_ADDR_BITS),
-        .DMI_DATA_BITS(DMI_DATA_BITS),
-        .DMI_OP_BITS(DMI_OP_BITS)
-    ) u_jtag_driver(
-        .rst_n(jtag_rst_n),
-        .jtag_TCK(jtag_pin_TCK),
-        .jtag_TDI(jtag_pin_TDI),
-        .jtag_TMS(jtag_pin_TMS),
-        .jtag_TDO(jtag_pin_TDO),
-        .dm_resp_i(dm_resp_valid_o),
-        .dm_resp_data_i(dm_resp_data_o),
-        .dtm_ack_o(dtm_ack_o),
-        .dm_ack_i(dm_ack_o),
-        .dtm_req_valid_o(dtm_req_valid_o),
-        .dtm_req_data_o(dtm_req_data_o)
-    );
+    wire [DMI_DATA_WIDTH-1:0]   dm_to_dmi_data;
+    wire                        dm_to_dmi_valid;
+    wire                        dm_to_dmi_ready;
+    wire [DMI_DATA_WIDTH-1:0]   dmi_to_dm_data;
+    wire                        dmi_to_dm_valid;
+    wire                        dmi_to_dm_ready;
 
     jtag_dm #(
-        .DMI_ADDR_BITS(DMI_ADDR_BITS),
-        .DMI_DATA_BITS(DMI_DATA_BITS),
-        .DMI_OP_BITS(DMI_OP_BITS)
-    ) u_jtag_dm(
-        .clk(clk),
-        .rst_n(jtag_rst_n),
-        .dm_ack_o(dm_ack_o),
-        .dtm_req_valid_i(dtm_req_valid_o),
-        .dtm_req_data_i(dtm_req_data_o),
-        .dtm_ack_i(dtm_ack_o),
-        .dm_resp_data_o(dm_resp_data_o),
-        .dm_resp_valid_o(dm_resp_valid_o),
-        .dm_reg_we_o(reg_we_o),
-        .dm_reg_addr_o(reg_addr_o),
-        .dm_reg_wdata_o(reg_wdata_o),
-        .dm_reg_rdata_i(reg_rdata_i),
-        .dm_mem_we_o(mem_we_o),
-        .dm_mem_addr_o(mem_addr_o),
-        .dm_mem_wdata_o(mem_wdata_o),
-        .dm_mem_rdata_i(mem_rdata_i),
-        .dm_mem_sel_o(mem_sel_o),
-        .req_valid_o(req_valid_o),
-        .req_ready_i(req_ready_i),
-        .rsp_valid_i(rsp_valid_i),
-        .rsp_ready_o(rsp_ready_o),
-        .dm_halt_req_o(halt_req_o),
-        .dm_reset_req_o(reset_req_o)
+
+    ) u_jtag_dm (
+        .clk            (clk_i),
+        .rst_n          (rst_ni),
+        .dmi_data_i     (dmi_to_dm_data),
+        .dmi_valid_i    (dmi_to_dm_valid),
+        .dm_ready_o     (dm_to_dmi_ready),
+        .dm_data_o      (dm_to_dmi_data),
+        .dm_valid_o     (dm_to_dmi_valid),
+        .dmi_ready_i    (dmi_to_dm_ready),
+        .debug_req_o    (debug_req_o),
+        .ndmreset_o     (ndmreset_o),
+        .master_req_o   (master_req_o),
+        .master_gnt_i   (master_gnt_i),
+        .master_rvalid_i(master_rvalid_i),
+        .master_we_o    (master_we_o),
+        .master_be_o    (master_be_o),
+        .master_addr_o  (master_addr_o),
+        .master_wdata_o (master_wdata_o),
+        .master_rdata_i (master_rdata_i),
+        .master_err_i   (master_err_i),
+        .slave_req_i    (slave_req_i),
+        .slave_we_i     (slave_we_i),
+        .slave_addr_i   (slave_addr_i),
+        .slave_be_i     (slave_be_i),
+        .slave_wdata_i  (slave_wdata_i),
+        .slave_rdata_o  (slave_rdata_o)
+    );
+
+    wire [DMI_DATA_WIDTH-1:0]   dtm_to_dmi_data;
+    wire                        dtm_to_dmi_valid;
+    wire                        dtm_to_dmi_ready;
+    wire [DMI_DATA_WIDTH-1:0]   dmi_to_dtm_data;
+    wire                        dmi_to_dtm_valid;
+    wire                        dmi_to_dtm_ready;
+
+    jtag_dmi #(
+
+    ) u_jtag_dmi (
+        .jtag_tck_i     (jtag_tck_i),
+        .jtag_trst_ni   (jtag_trst_ni),
+        .jtag_data_i    (dtm_to_dmi_data),
+        .jtag_valid_i   (dtm_to_dmi_valid),
+        .jtag_ready_o   (dmi_to_dtm_ready),
+        .jtag_data_o    (dmi_to_dtm_data),
+        .jtag_valid_o   (dmi_to_dtm_valid),
+        .jtag_ready_i   (dtm_to_dmi_ready),
+        .clk_i          (clk_i),
+        .rst_ni         (rst_ni),
+        .core_data_i    (dm_to_dmi_data),
+        .core_valid_i   (dm_to_dmi_valid),
+        .core_ready_o   (dmi_to_dm_ready),
+        .core_data_o    (dmi_to_dm_data),
+        .core_valid_o   (dmi_to_dm_valid),
+        .core_ready_i   (dm_to_dmi_ready)
+    );
+
+    wire                        tap_to_dtm_req;
+    wire [DMI_DATA_WIDTH-1:0]   tap_to_dtm_data;
+    wire [DMI_DATA_WIDTH-1:0]   dtm_to_tap_data;
+    wire [31:0]                 idcode;
+    wire [31:0]                 dtmcs;
+
+    jtag_dtm #(
+
+    ) u_jtag_dtm (
+        .jtag_tck_i     (jtag_tck_i),
+        .jtag_trst_ni   (jtag_trst_ni),
+        .dtm_data_o     (dtm_to_dmi_data),
+        .dtm_valid_o    (dtm_to_dmi_valid),
+        .dmi_ready_i    (dmi_to_dtm_ready),
+        .dmi_data_i     (dmi_to_dtm_data),
+        .dmi_valid_i    (dmi_to_dtm_valid),
+        .dtm_ready_o    (dtm_to_dmi_ready),
+        .tap_req_i      (tap_to_dtm_req),
+        .tap_data_i     (tap_to_dtm_data),
+        .data_o         (dtm_to_tap_data),
+        .idcode_o       (idcode),
+        .dtmcs_o        (dtmcs)
+    );
+
+    jtag_tap #(
+
+    ) u_jtag_tap (
+        .jtag_tck_i     (jtag_tck_i),
+        .jtag_tdi_i     (jtag_tdi_i),
+        .jtag_tms_i     (jtag_tms_i),
+        .jtag_trst_ni   (jtag_trst_ni),
+        .jtag_tdo_o     (jtag_tdo_o),
+        .tap_req_o      (tap_to_dtm_req),
+        .tap_data_o     (tap_to_dtm_data),
+        .dtm_data_i     (dtm_to_tap_data),
+        .idcode_i       (idcode),
+        .dtmcs_i        (dtmcs)
     );
 
 endmodule

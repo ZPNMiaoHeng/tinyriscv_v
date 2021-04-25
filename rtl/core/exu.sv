@@ -30,6 +30,7 @@ module exu(
     output wire inst_ecall_o,               // ecall指令
     output wire inst_ebreak_o,              // ebreak指令
     output wire inst_mret_o,                // mret指令
+    output wire inst_dret_o,                // dret指令
 
     // mem
     input wire[31:0] mem_rdata_i,           // 内存输入数据
@@ -143,6 +144,7 @@ module exu(
     wire sys_op_ecall_o;
     wire sys_op_ebreak_o;
     wire sys_op_fence_o;
+    wire sys_op_dret_o;
 
     exu_dispatch u_exu_dispatch(
         // input
@@ -219,12 +221,14 @@ module exu(
         .sys_op_mret_o(sys_op_mret_o),
         .sys_op_ecall_o(sys_op_ecall_o),
         .sys_op_ebreak_o(sys_op_ebreak_o),
-        .sys_op_fence_o(sys_op_fence_o)
+        .sys_op_fence_o(sys_op_fence_o),
+        .sys_op_dret_o(sys_op_dret_o)
     );
 
     assign inst_ecall_o = sys_op_ecall_o;
     assign inst_ebreak_o = sys_op_ebreak_o;
     assign inst_mret_o = sys_op_mret_o;
+    assign inst_dret_o = sys_op_dret_o;
 
     wire[31:0] alu_res_o;
     wire[31:0] bjp_res_o;

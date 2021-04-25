@@ -34,7 +34,7 @@ module tb_top_verilator #(
             $display("No firmware specified");
         end
     end
-
+/*
     always @(posedge clk_i or negedge rst_ni) begin
         if (!rst_ni) begin
 
@@ -65,7 +65,7 @@ module tb_top_verilator #(
             end
         end
     end
-
+*/
     tinyriscv_soc_top u_tinyriscv_soc_top(
         .clk(clk_i),
         .rst_ext_ni(rst_ni)

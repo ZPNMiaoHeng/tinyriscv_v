@@ -15,6 +15,7 @@
  */
 
 `include "../core/defines.sv"
+`include "../debug/jtag_def.sv"
 
 // tinyriscv soc顶层模块
 module tinyriscv_soc_top(
@@ -38,14 +39,18 @@ module tinyriscv_soc_top(
 
 
 
-    localparam int MASTERS = 2; //Number of master ports
-    localparam int SLAVES  = 2; //Number of slave ports
+    localparam int MASTERS = 3; // Number of master ports
+    localparam int SLAVES  = 3; // Number of slave ports
 
-    localparam int CoreD = 0;
-    localparam int CoreI = 1;
+    // masters
+    localparam int CoreD    = 0;
+    localparam int JtagHost = 1;
+    localparam int CoreI    = 2;
 
-    localparam int Rom = 0;
-    localparam int Ram = 1;
+    // slaves
+    localparam int Rom          = 0;
+    localparam int Ram          = 1;
+    localparam int JtagDevice   = 2;
 
 
     wire           master_req       [MASTERS];
@@ -80,12 +85,12 @@ module tinyriscv_soc_top(
 
     wire ndmreset;
     wire ndmreset_n;
+    wire debug_req;
 
-    assign ndmreset = 1'b0;
 
     tinyriscv_core #(
-        .DEBUG_HALT_ADDR(`DEBUG_ADDR_BASE + 16'h800),
-        .DEBUG_EXCEPTION_ADDR(`DEBUG_ADDR_BASE + 16'h808)
+        .DEBUG_HALT_ADDR(`DEBUG_ADDR_BASE + `HaltAddress),
+        .DEBUG_EXCEPTION_ADDR(`DEBUG_ADDR_BASE + `ExceptionAddress)
     ) u_tinyriscv_core (
         .clk(clk),
         .rst_n(ndmreset_n),
@@ -111,9 +116,8 @@ module tinyriscv_soc_top(
         .irq_timer_i(1'b0),
         .irq_external_i(1'b0),
         .irq_fast_i(15'b0),
-        .irq_nm_i(1'b0),
 
-        .debug_req_i(1'b0)
+        .debug_req_i(debug_req)
     );
 
 
@@ -182,7 +186,37 @@ module tinyriscv_soc_top(
         .rst_no(ndmreset_n)
     );
 
+    assign slave_addr_mask[JtagDevice] = `DEBUG_ADDR_MASK;
+    assign slave_addr_base[JtagDevice] = `DEBUG_ADDR_BASE;
+    // JTAG module
+    jtag_top #(
 
+    ) u_jtag_top (
+        .clk_i              (clk),
+        .rst_ni             (rst_ext_ni),
+        .debug_req_o        (debug_req),
+        .ndmreset_o         (ndmreset),
+        .jtag_tck_i         (sim_jtag_tck),
+        .jtag_tdi_i         (sim_jtag_tdi),
+        .jtag_tms_i         (sim_jtag_tms),
+        .jtag_trst_ni       (sim_jtag_trstn),
+        .jtag_tdo_o         (sim_jtag_tdo),
+        .master_req_o       (master_req[JtagHost]),
+        .master_gnt_i       (master_gnt[JtagHost]),
+        .master_rvalid_i    (master_rvalid[JtagHost]),
+        .master_we_o        (master_we[JtagHost]),
+        .master_be_o        (master_be[JtagHost]),
+        .master_addr_o      (master_addr[JtagHost]),
+        .master_wdata_o     (master_wdata[JtagHost]),
+        .master_rdata_i     (master_rdata[JtagHost]),
+        .master_err_i       (1'b0),
+        .slave_req_i        (slave_req[JtagDevice]),
+        .slave_we_i         (slave_we[JtagDevice]),
+        .slave_addr_i       (slave_addr[JtagDevice]),
+        .slave_be_i         (slave_be[JtagDevice]),
+        .slave_wdata_i      (slave_wdata[JtagDevice]),
+        .slave_rdata_o      (slave_rdata[JtagDevice])
+    );
 
 `ifdef VERILATOR
     sim_jtag #(
@@ -191,7 +225,7 @@ module tinyriscv_soc_top(
     ) u_sim_jtag (
         .clock                ( clk                  ),
         .reset                ( ~rst_ext_ni          ),
-        .enable               ( 1'b0                 ),
+        .enable               ( 1'b1                 ),
         .init_done            ( rst_ext_ni           ),
         .jtag_TCK             ( sim_jtag_tck         ),
         .jtag_TMS             ( sim_jtag_tms         ),

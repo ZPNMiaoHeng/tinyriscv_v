@@ -99,7 +99,8 @@ module exu_dispatch(
     output wire sys_op_mret_o,
     output wire sys_op_ecall_o,
     output wire sys_op_ebreak_o,
-    output wire sys_op_fence_o
+    output wire sys_op_fence_o,
+    output wire sys_op_dret_o
 
     );
 
@@ -206,5 +207,6 @@ module exu_dispatch(
     assign sys_op_ecall_o = sys_info[`DECINFO_SYS_ECALL];
     assign sys_op_ebreak_o = sys_info[`DECINFO_SYS_EBREAK];
     assign sys_op_fence_o = sys_info[`DECINFO_SYS_FENCE];
+    assign sys_op_dret_o = sys_info[`DECINFO_SYS_DRET];
 
 endmodule

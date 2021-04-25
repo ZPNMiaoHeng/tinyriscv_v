@@ -156,6 +156,7 @@ module idu(
     wire inst_remu = opcode_0110011 & funct3_111 & funct7_0000001;
     wire inst_nop = (inst_i == `INST_NOP);
     wire inst_mret = (inst_i == `INST_MRET);
+    wire inst_dret = (inst_i == `INST_DRET);
 
     // 将指令分类
     wire inst_type_load = opcode_0000011;
@@ -228,6 +229,7 @@ module idu(
     assign dec_sys_info_bus[`DECINFO_SYS_EBREAK] = inst_ebreak;
     assign dec_sys_info_bus[`DECINFO_SYS_NOP] = inst_nop;
     assign dec_sys_info_bus[`DECINFO_SYS_MRET] = inst_mret;
+    assign dec_sys_info_bus[`DECINFO_SYS_DRET] = inst_dret;
     assign dec_sys_info_bus[`DECINFO_SYS_FENCE] = inst_fence | inst_fence_i;
 
     // 指令中的立即数
@@ -259,7 +261,7 @@ module idu(
     wire op_bjp = inst_jal | inst_jalr | inst_type_branch;
     wire op_muldiv = inst_type_muldiv;
     wire op_csr = inst_csrrw | inst_csrrwi | inst_csrrs | inst_csrrsi | inst_csrrc | inst_csrrci;
-    wire op_sys = inst_ebreak | inst_ecall | inst_nop | inst_mret | inst_fence | inst_fence_i;
+    wire op_sys = inst_ebreak | inst_ecall | inst_nop | inst_mret | inst_fence | inst_fence_i | inst_dret;
     wire op_mem = inst_type_load | inst_type_store;
 
     assign dec_info_bus_o = ({`DECINFO_WIDTH{op_alu}} & {{`DECINFO_WIDTH-`DECINFO_ALU_BUS_WIDTH{1'b0}}, dec_alu_info_bus}) |

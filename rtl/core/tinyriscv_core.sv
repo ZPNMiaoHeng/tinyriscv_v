@@ -49,7 +49,6 @@ module tinyriscv_core #(
     input wire irq_timer_i,
     input wire irq_external_i,
     input wire[14:0] irq_fast_i,
-    input wire irq_nm_i,
 
     // debug req signal
     input wire debug_req_i
@@ -114,6 +113,7 @@ module tinyriscv_core #(
     wire ex_inst_ecall_o;
     wire ex_inst_ebreak_o;
     wire ex_inst_mret_o;
+    wire ex_inst_dret_o;
     wire ex_inst_valid_o;
 
     // gpr_reg模块输出信号
@@ -126,6 +126,8 @@ module tinyriscv_core #(
     wire[31:0] csr_mtvec_o;
     wire[31:0] csr_mepc_o;
     wire[31:0] csr_mstatus_o;
+    wire[31:0] csr_mie_o;
+    wire[31:0] csr_dpc_o;
 
     // pipe_ctrl模块输出信号
     wire[31:0] ctrl_flush_addr_o;
@@ -197,7 +199,9 @@ module tinyriscv_core #(
         .clint_wdata_i(clint_csr_wdata_o),
         .mtvec_o(csr_mtvec_o),
         .mepc_o(csr_mepc_o),
-        .mstatus_o(csr_mstatus_o)
+        .mstatus_o(csr_mstatus_o),
+        .mie_o(csr_mie_o),
+        .dpc_o(csr_dpc_o)
     );
 
     ifu_idu u_ifu_idu(
@@ -283,6 +287,7 @@ module tinyriscv_core #(
         .inst_ecall_o(ex_inst_ecall_o),
         .inst_ebreak_o(ex_inst_ebreak_o),
         .inst_mret_o(ex_inst_mret_o),
+        .inst_dret_o(ex_inst_dret_o),
         .int_stall_i(clint_stall_flag_o),
         .csr_raddr_o(ex_csr_raddr_o),
         .csr_rdata_i(csr_ex_data_o),
@@ -300,19 +305,26 @@ module tinyriscv_core #(
         .rd_we_i(ie_rd_we_o)
     );
 
-    clint u_clint(
+    exception u_exception(
         .clk(clk),
         .rst_n(rst_n),
-        .int_flag_i(`INT_NONE),
+        .inst_valid_i(ex_inst_valid_o),
         .inst_ecall_i(ex_inst_ecall_o),
         .inst_ebreak_i(ex_inst_ebreak_o),
         .inst_mret_i(ex_inst_mret_o),
+        .inst_dret_i(ex_inst_dret_o),
         .inst_addr_i(ie_dec_pc_o),
-        .jump_flag_i(ex_jump_flag_o),
-        .mem_access_misaligned_i(ex_mem_access_misaligned_o),
-        .csr_mtvec_i(csr_mtvec_o),
-        .csr_mepc_i(csr_mepc_o),
-        .csr_mstatus_i(csr_mstatus_o),
+        .mtvec_i(csr_mtvec_o),
+        .mepc_i(csr_mepc_o),
+        .mstatus_i(csr_mstatus_o),
+        .mie_i(csr_mie_o),
+        .dpc_i(csr_dpc_o),
+        .irq_software_i(irq_software_i),
+        .irq_timer_i(irq_timer_i),
+        .irq_external_i(irq_external_i),
+        .irq_fast_i(irq_fast_i),
+        .debug_halt_addr_i(DEBUG_HALT_ADDR),
+        .debug_req_i(debug_req_i),
         .csr_we_o(clint_csr_we_o),
         .csr_waddr_o(clint_csr_waddr_o),
         .csr_wdata_o(clint_csr_wdata_o),

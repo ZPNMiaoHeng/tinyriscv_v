@@ -1,11 +1,11 @@
-
 +incdir+../rtl/core
++incdir+../rtl/debug
 
-../rtl/core/clint.sv
 ../rtl/core/csr_reg.sv
 ../rtl/core/csr.sv
 ../rtl/core/defines.sv
 ../rtl/core/divider.sv
+../rtl/core/exception.sv
 ../rtl/core/exu.sv
 ../rtl/core/exu_alu_datapath.sv
 ../rtl/core/exu_commit.sv
@@ -22,9 +22,15 @@
 ../rtl/core/tinyriscv_core.sv
 ../rtl/core/tracer.sv
 
+../rtl/debug/jtag_def.sv
+../rtl/debug/jtag_tap.sv
+../rtl/debug/jtag_dtm.sv
+../rtl/debug/jtag_dmi.sv
 ../rtl/debug/jtag_dm.sv
-../rtl/debug/jtag_driver.sv
+../rtl/debug/jtag_mem.sv
+../rtl/debug/jtag_sba.sv
 ../rtl/debug/jtag_top.sv
+../rtl/debug/debug_rom.sv
 
 ../rtl/perips/gpio.sv
 ../rtl/perips/ram.sv
@@ -32,18 +38,13 @@
 ../rtl/perips/timer.sv
 ../rtl/perips/uart.sv
 
-../rtl/sys_bus/rib.sv
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
 ../rtl/sys_bus/obi_interconnect_slave_sel.sv
 
 ../rtl/top/tinyriscv_soc_top.sv
 
-../rtl/utils/full_handshake_rx.sv
-../rtl/utils/full_handshake_tx.sv
 ../rtl/utils/gen_buf.sv
 ../rtl/utils/gen_dff.sv
 ../rtl/utils/gen_ram.sv
-../rtl/utils/vld_rdy.sv
-
-
+../rtl/utils/cdc_2phase.sv

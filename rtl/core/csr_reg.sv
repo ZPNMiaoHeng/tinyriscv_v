@@ -36,7 +36,9 @@ module csr_reg(
 
     output wire[31:0] mtvec_o,              // mtvec寄存器值
     output wire[31:0] mepc_o,               // mepc寄存器值
-    output wire[31:0] mstatus_o             // mstatus寄存器值
+    output wire[31:0] mstatus_o,            // mstatus寄存器值
+    output wire[31:0] mie_o,                // mie寄存器值
+    output wire[31:0] dpc_o                 // dpc寄存器值
 
     );
 
@@ -67,6 +69,9 @@ module csr_reg(
     reg[31:0] mhartid_d;
     wire[31:0] mhartid_q;
     reg mhartid_we;
+    reg[31:0] dpc_d;
+    wire[31:0] dpc_q;
+    reg dpc_we;
 
     reg[63:0] cycle;
 
@@ -83,6 +88,8 @@ module csr_reg(
     assign mtvec_o = mtvec_q;
     assign mepc_o = mepc_q;
     assign mstatus_o = mstatus_q;
+    assign mie_o = mie_q;
+    assign dpc_o = dpc_q;
 
     reg[31:0] exu_rdata;
 
@@ -122,6 +129,9 @@ module csr_reg(
             `CSR_MHARTID: begin
                 exu_rdata = mhartid_q;
             end
+            `CSR_DPC: begin
+                exu_rdata = dpc_q;
+            end
             default: begin
                 exu_rdata = 32'h0;
             end
@@ -154,6 +164,8 @@ module csr_reg(
         dscratch1_we = 1'b0;
         mhartid_d = mhartid_q;
         mhartid_we = 1'b0;
+        dpc_d = dpc_q;
+        dpc_we = 1'b0;
 
         if (we) begin
             case (waddr[11:0])
@@ -192,6 +204,10 @@ module csr_reg(
                 `CSR_MHARTID: begin
                     mhartid_d = wdata;
                     mhartid_we = 1'b1;
+                end
+                `CSR_DPC: begin
+                    dpc_d = wdata;
+                    dpc_we = 1'b1;
                 end
                 default:;
             endcase
@@ -295,6 +311,17 @@ module csr_reg(
         .wdata_i(mhartid_d),
         .we_i(mhartid_we),
         .rdata_o(mhartid_q)
+    );
+
+    // dpc
+    csr #(
+        .RESET_VAL(32'h0)
+    ) dpc_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(dpc_d),
+        .we_i(dpc_we),
+        .rdata_o(dpc_q)
     );
 
 endmodule
