@@ -66,6 +66,7 @@ module jtag_dm #(
     wire halted;
     wire resumeack;
     wire sbbusy;
+    wire[2:0] sberror;
     wire[DMI_OP_BITS-1:0] dm_op;
     wire[DMI_ADDR_BITS-1:0] dm_op_addr;
     wire[DMI_DATA_BITS-1:0] dm_op_data;
@@ -74,11 +75,15 @@ module jtag_dm #(
     reg clear_resumeack;
     reg sbaddress_write_valid;
     reg sbdata_write_valid;
+    reg sbdata_read_valid;
+    reg[31:0] sbcs;
     reg[31:0] dm_resp_data_d, dm_resp_data_q;
     wire[31:0] sba_sbaddress;
     wire[31:0] dm_sbaddress;
     wire resumereq;
     wire cmdbusy;
+    wire sbdata_valid;
+    wire[31:0] sbdata;
 
     // DM regs
     reg[31:0] dmstatus;
@@ -173,6 +178,8 @@ module jtag_dm #(
         clear_resumeack = 1'b0;
         sbaddress_write_valid = 1'b0;
         sbdata_write_valid = 1'b0;
+        sbdata_read_valid = 1'b0;
+        sbcs = 32'h0;
 
         data0_d = data0_q;
         sbcs_d = sbcs_q;
@@ -183,14 +190,22 @@ module jtag_dm #(
             // read
             if (dm_op == `DMI_OP_READ) begin
                 case (dm_op_addr)
-                    `DMStatus:  dm_resp_data_d = dmstatus;
-                    `DMControl: dm_resp_data_d = dmcontrol_q;
-                    `Hartinfo:  dm_resp_data_d = HARTINFO;
-                    `SBCS:      dm_resp_data_d = sbcs_q;
+                    `DMStatus  :dm_resp_data_d = dmstatus;
+                    `DMControl :dm_resp_data_d = dmcontrol_q;
+                    `Hartinfo  :dm_resp_data_d = HARTINFO;
+                    `SBCS      :dm_resp_data_d = sbcs_q;
                     `AbstractCS:dm_resp_data_d = abstractcs;
+                    `SBAddress0:dm_resp_data_d = sbaddress0_q;
+                    `SBData0   : begin
+                        if (sbbusy || sbcs_q[`Sbbusyerror]) begin
+                            sbcs_d[`Sbbusyerror] = 1'b1;
+                        end else begin
+                            sbdata_read_valid = (sbcs_q[`Sberror] == 3'b0);
+                            dm_resp_data_d = sbdata0_q;
+                        end
+                    end
                     default:;
                 endcase
-
             // write
             end else if (dm_op == `DMI_OP_WRITE) begin
                 case (dm_op_addr)
@@ -209,15 +224,16 @@ module jtag_dm #(
                         if (sbbusy) begin
                             sbcs_d[`Sbbusyerror] = 1'b1;
                         end else begin
+                            sbcs = dm_op_data;
                             sbcs_d = dm_op_data;
                             // write 1 to clear
-                            sbcs_d[`Sbbusyerror] = sbcs_q[`Sbbusyerror] & (~sbcs_d[`Sbbusyerror]);
-                            sbcs_d[`Sberror]     = sbcs_q[`Sberror]     & (~sbcs_d[`Sberror]);
+                            sbcs_d[`Sbbusyerror] = sbcs_q[`Sbbusyerror] & (~sbcs[`Sbbusyerror]);
+                            sbcs_d[`Sberror]     = sbcs_q[`Sberror]     & (~sbcs[`Sberror]);
                         end
                     end
 
                     `SBAddress0: begin
-                        if (sbbusy | sbcs_d[`Sbbusyerror]) begin
+                        if (sbbusy | sbcs_q[`Sbbusyerror]) begin
                             sbcs_d[`Sbbusyerror] = 1'b1;
                         end else begin
                             sbaddress0_d = dm_op_data;
@@ -226,7 +242,7 @@ module jtag_dm #(
                     end
 
                     `SBData0: begin
-                        if (sbbusy | sbcs_d[`Sbbusyerror]) begin
+                        if (sbbusy | sbcs_q[`Sbbusyerror]) begin
                             sbcs_d[`Sbbusyerror] = 1'b1;
                         end else begin
                             sbdata0_d = dm_op_data;
@@ -241,8 +257,6 @@ module jtag_dm #(
                     default:;
                 endcase
             // nop
-            end else begin
-
             end
         end
 
@@ -267,6 +281,7 @@ module jtag_dm #(
         // sbcs
         sbcs_d[`Sbversion]            = 3'd1;
         sbcs_d[`Sbbusy]               = sbbusy;
+        sbcs_d[`Sberror]              = sberror;
         sbcs_d[`Sbasize]              = 7'd32;
         sbcs_d[`Sbaccess128]          = 1'b0;
         sbcs_d[`Sbaccess64]           = 1'b0;
@@ -274,6 +289,10 @@ module jtag_dm #(
         sbcs_d[`Sbaccess16]           = 1'b0;
         sbcs_d[`Sbaccess8]            = 1'b0;
         sbcs_d[`Sbaccess]             = 3'd2;
+
+        if (sbdata_valid) begin
+            sbdata0_d = sbdata;
+        end
 
         // set the havereset flag when we did a ndmreset
         if (ndmreset_o) begin
@@ -355,7 +374,21 @@ module jtag_dm #(
     ) u_jtag_sba (
         .clk(clk),
         .rst_n(rst_n),
+        .sbaddress_i(sbaddress0_q),
+        .sbaddress_write_valid_i(sbaddress_write_valid),
+        .sbreadonaddr_i(sbcs_q[`Sbreadonaddr]),
+        .sbaddress_o(sba_sbaddress),
+        .sbautoincrement_i(sbcs_q[`Sbautoincrement]),
+        .sbaccess_i(sbcs_q[`Sbaccess]),
+        .sbreadondata_i(sbcs_q[`Sbreadondata]),
+        .sbdata_i(sbdata0_q),
+        .sbdata_read_valid_i(sbdata_read_valid),
+        .sbdata_write_valid_i(sbdata_write_valid),
+        .sbdata_o(sbdata),
+        .sbdata_valid_o(sbdata_valid),
         .sbbusy_o(sbbusy),
+        .sberror_o(sberror),
+
         .master_req_o(master_req_o),
         .master_gnt_i(master_gnt_i),
         .master_rvalid_i(master_rvalid_i),
