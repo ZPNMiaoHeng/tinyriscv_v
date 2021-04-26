@@ -84,6 +84,7 @@ module jtag_dm #(
     wire cmdbusy;
     wire sbdata_valid;
     wire[31:0] sbdata;
+    wire[19:0] hartsel;
 
     // DM regs
     reg[31:0] dmstatus;
@@ -97,6 +98,8 @@ module jtag_dm #(
     reg[2:0] cmderr_d, cmderr_q;
 
     assign dm_sbaddress = sbaddress0_q;
+
+    assign hartsel = {dmcontrol_q[`Hartselhi], dmcontrol_q[`Hartsello]};
 
     assign dm_op      = dmi_data_i[DMI_OP_BITS-1:0];
     assign dm_op_addr = dmi_data_i[DMI_REQ_BITS-1:DMI_DATA_BITS+DMI_OP_BITS];
@@ -163,6 +166,8 @@ module jtag_dm #(
         dmstatus[`Anyhalted]      = halted;
         dmstatus[`Allrunning]     = ~halted;
         dmstatus[`Anyrunning]     = ~halted;
+        dmstatus[`Allnonexistent] = hartsel > 20'h0;
+        dmstatus[`Anynonexistent] = hartsel > 20'h0;
 
         // abstractcs
         cmderr_d = cmderr_q;
@@ -266,8 +271,6 @@ module jtag_dm #(
         dmcontrol_d[`Setresethaltreq] = 1'b0;
         dmcontrol_d[`Clrresethaltreq] = 1'b0;
         dmcontrol_d[`Ackhavereset]    = 1'b0;
-        dmcontrol_d[`Hartsello]       = 10'h1;
-        dmcontrol_d[`Hartselhi]       = 10'h0;
         // 收到resume请求后清resume应答
         if (!dmcontrol_q[`Resumereq] && dmcontrol_d[`Resumereq]) begin
             clear_resumeack = 1'b1;
