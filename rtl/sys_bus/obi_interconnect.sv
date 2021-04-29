@@ -79,8 +79,8 @@ module obi_interconnect #(
     // slave信号赋值
     generate
         for (s = 0; s < SLAVES; s = s + 1) begin: slave_signal
-            assign slave_req_o[s]   = master_req_i[master_sel_int[s]];
-            assign slave_we_o[s]    = master_we_i[master_sel_int[s]];
+            assign slave_req_o[s]   = master_req_i[master_sel_int[s]] & granted_master[s];
+            assign slave_we_o[s]    = master_we_i[master_sel_int[s]]  & granted_master[s];
             assign slave_be_o[s]    = master_be_i[master_sel_int[s]];
             assign slave_addr_o[s]  = master_addr_i[master_sel_int[s]];
             assign slave_wdata_o[s] = master_wdata_i[master_sel_int[s]];

@@ -46,6 +46,7 @@ module exception (
     input wire[31:0] mstatus_i,                 // mstatus寄存器
     input wire[31:0] mie_i,                     // mie寄存器
     input wire[31:0] dpc_i,                     // dpc寄存器
+    input wire[31:0] dcsr_i,                    // dcsr寄存器
 
     input wire irq_software_i,
     input wire irq_timer_i,
@@ -55,9 +56,9 @@ module exception (
     input wire[31:0] debug_halt_addr_i,
     input wire debug_req_i,
 
-    output wire csr_we_o,                        // 写CSR寄存器标志
-    output wire[31:0] csr_waddr_o,               // 写CSR寄存器地址
-    output wire[31:0] csr_wdata_o,               // 写CSR寄存器数据
+    output wire csr_we_o,                       // 写CSR寄存器标志
+    output wire[31:0] csr_waddr_o,              // 写CSR寄存器地址
+    output wire[31:0] csr_wdata_o,              // 写CSR寄存器数据
 
     output wire stall_flag_o,                   // 流水线暂停标志
     output wire[31:0] int_addr_o,               // 中断入口地址
@@ -159,7 +160,7 @@ module exception (
             exception_req = 1'b1;
             exception_cause = `CAUSE_EXCEP_ECALL_M;
             exception_offset = ECALL_OFFSET;
-        end else if (inst_ebreak_i) begin
+        end else if (inst_ebreak_i & (!dcsr_i[15])) begin
             exception_req = 1'b1;
             exception_cause = `CAUSE_EXCEP_EBREAK_M;
             exception_offset = EBREAK_OFFSET;
@@ -178,7 +179,7 @@ module exception (
     assign int_or_exception_cause   = exception_req ? exception_cause  : interrupt_cause;
     assign int_or_exception_offset  = exception_req ? exception_offset : interrupt_offset;
 
-    wire debug_mode_req = (~debug_mode_q) & debug_req_i & inst_valid_i;
+    wire debug_mode_req = ((~debug_mode_q) & debug_req_i & inst_valid_i) | (inst_ebreak_i & dcsr_i[15]);
 
     assign stall_flag_o = ((state_q != S_IDLE) & (state_q != S_ASSERT)) |
                           (interrupt_req & global_int_en) | exception_req |
@@ -206,9 +207,11 @@ module exception (
                     state_d = S_W_MEPC;
                 end else if (debug_mode_req) begin
                     debug_mode_d = 1'b1;
-                    csr_we = 1'b1;
-                    csr_waddr = {20'h0, `CSR_DPC};
-                    csr_wdata = inst_addr_i;
+                    if (!inst_ebreak_i) begin
+                        csr_we = 1'b1;
+                        csr_waddr = {20'h0, `CSR_DPC};
+                        csr_wdata = inst_addr_i;
+                    end
                     assert_addr_d = debug_halt_addr_i;
                     state_d = S_ASSERT;
                 end else if (inst_mret_i) begin

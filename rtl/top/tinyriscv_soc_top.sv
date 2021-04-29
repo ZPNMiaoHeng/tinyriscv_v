@@ -37,15 +37,13 @@ module tinyriscv_soc_top(
 
     );
 
-
-
-    localparam int MASTERS = 3; // Number of master ports
-    localparam int SLAVES  = 3; // Number of slave ports
+    localparam int MASTERS      = 3; // Number of master ports
+    localparam int SLAVES       = 3; // Number of slave ports
 
     // masters
-    localparam int CoreD    = 0;
-    localparam int JtagHost = 1;
-    localparam int CoreI    = 2;
+    localparam int CoreD        = 0;
+    localparam int JtagHost     = 1;
+    localparam int CoreI        = 2;
 
     // slaves
     localparam int Rom          = 0;
@@ -86,54 +84,55 @@ module tinyriscv_soc_top(
     wire ndmreset;
     wire ndmreset_n;
     wire debug_req;
+    wire core_halted;
 
+    assign halted_ind_pin = core_halted;
 
     tinyriscv_core #(
         .DEBUG_HALT_ADDR(`DEBUG_ADDR_BASE + `HaltAddress),
         .DEBUG_EXCEPTION_ADDR(`DEBUG_ADDR_BASE + `ExceptionAddress)
     ) u_tinyriscv_core (
-        .clk(clk),
-        .rst_n(ndmreset_n),
+        .clk            (clk),
+        .rst_n          (ndmreset_n),
 
-        .instr_req_o(master_req[CoreI]),
-        .instr_gnt_i(master_gnt[CoreI]),
-        .instr_rvalid_i(master_rvalid[CoreI]),
-        .instr_addr_o(master_addr[CoreI]),
-        .instr_rdata_i(master_rdata[CoreI]),
-        .instr_err_i(1'b0),
+        .instr_req_o    (master_req[CoreI]),
+        .instr_gnt_i    (master_gnt[CoreI]),
+        .instr_rvalid_i (master_rvalid[CoreI]),
+        .instr_addr_o   (master_addr[CoreI]),
+        .instr_rdata_i  (master_rdata[CoreI]),
+        .instr_err_i    (1'b0),
 
-        .data_req_o(master_req[CoreD]),
-        .data_gnt_i(master_gnt[CoreD]),
-        .data_rvalid_i(master_rvalid[CoreD]),
-        .data_we_o(master_we[CoreD]),
-        .data_be_o(master_be[CoreD]),
-        .data_addr_o(master_addr[CoreD]),
-        .data_wdata_o(master_wdata[CoreD]),
-        .data_rdata_i(master_rdata[CoreD]),
-        .data_err_i(1'b0),
+        .data_req_o     (master_req[CoreD]),
+        .data_gnt_i     (master_gnt[CoreD]),
+        .data_rvalid_i  (master_rvalid[CoreD]),
+        .data_we_o      (master_we[CoreD]),
+        .data_be_o      (master_be[CoreD]),
+        .data_addr_o    (master_addr[CoreD]),
+        .data_wdata_o   (master_wdata[CoreD]),
+        .data_rdata_i   (master_rdata[CoreD]),
+        .data_err_i     (1'b0),
 
-        .irq_software_i(1'b0),
-        .irq_timer_i(1'b0),
-        .irq_external_i(1'b0),
-        .irq_fast_i(15'b0),
+        .irq_software_i (1'b0),
+        .irq_timer_i    (1'b0),
+        .irq_external_i (1'b0),
+        .irq_fast_i     (15'b0),
 
-        .debug_req_i(debug_req)
+        .debug_req_i    (debug_req)
     );
-
 
     assign slave_addr_mask[Rom] = `ROM_ADDR_MASK;
     assign slave_addr_base[Rom] = `ROM_ADDR_BASE;
     // 指令存储器
     rom #(
         .DP(`ROM_DEPTH)
-    ) u_rom(
-        .clk(clk),
-        .rst_n(ndmreset_n),
-        .addr_i(slave_addr[Rom]),
-        .data_i(slave_wdata[Rom]),
-        .sel_i(slave_be[Rom]),
-        .we_i(slave_we[Rom]),
-        .data_o(slave_rdata[Rom])
+    ) u_rom (
+        .clk    (clk),
+        .rst_n  (ndmreset_n),
+        .addr_i (slave_addr[Rom]),
+        .data_i (slave_wdata[Rom]),
+        .sel_i  (slave_be[Rom]),
+        .we_i   (slave_we[Rom]),
+        .data_o (slave_rdata[Rom])
     );
 
     assign slave_addr_mask[Ram] = `RAM_ADDR_MASK;
@@ -141,49 +140,48 @@ module tinyriscv_soc_top(
     // 数据存储器
     ram #(
         .DP(`RAM_DEPTH)
-    ) u_ram(
-        .clk(clk),
-        .rst_n(ndmreset_n),
-        .addr_i(slave_addr[Ram]),
-        .data_i(slave_wdata[Ram]),
-        .sel_i(slave_be[Ram]),
-        .we_i(slave_we[Ram]),
-        .data_o(slave_rdata[Ram])
+    ) u_ram (
+        .clk    (clk),
+        .rst_n  (ndmreset_n),
+        .addr_i (slave_addr[Ram]),
+        .data_i (slave_wdata[Ram]),
+        .sel_i  (slave_be[Ram]),
+        .we_i   (slave_we[Ram]),
+        .data_o (slave_rdata[Ram])
     );
 
     obi_interconnect #(
         .MASTERS(MASTERS),
         .SLAVES(SLAVES)
     ) bus (
-        .clk_i(clk),
-        .rst_ni(ndmreset_n),
-        .master_req_i(master_req),
-        .master_gnt_o(master_gnt),
-        .master_rvalid_o(master_rvalid),
-        .master_we_i(master_we),
-        .master_be_i(master_be),
-        .master_addr_i(master_addr),
-        .master_wdata_i(master_wdata),
-        .master_rdata_o(master_rdata),
-        .slave_addr_mask_i(slave_addr_mask),
-        .slave_addr_base_i(slave_addr_base),
-        .slave_req_o(slave_req),
-        .slave_gnt_i(slave_gnt),
-        .slave_rvalid_i(slave_rvalid),
-        .slave_we_o(slave_we),
-        .slave_be_o(slave_be),
-        .slave_addr_o(slave_addr),
-        .slave_wdata_o(slave_wdata),
-        .slave_rdata_i(slave_rdata)
+        .clk_i              (clk),
+        .rst_ni             (ndmreset_n),
+        .master_req_i       (master_req),
+        .master_gnt_o       (master_gnt),
+        .master_rvalid_o    (master_rvalid),
+        .master_we_i        (master_we),
+        .master_be_i        (master_be),
+        .master_addr_i      (master_addr),
+        .master_wdata_i     (master_wdata),
+        .master_rdata_o     (master_rdata),
+        .slave_addr_mask_i  (slave_addr_mask),
+        .slave_addr_base_i  (slave_addr_base),
+        .slave_req_o        (slave_req),
+        .slave_gnt_i        (slave_gnt),
+        .slave_rvalid_i     (slave_rvalid),
+        .slave_we_o         (slave_we),
+        .slave_be_o         (slave_be),
+        .slave_addr_o       (slave_addr),
+        .slave_wdata_o      (slave_wdata),
+        .slave_rdata_i      (slave_rdata)
     );
-
 
     rst_gen #(
         .RESET_FIFO_DEPTH(5)
     ) u_rst (
-        .clk(clk),
-        .rst_ni(rst_ext_ni & (~ndmreset)),
-        .rst_no(ndmreset_n)
+        .clk    (clk),
+        .rst_ni (rst_ext_ni & (~ndmreset)),
+        .rst_no (ndmreset_n)
     );
 
     assign slave_addr_mask[JtagDevice] = `DEBUG_ADDR_MASK;
@@ -196,6 +194,7 @@ module tinyriscv_soc_top(
         .rst_ni             (rst_ext_ni),
         .debug_req_o        (debug_req),
         .ndmreset_o         (ndmreset),
+        .halted_o           (core_halted),
         .jtag_tck_i         (sim_jtag_tck),
         .jtag_tdi_i         (sim_jtag_tdi),
         .jtag_tms_i         (sim_jtag_tms),

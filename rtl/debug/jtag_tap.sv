@@ -20,8 +20,8 @@ module jtag_tap #(
     parameter DMI_DATA_BITS = 32,
     parameter DMI_OP_BITS   = 2,
     parameter IR_BITS       = 5,
-    localparam TAP_REQ_BITS  = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS,
-    localparam DTM_RESP_BITS = TAP_REQ_BITS
+    parameter TAP_REQ_BITS  = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS,
+    parameter DTM_RESP_BITS = TAP_REQ_BITS
     )(
 
     input wire  jtag_tck_i,     // JTAG test clock pad

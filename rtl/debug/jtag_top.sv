@@ -15,15 +15,14 @@
  */
 
 
-module jtag_top #(
-
-    )(
+module jtag_top(
 
     input wire                      clk_i,
     input wire                      rst_ni,
 
     output wire                     debug_req_o,
     output wire                     ndmreset_o,
+    output wire                     halted_o,
 
     input wire                      jtag_tck_i,     // JTAG test clock pad
     input wire                      jtag_tdi_i,     // JTAG test data input pad
@@ -74,6 +73,7 @@ module jtag_top #(
         .dmi_ready_i    (dmi_to_dm_ready),
         .debug_req_o    (debug_req_o),
         .ndmreset_o     (ndmreset_o),
+        .halted_o       (halted_o),
         .master_req_o   (master_req_o),
         .master_gnt_i   (master_gnt_i),
         .master_rvalid_i(master_rvalid_i),

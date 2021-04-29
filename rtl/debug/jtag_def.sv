@@ -17,11 +17,14 @@
 
 `define DbgVersion013       4'h2
 `define ProgBufSize         5'h8
-`define DataCount           4'h2
+`define DataCount           4'h1
 `define HaltAddress         64'h800
 `define ResumeAddress       `HaltAddress + 4
 `define ExceptionAddress    `HaltAddress + 8
-`define DataAddr            12'h380
+`define DataBaseAddr        12'h380
+`define AbstCmdBaseAddr     12'h338
+`define AbstCmdCount        12'd10
+`define ProgbufBaseAddr     `AbstCmdBaseAddr + (4 * `AbstCmdCount)
 
 // dmi op
 `define DMI_OP_NOP          2'b00
@@ -33,11 +36,13 @@
 `define Data1               6'h05
 `define Data2               6'h06
 `define Data3               6'h07
+`define Data4               6'h08
 `define DMControl           6'h10
 `define DMStatus            6'h11
 `define Hartinfo            6'h12
 `define AbstractCS          6'h16
 `define Command             6'h17
+`define AbstractAuto        8'h18
 `define ProgBuf0            6'h20
 `define ProgBuf1            6'h21
 `define ProgBuf2            6'h22
@@ -127,4 +132,22 @@
 `define Sbaccess32          2
 `define Sbaccess16          1
 `define Sbaccess8           0
+
+// abstractauto
+`define AutoexecData        11:0
+`define AutoexecProgbuf     31:16
+
+`define CSR_CYCLE       12'hc00
+`define CSR_CYCLEH      12'hc80
+`define CSR_MTVEC       12'h305
+`define CSR_MCAUSE      12'h342
+`define CSR_MEPC        12'h341
+`define CSR_MIE         12'h304
+`define CSR_MSTATUS     12'h300
+`define CSR_MSCRATCH    12'h340
+`define CSR_MHARTID     12'hF14
+`define CSR_DCSR        12'h7b0
+`define CSR_DPC         12'h7b1
+`define CSR_DSCRATCH0   12'h7b2
+`define CSR_DSCRATCH1   12'h7b3
 

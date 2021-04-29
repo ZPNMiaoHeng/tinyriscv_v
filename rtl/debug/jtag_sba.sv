@@ -15,9 +15,7 @@
  */
 
 
-module jtag_sba #(
-
-    )(
+module jtag_sba(
 
     input  wire                     clk,
     input  wire                     rst_n,

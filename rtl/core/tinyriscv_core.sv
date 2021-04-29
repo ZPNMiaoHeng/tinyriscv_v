@@ -128,6 +128,7 @@ module tinyriscv_core #(
     wire[31:0] csr_mstatus_o;
     wire[31:0] csr_mie_o;
     wire[31:0] csr_dpc_o;
+    wire[31:0] csr_dcsr_o;
 
     // pipe_ctrl模块输出信号
     wire[31:0] ctrl_flush_addr_o;
@@ -201,7 +202,8 @@ module tinyriscv_core #(
         .mepc_o(csr_mepc_o),
         .mstatus_o(csr_mstatus_o),
         .mie_o(csr_mie_o),
-        .dpc_o(csr_dpc_o)
+        .dpc_o(csr_dpc_o),
+        .dcsr_o(csr_dcsr_o)
     );
 
     ifu_idu u_ifu_idu(
@@ -319,6 +321,7 @@ module tinyriscv_core #(
         .mstatus_i(csr_mstatus_o),
         .mie_i(csr_mie_o),
         .dpc_i(csr_dpc_o),
+        .dcsr_i(csr_dcsr_o),
         .irq_software_i(irq_software_i),
         .irq_timer_i(irq_timer_i),
         .irq_external_i(irq_external_i),
