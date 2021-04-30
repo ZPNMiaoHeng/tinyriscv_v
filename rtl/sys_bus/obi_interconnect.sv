@@ -96,24 +96,36 @@ module obi_interconnect #(
         end
     end
 
-    // master信号赋值
+    logic [SLAVE_BITS-1:0]     slave_sel_int_q[MASTERS];
+
     generate
-        for (m = 0; m < MASTERS; m = m + 1) begin: master_gnt_rdata
-            assign master_gnt_o[m]   = master_sel_or[m];
-            assign master_rdata_o[m] = slave_rdata_i[slave_sel_int[m]];
+        for (m = 0; m < MASTERS; m = m + 1) begin: master_data_q
+            always_ff @ (posedge clk_i or negedge rst_ni) begin
+                if (!rst_ni) begin
+                    slave_sel_int_q[m] <= 'b0;
+                end else begin
+                    slave_sel_int_q[m] <= slave_sel_int[m];
+                end
+            end
         end
     endgenerate
 
+    logic [MASTERS-1:0]        master_sel_or_q;
+
+    always_ff @ (posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+            master_sel_or_q <= 'b0;
+        end else begin
+            master_sel_or_q <= master_sel_or;
+        end
+    end
+
     // master信号赋值
     generate
-        for (m = 0; m < MASTERS; m = m + 1) begin: master_rvalid
-            always_ff @(posedge clk_i or negedge rst_ni) begin
-                if (!rst_ni) begin
-                    master_rvalid_o[m] <= 'b0;
-                end else begin
-                    master_rvalid_o[m] <= master_sel_or[m];
-                end
-            end
+        for (m = 0; m < MASTERS; m = m + 1) begin: master_data
+            assign master_gnt_o[m]   = master_sel_or[m];
+            assign master_rdata_o[m] = slave_rdata_i[slave_sel_int_q[m]];
+            assign master_rvalid_o[m] = master_sel_or_q[m];
         end
     endgenerate
 
