@@ -332,6 +332,7 @@ module exu(
         .muldiv_op_divu_i(muldiv_op_divu_o),
         .muldiv_op_rem_i(muldiv_op_rem_o),
         .muldiv_op_remu_i(muldiv_op_remu_o),
+        .int_stall_i(int_stall_i),
         .muldiv_reg_wdata_o(muldiv_reg_wdata_o),
         .muldiv_reg_we_o(muldiv_reg_we_o),
         .muldiv_stall_o(muldiv_stall_o)
@@ -366,9 +367,9 @@ module exu(
         .reg_wdata_o(reg_wdata_o)
     );
 
-    assign reg_we_o = commit_reg_we_o;
+    assign reg_we_o = commit_reg_we_o & (~int_stall_i);
 
-    assign jump_flag_o = bjp_cmp_res_o | bjp_op_jump_o | sys_op_fence_o | int_assert_i;
+    assign jump_flag_o = ((bjp_cmp_res_o | bjp_op_jump_o | sys_op_fence_o) & (~int_stall_i)) | int_assert_i;
     assign jump_addr_o = int_assert_i? int_addr_i:
                          sys_op_fence_o? next_pc_i:
                          bjp_res_o;
@@ -376,10 +377,10 @@ module exu(
 
     assign csr_raddr_o = csr_addr_o;
     assign csr_waddr_o = csr_addr_o;
-    assign csr_we_o = req_csr_o;
+    assign csr_we_o = req_csr_o & (~int_stall_i);
     assign csr_wdata_o = alu_res_o;
 
-    assign mem_we_o = mem_mem_we_o;
+    assign mem_we_o = mem_mem_we_o & (~int_stall_i);
     assign mem_wdata_o = mem_wdata;
 
     assign inst_valid_o = hold_flag_o? 1'b0: inst_valid_i;

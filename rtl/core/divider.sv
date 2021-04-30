@@ -29,7 +29,7 @@ module divider(
     input wire start_i,                 // 开始信号，运算期间这个信号需要一直保持有效
     input wire[3:0] op_i,               // 具体是哪一条指令
 
-    output reg[31:0] result_o,          // 除法结果，高32位是余数，低32位是商
+    output reg[31:0] result_o,          // 除法结果
     output reg ready_o                  // 运算结束信号
 
     );

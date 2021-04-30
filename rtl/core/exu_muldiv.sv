@@ -33,6 +33,8 @@ module exu_muldiv(
     input wire muldiv_op_rem_i,
     input wire muldiv_op_remu_i,
 
+    input wire int_stall_i,
+
     output wire[31:0] muldiv_reg_wdata_o,
     output wire muldiv_reg_we_o,
     output wire muldiv_stall_o
@@ -41,7 +43,7 @@ module exu_muldiv(
 
     // 除法操作
     wire op_div = muldiv_op_div_i | muldiv_op_divu_i | muldiv_op_rem_i | muldiv_op_remu_i;
-    wire div_start = op_div & (!div_ready);
+    wire div_start = op_div & (!div_ready) & (~int_stall_i);
     wire[3:0] div_op = {muldiv_op_div_i, muldiv_op_divu_i, muldiv_op_rem_i, muldiv_op_remu_i};
     wire[31:0] div_result;
     wire div_ready;
