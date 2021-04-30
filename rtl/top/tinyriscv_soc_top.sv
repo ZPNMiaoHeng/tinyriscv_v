@@ -219,7 +219,7 @@ module tinyriscv_soc_top(
 
 `ifdef VERILATOR
     sim_jtag #(
-        .TICK_DELAY(1),
+        .TICK_DELAY(10),
         .PORT(9999)
     ) u_sim_jtag (
         .clock                ( clk                  ),
