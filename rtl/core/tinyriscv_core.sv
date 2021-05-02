@@ -310,7 +310,7 @@ module tinyriscv_core #(
     exception u_exception(
         .clk(clk),
         .rst_n(rst_n),
-        .inst_valid_i(ex_inst_valid_o),
+        .inst_valid_i(ie_inst_valid_o),
         .inst_ecall_i(ex_inst_ecall_o),
         .inst_ebreak_i(ex_inst_ebreak_o),
         .inst_mret_i(ex_inst_mret_o),

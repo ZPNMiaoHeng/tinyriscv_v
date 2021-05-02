@@ -195,11 +195,19 @@ module tinyriscv_soc_top(
         .debug_req_o        (debug_req),
         .ndmreset_o         (ndmreset),
         .halted_o           (core_halted),
+`ifdef VERILATOR
         .jtag_tck_i         (sim_jtag_tck),
         .jtag_tdi_i         (sim_jtag_tdi),
         .jtag_tms_i         (sim_jtag_tms),
         .jtag_trst_ni       (sim_jtag_trstn),
         .jtag_tdo_o         (sim_jtag_tdo),
+`else
+        .jtag_tck_i         (jtag_TCK_pin),
+        .jtag_tdi_i         (jtag_TDI_pin),
+        .jtag_tms_i         (jtag_TMS_pin),
+        .jtag_trst_ni       (rst_ext_ni),
+        .jtag_tdo_o         (jtag_TDO_pin),
+`endif
         .master_req_o       (master_req[JtagHost]),
         .master_gnt_i       (master_gnt[JtagHost]),
         .master_rvalid_i    (master_rvalid[JtagHost]),
