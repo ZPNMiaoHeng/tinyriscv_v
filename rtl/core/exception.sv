@@ -160,7 +160,7 @@ module exception (
             exception_req = 1'b1;
             exception_cause = `CAUSE_EXCEP_ECALL_M;
             exception_offset = ECALL_OFFSET;
-        end else if (inst_ebreak_i & (!dcsr_i[15])) begin
+        end else if (inst_ebreak_i & (!dcsr_i[15]) & (~debug_mode_q)) begin
             exception_req = 1'b1;
             exception_cause = `CAUSE_EXCEP_EBREAK_M;
             exception_offset = EBREAK_OFFSET;
@@ -179,7 +179,9 @@ module exception (
     assign int_or_exception_cause   = exception_req ? exception_cause  : interrupt_cause;
     assign int_or_exception_offset  = exception_req ? exception_offset : interrupt_offset;
 
-    wire debug_mode_req = ((~debug_mode_q) & debug_req_i & inst_valid_i) | (inst_ebreak_i & dcsr_i[15]);
+    wire debug_mode_req = ((~debug_mode_q) & debug_req_i & inst_valid_i) |
+                          (inst_ebreak_i & dcsr_i[15]) |
+                          (inst_ebreak_i & debug_mode_q);
 
     assign stall_flag_o = ((state_q != S_IDLE) & (state_q != S_ASSERT)) |
                           (interrupt_req & global_int_en) | exception_req |

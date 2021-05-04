@@ -331,7 +331,8 @@ module tracer(
             12'd1955: return "tdata3";
             12'd1968: return "dcsr";
             12'd1969: return "dpc";
-            12'd1970: return "dscratch";
+            12'd1970: return "dscratch0";
+            12'd1971: return "dscratch1";
             12'd512: return "hstatus";
             12'd514: return "hedeleg";
             12'd515: return "hideleg";

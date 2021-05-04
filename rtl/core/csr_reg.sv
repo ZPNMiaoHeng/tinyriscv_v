@@ -43,6 +43,8 @@ module csr_reg(
 
     );
 
+    wire[31:0] misa = 32'h40001100;   // 32bits, IM
+
     reg[31:0] mtvec_d;
     wire[31:0] mtvec_q;
     reg mtvec_we;
@@ -139,6 +141,9 @@ module csr_reg(
             end
             `CSR_DCSR: begin
                 exu_rdata = dcsr_q;
+            end
+            `CSR_MISA: begin
+                exu_rdata = misa;
             end
             default: begin
                 exu_rdata = 32'h0;
@@ -348,5 +353,12 @@ module csr_reg(
         .we_i(dcsr_we),
         .rdata_o(dcsr_q)
     );
+
+    wire[31:0] mtvec = mtvec_q;
+    wire[31:0] mstatus = mstatus_q;
+    wire[31:0] mepc = mepc_q;
+    wire[31:0] mie = mie_q;
+    wire[31:0] dpc = dpc_q;
+    wire[31:0] dcsr = dcsr_q;
 
 endmodule

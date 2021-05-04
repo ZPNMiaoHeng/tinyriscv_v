@@ -144,3 +144,4 @@
 `define CSR_DPC         12'h7b1
 `define CSR_DSCRATCH0   12'h7b2
 `define CSR_DSCRATCH1   12'h7b3
+`define CSR_MISA        12'h301

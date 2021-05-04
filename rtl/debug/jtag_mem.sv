@@ -176,11 +176,11 @@ module jtag_mem(
     reg resuming_d, resuming_q;
     reg resume, go, going;
     reg fwd_rom_q;
-    reg word_enable32_q;
     reg data_valid;
     reg cmdbusy;
+    reg halted_aligned;
     wire fwd_rom_d;
-    wire[63:0] rom_rdata;
+    wire[31:0] rom_rdata;
     reg[31:0] data_bits;
     reg[9:0][31:0] abstract_cmd;
     reg unsupported_command;
@@ -197,10 +197,9 @@ module jtag_mem(
     wire[2:0] cmd_aarsize = cmd_i[22:20];
     wire cmd_aarpostincrement = cmd_i[19];
 
-    // word mux for 32bit and 64bit buses
-    wire [63:0] word_mux;
+    wire[31:0] word_mux;
     assign word_mux = fwd_rom_q ? rom_rdata : rdata_q;
-    assign rdata_o = (word_enable32_q) ? word_mux[32 +: 32] : word_mux[0 +: 32];
+    assign rdata_o = word_mux;
 
     assign halted_o = halted_q;
     assign resumeack_o = resuming_q;
@@ -253,7 +252,7 @@ module jtag_mem(
             S_CMD_EXECUTING: begin
                 cmdbusy = 1'b1;
                 go = 1'b0;
-                if (halted_q) begin
+                if (halted_aligned) begin
                     state_d = S_IDLE;
                 end
             end
@@ -278,6 +277,7 @@ module jtag_mem(
 
         going = 1'b0;
         exception = 1'b0;
+        halted_aligned = 1'b0;
 
         data_valid = 1'b0;
         data_bits = data_i;
@@ -291,6 +291,7 @@ module jtag_mem(
             case (addr_i[DbgAddressBits-1:0])
                 HaltedAddr: begin
                     halted_d = 1'b1;
+                    halted_aligned = 1'b1;
                 end
 
                 GoingAddr: begin
@@ -349,15 +350,15 @@ module jtag_mem(
                 Progbuf0Addr, Progbuf1Addr, Progbuf2Addr, Progbuf3Addr,
                 Progbuf4Addr, Progbuf5Addr, Progbuf6Addr, Progbuf7Addr,
                 Progbuf8Addr, Progbuf9Addr: begin
-                    rdata_d = progbuf_i[addr_i[DbgAddressBits-1:3] -
-                              progbuf_baseaddr[DbgAddressBits-1:3]];
+                    rdata_d = progbuf_i[addr_i[DbgAddressBits-1:2] -
+                              progbuf_baseaddr[DbgAddressBits-1:2]];
                 end
 
                 AbstractCmd0Addr, AbstractCmd1Addr, AbstractCmd2Addr, AbstractCmd3Addr,
                 AbstractCmd4Addr, AbstractCmd5Addr, AbstractCmd6Addr, AbstractCmd7Addr,
                 AbstractCmd8Addr, AbstractCmd9Addr: begin
-                    rdata_d = abstract_cmd[addr_i[DbgAddressBits-1:3] -
-                              abstractcmd_baseaddr[DbgAddressBits-1:3]];
+                    rdata_d = abstract_cmd[addr_i[DbgAddressBits-1:2] -
+                              abstractcmd_baseaddr[DbgAddressBits-1:2]];
                 end
 
                 default:;
@@ -464,8 +465,8 @@ module jtag_mem(
         endcase
     end
 
-    wire[63:0] rom_addr;
-    assign rom_addr = {32'h0, addr_i};
+    wire[31:0] rom_addr;
+    assign rom_addr = addr_i;
 
     assign fwd_rom_d = addr_i[DbgAddressBits-1:0] >= `HaltAddress;
 
@@ -480,13 +481,11 @@ module jtag_mem(
         if (!rst_n) begin
             rdata_q <= 32'h0;
             fwd_rom_q <= 1'b0;
-            word_enable32_q <= 1'b0;
             halted_q <= 1'b0;
             resuming_q <= 1'b0;
         end else begin
             rdata_q <= rdata_d;
             fwd_rom_q <= fwd_rom_d;
-            word_enable32_q <= addr_i[2];
             halted_q <= halted_d;
             resuming_q <= resuming_d;
         end
