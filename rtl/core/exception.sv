@@ -27,6 +27,10 @@
 `define MIE_MEIE_BIT            11
 `define MIE_MSIE_BIT            3
 
+`define DCSR_CAUSE_NONE         3'h0
+`define DCSR_CAUSE_STEP         3'h4
+`define DCSR_CAUSE_DBGREQ       3'h3
+`define DCSR_CAUSE_EBREAK       3'h1
 
 
 module exception (
@@ -82,13 +86,14 @@ module exception (
     localparam FAST_INT_OFFSET              = 44;
 
 
-    localparam S_IDLE       = 3'b001;
-    localparam S_W_MEPC     = 3'b010;
-    localparam S_ASSERT     = 3'b100;
+    localparam S_IDLE       = 4'b0001;
+    localparam S_W_MEPC     = 4'b0010;
+    localparam S_W_DCSR     = 4'b0100;
+    localparam S_ASSERT     = 4'b1000;
 
 
     reg debug_mode_d, debug_mode_q;
-    reg[2:0] state_d, state_q;
+    reg[3:0] state_d, state_q;
     reg[31:0] assert_addr_d, assert_addr_q;
     reg[31:0] return_addr_d, return_addr_q;
     reg csr_we;
@@ -179,9 +184,32 @@ module exception (
     assign int_or_exception_cause   = exception_req ? exception_cause  : interrupt_cause;
     assign int_or_exception_offset  = exception_req ? exception_offset : interrupt_offset;
 
-    wire debug_mode_req = ((~debug_mode_q) & debug_req_i & inst_valid_i) |
-                          (inst_ebreak_i & dcsr_i[15]) |
-                          (inst_ebreak_i & debug_mode_q);
+    reg enter_debug_cause_debugger_req;
+    reg enter_debug_cause_single_step;
+    reg enter_debug_cause_ebreak;
+    reg[2:0] dcsr_cause_d, dcsr_cause_q;
+
+    always @ (*) begin
+        enter_debug_cause_debugger_req = 1'b0;
+        enter_debug_cause_single_step = 1'b0;
+        enter_debug_cause_ebreak = 1'b0;
+        dcsr_cause_d = `DCSR_CAUSE_NONE;
+
+        if (inst_ebreak_i & debug_mode_q) begin
+            enter_debug_cause_ebreak = 1'b1;
+            dcsr_cause_d = `DCSR_CAUSE_EBREAK;
+        end else if ((~debug_mode_q) & debug_req_i & inst_valid_i) begin
+            enter_debug_cause_debugger_req = 1'b1;
+            dcsr_cause_d = `DCSR_CAUSE_DBGREQ;
+        end else if (inst_ebreak_i & dcsr_i[15]) begin
+            enter_debug_cause_single_step = 1'b1;
+            dcsr_cause_d = `DCSR_CAUSE_STEP;
+        end
+    end
+
+    wire debug_mode_req = enter_debug_cause_debugger_req |
+                          enter_debug_cause_single_step |
+                          enter_debug_cause_ebreak;
 
     assign stall_flag_o = ((state_q != S_IDLE) & (state_q != S_ASSERT)) |
                           (interrupt_req & global_int_en) | exception_req |
@@ -209,13 +237,13 @@ module exception (
                     state_d = S_W_MEPC;
                 end else if (debug_mode_req) begin
                     debug_mode_d = 1'b1;
-                    if (!inst_ebreak_i) begin
+                    if (enter_debug_cause_debugger_req) begin
                         csr_we = 1'b1;
                         csr_waddr = {20'h0, `CSR_DPC};
                         csr_wdata = inst_addr_i;
                     end
                     assert_addr_d = debug_halt_addr_i;
-                    state_d = S_ASSERT;
+                    state_d = S_W_DCSR;
                 end else if (inst_mret_i) begin
                     assert_addr_d = mepc_i;
                     state_d = S_ASSERT;
@@ -230,6 +258,13 @@ module exception (
                 csr_we = 1'b1;
                 csr_waddr = {20'h0, `CSR_MEPC};
                 csr_wdata = return_addr_q;
+                state_d = S_ASSERT;
+            end
+
+            S_W_DCSR: begin
+                csr_we = 1'b1;
+                csr_waddr = {20'h0, `CSR_DCSR};
+                csr_wdata = {dcsr_i[31:9], dcsr_cause_q, dcsr_i[5:0]};
                 state_d = S_ASSERT;
             end
 
@@ -256,11 +291,13 @@ module exception (
             assert_addr_q <= 32'h0;
             debug_mode_q <= 1'b0;
             return_addr_q <= 32'h0;
+            dcsr_cause_q <= `DCSR_CAUSE_NONE;
         end else begin
             state_q <= state_d;
             assert_addr_q <= assert_addr_d;
             debug_mode_q <= debug_mode_d;
             return_addr_q <= return_addr_d;
+            dcsr_cause_q <= dcsr_cause_d;
         end
     end
 

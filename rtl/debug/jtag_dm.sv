@@ -252,6 +252,8 @@ module jtag_dm #(
                             cmderr_d = CmdErrorBusy;
                         end
                     end
+                    `HaltSum0: dm_resp_data_d = {31'h0, halted};
+                    `HaltSum1: dm_resp_data_d = {31'h0, halted};
                     default: dm_resp_data_d = 32'h0;
                 endcase
             // write
@@ -479,7 +481,7 @@ module jtag_dm #(
         .resumereq_i(resumereq),
         .haltreq_i(debug_req_o),
 
-        .progbuf_i(),
+        .progbuf_i(progbuf_q),
         .data_i(data0_q),
         .data_o(data0),
         .data_valid_o(data_valid),

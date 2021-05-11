@@ -68,6 +68,8 @@
 `define SBData1             6'h3D
 `define SBData2             6'h3E
 `define SBData3             6'h3F
+`define HaltSum0            6'h40
+`define HaltSum1            6'h13
 
 // dmstatus bit index
 `define Impebreak           22
