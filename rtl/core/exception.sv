@@ -31,6 +31,7 @@
 `define DCSR_CAUSE_STEP         3'h4
 `define DCSR_CAUSE_DBGREQ       3'h3
 `define DCSR_CAUSE_EBREAK       3'h1
+`define DCSR_CAUSE_HALT         3'h5
 
 
 module exception (
@@ -187,21 +188,26 @@ module exception (
     reg enter_debug_cause_debugger_req;
     reg enter_debug_cause_single_step;
     reg enter_debug_cause_ebreak;
+    reg enter_debug_cause_reset_halt;
     reg[2:0] dcsr_cause_d, dcsr_cause_q;
 
     always @ (*) begin
         enter_debug_cause_debugger_req = 1'b0;
         enter_debug_cause_single_step = 1'b0;
         enter_debug_cause_ebreak = 1'b0;
+        enter_debug_cause_reset_halt = 1'b0;
         dcsr_cause_d = `DCSR_CAUSE_NONE;
 
         if (inst_ebreak_i & debug_mode_q) begin
             enter_debug_cause_ebreak = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_EBREAK;
+        end else if ((inst_addr_i == `CPU_RESET_ADDR) & inst_valid_i & debug_req_i) begin
+            enter_debug_cause_reset_halt = 1'b1;
+            dcsr_cause_d = `DCSR_CAUSE_HALT;
         end else if ((~debug_mode_q) & debug_req_i & inst_valid_i) begin
             enter_debug_cause_debugger_req = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_DBGREQ;
-        end else if (inst_ebreak_i & dcsr_i[15]) begin
+        end else if ((~debug_mode_q) & dcsr_i[2] & (state_q == S_IDLE)) begin
             enter_debug_cause_single_step = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_STEP;
         end
@@ -209,6 +215,7 @@ module exception (
 
     wire debug_mode_req = enter_debug_cause_debugger_req |
                           enter_debug_cause_single_step |
+                          enter_debug_cause_reset_halt |
                           enter_debug_cause_ebreak;
 
     assign stall_flag_o = ((state_q != S_IDLE) & (state_q != S_ASSERT)) |
@@ -237,13 +244,23 @@ module exception (
                     state_d = S_W_MEPC;
                 end else if (debug_mode_req) begin
                     debug_mode_d = 1'b1;
-                    if (enter_debug_cause_debugger_req) begin
+                    if (enter_debug_cause_debugger_req |
+                        enter_debug_cause_single_step |
+                        enter_debug_cause_reset_halt) begin
                         csr_we = 1'b1;
                         csr_waddr = {20'h0, `CSR_DPC};
-                        csr_wdata = inst_addr_i;
+                        csr_wdata = enter_debug_cause_reset_halt ? (`CPU_RESET_ADDR) : inst_addr_i;
+                        // when run openocd compliance test, use it.
+                        // openocd compliance test bug: It report test fail when the reset address is 0x0:
+                        // "NDMRESET should move DPC to reset value."
+                        //csr_wdata = enter_debug_cause_reset_halt ? (`CPU_RESET_ADDR + 4'h4) : inst_addr_i;
                     end
                     assert_addr_d = debug_halt_addr_i;
-                    state_d = S_W_DCSR;
+                    if (enter_debug_cause_ebreak) begin
+                        state_d = S_ASSERT;
+                    end else begin
+                        state_d = S_W_DCSR;
+                    end
                 end else if (inst_mret_i) begin
                     assert_addr_d = mepc_i;
                     state_d = S_ASSERT;

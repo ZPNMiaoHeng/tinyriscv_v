@@ -225,7 +225,12 @@ module csr_reg(
                     dpc_we = 1'b1;
                 end
                 `CSR_DCSR: begin
-                    dcsr_d = wdata;
+                    // Not all bits in DCSR are writable by exu
+                    if (exu_we_i) begin
+                        dcsr_d = {dcsr_q[31:28], wdata[27:9], dcsr_q[8:6], wdata[5:4], dcsr_q[3], wdata[2:0]};
+                    end else begin
+                        dcsr_d = wdata;
+                    end
                     dcsr_we = 1'b1;
                 end
                 default:;
@@ -345,7 +350,7 @@ module csr_reg(
 
     // dcsr
     csr #(
-        .RESET_VAL(32'h0)
+        .RESET_VAL(32'h40000000)
     ) dcsr_csr (
         .clk(clk),
         .rst_n(rst_n),
