@@ -21,7 +21,7 @@ else
 VERI_TRACE =
 endif
 
-SIM_SRC := sim_jtag.sv
+SIM_SRC := sim_jtag.sv sim_ctrl.sv
 
 SIM_SRC += tb_top_verilator.sv \
            tb_top_verilator.cpp

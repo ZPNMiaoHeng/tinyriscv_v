@@ -32,6 +32,7 @@
 `define DCSR_CAUSE_DBGREQ       3'h3
 `define DCSR_CAUSE_EBREAK       3'h1
 `define DCSR_CAUSE_HALT         3'h5
+`define DCSR_CAUSE_TRIGGER      3'h2
 
 
 module exception (
@@ -58,6 +59,8 @@ module exception (
     input wire irq_external_i,
     input wire[14:0] irq_fast_i,
 
+    input wire trigger_match_i,
+
     input wire[31:0] debug_halt_addr_i,
     input wire debug_req_i,
 
@@ -70,7 +73,6 @@ module exception (
     output wire int_assert_o                    // 中断标志
 
     );
-
 
     localparam ILLEGAL_INSTR_OFFSET         = 0;
     localparam INSTR_ADDR_MISA_OFFSET       = 4;
@@ -166,10 +168,6 @@ module exception (
             exception_req = 1'b1;
             exception_cause = `CAUSE_EXCEP_ECALL_M;
             exception_offset = ECALL_OFFSET;
-        end else if (inst_ebreak_i & (!dcsr_i[15]) & (~debug_mode_q)) begin
-            exception_req = 1'b1;
-            exception_cause = `CAUSE_EXCEP_EBREAK_M;
-            exception_offset = EBREAK_OFFSET;
         end else begin
             exception_req = 1'b0;
             exception_cause = 32'h0;
@@ -189,6 +187,7 @@ module exception (
     reg enter_debug_cause_single_step;
     reg enter_debug_cause_ebreak;
     reg enter_debug_cause_reset_halt;
+    reg enter_debug_cause_trigger;
     reg[2:0] dcsr_cause_d, dcsr_cause_q;
 
     always @ (*) begin
@@ -196,9 +195,13 @@ module exception (
         enter_debug_cause_single_step = 1'b0;
         enter_debug_cause_ebreak = 1'b0;
         enter_debug_cause_reset_halt = 1'b0;
+        enter_debug_cause_trigger = 1'b0;
         dcsr_cause_d = `DCSR_CAUSE_NONE;
 
-        if (inst_ebreak_i & debug_mode_q) begin
+        if (trigger_match_i & inst_valid_i) begin
+            enter_debug_cause_trigger = 1'b1;
+            dcsr_cause_d = `DCSR_CAUSE_TRIGGER;
+        end else if (inst_ebreak_i) begin
             enter_debug_cause_ebreak = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_EBREAK;
         end else if ((inst_addr_i == `CPU_RESET_ADDR) & inst_valid_i & debug_req_i) begin
@@ -216,6 +219,7 @@ module exception (
     wire debug_mode_req = enter_debug_cause_debugger_req |
                           enter_debug_cause_single_step |
                           enter_debug_cause_reset_halt |
+                          enter_debug_cause_trigger |
                           enter_debug_cause_ebreak;
 
     assign stall_flag_o = ((state_q != S_IDLE) & (state_q != S_ASSERT)) |
@@ -246,6 +250,7 @@ module exception (
                     debug_mode_d = 1'b1;
                     if (enter_debug_cause_debugger_req |
                         enter_debug_cause_single_step |
+                        enter_debug_cause_trigger |
                         enter_debug_cause_reset_halt) begin
                         csr_we = 1'b1;
                         csr_waddr = {20'h0, `CSR_DPC};
@@ -256,6 +261,7 @@ module exception (
                         //csr_wdata = enter_debug_cause_reset_halt ? (`CPU_RESET_ADDR + 4'h4) : inst_addr_i;
                     end
                     assert_addr_d = debug_halt_addr_i;
+                    // ebreak do not change dpc and dcsr value
                     if (enter_debug_cause_ebreak) begin
                         state_d = S_ASSERT;
                     end else begin

@@ -480,6 +480,7 @@ module jtag_dm #(
         .clear_resumeack_i(clear_resumeack),
         .resumereq_i(resumereq),
         .haltreq_i(debug_req_o),
+        .ndmreset_i(ndmreset_o),
 
         .progbuf_i(progbuf_q),
         .data_i(data0_q),

@@ -26,6 +26,7 @@ module jtag_mem(
     input  wire                          clear_resumeack_i,
     input  wire                          resumereq_i,
     input  wire                          haltreq_i,
+    input  wire                          ndmreset_i,
 
     input  wire [`ProgBufSize-1:0][31:0] progbuf_i,
     input  wire [31:0]                   data_i,
@@ -284,6 +285,10 @@ module jtag_mem(
 
         if (clear_resumeack_i) begin
             resuming_d = 1'b0;
+        end
+
+        if (ndmreset_i & (!haltreq_i)) begin
+            halted_d = 1'b0;
         end
 
         // write

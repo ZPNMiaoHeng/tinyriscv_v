@@ -38,7 +38,11 @@ module tinyriscv_soc_top(
     );
 
     localparam int MASTERS      = 3; // Number of master ports
+`ifdef VERILATOR
+    localparam int SLAVES       = 4; // Number of slave ports
+`else
     localparam int SLAVES       = 3; // Number of slave ports
+`endif
 
     // masters
     localparam int CoreD        = 0;
@@ -49,6 +53,9 @@ module tinyriscv_soc_top(
     localparam int Rom          = 0;
     localparam int Ram          = 1;
     localparam int JtagDevice   = 2;
+`ifdef VERILATOR
+    localparam int SimCtrl      = 3;
+`endif
 
 
     wire           master_req       [MASTERS];
@@ -149,6 +156,22 @@ module tinyriscv_soc_top(
         .we_i   (slave_we[Ram]),
         .data_o (slave_rdata[Ram])
     );
+
+`ifdef VERILATOR
+    assign slave_addr_mask[SimCtrl] = `SIM_CTRL_ADDR_MASK;
+    assign slave_addr_base[SimCtrl] = `SIM_CTRL_ADDR_BASE;
+    sim_ctrl u_sim_ctrl(
+        .clk_i(clk),
+        .rst_ni(ndmreset_n),
+        .req_i(),
+        .gnt_o(),
+        .addr_i(slave_addr[SimCtrl]),
+        .we_i(slave_we[SimCtrl]),
+        .be_i(slave_be[SimCtrl]),
+        .wdata_i(slave_wdata[SimCtrl]),
+        .rdata_o(slave_rdata[SimCtrl])
+    );
+`endif
 
     obi_interconnect #(
         .MASTERS(MASTERS),

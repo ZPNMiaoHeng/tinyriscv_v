@@ -40,9 +40,9 @@
 // UART
 `define UART_ADDR_MASK      ~32'hffff
 `define UART_ADDR_BASE      32'h50000000
-
-`define INT_WIDTH    8
-`define INT_NONE     8'h0
+// SIM CTRL
+`define SIM_CTRL_ADDR_MASK  ~32'hffff
+`define SIM_CTRL_ADDR_BASE  32'hE0000000
 
 `define STALL_WIDTH  4
 `define STALL_PC     2'd0
@@ -140,8 +140,15 @@
 `define CSR_MSTATUS     12'h300
 `define CSR_MSCRATCH    12'h340
 `define CSR_MHARTID     12'hF14
+`define CSR_MISA        12'h301
+// Debug
 `define CSR_DCSR        12'h7b0
 `define CSR_DPC         12'h7b1
 `define CSR_DSCRATCH0   12'h7b2
 `define CSR_DSCRATCH1   12'h7b3
-`define CSR_MISA        12'h301
+`define CSR_TSELECT     12'h7A0
+`define CSR_TDATA1      12'h7A1
+`define CSR_TDATA2      12'h7A2
+`define CSR_TDATA3      12'h7A3
+`define CSR_MCONTEXT    12'h7A8
+`define CSR_SCONTEXT    12'h7AA

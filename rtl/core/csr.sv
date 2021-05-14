@@ -15,19 +15,20 @@
  */
 
 module csr #(
-    parameter RESET_VAL = 32'h0
+    parameter RESET_VAL = 32'h0,
+    parameter WIDTH     = 32
     )(
 
     input  wire             clk,
     input  wire             rst_n,
 
-    input  wire [31:0]      wdata_i,
+    input  wire [WIDTH-1:0] wdata_i,
     input  wire             we_i,
-    output wire [31:0]      rdata_o
+    output wire [WIDTH-1:0] rdata_o
 
     );
 
-    reg[31:0] rdata_q;
+    reg[WIDTH-1:0] rdata_q;
 
     always @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin

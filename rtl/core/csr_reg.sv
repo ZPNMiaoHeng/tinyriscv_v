@@ -29,6 +29,9 @@ module csr_reg(
     input wire[31:0] exu_raddr_i,           // exu模块读寄存器地址
     output wire[31:0] exu_rdata_o,          // exu模块读寄存器数据
 
+    input wire[31:0] pc_if_i,               // 取指地址
+    output wire trigger_match_o,            // 断点
+
     // clint
     input wire clint_we_i,                  // clint模块写寄存器标志
     input wire[31:0] clint_waddr_i,         // clint模块写寄存器地址
@@ -42,6 +45,13 @@ module csr_reg(
     output wire[31:0] dcsr_o                // dcsr寄存器值
 
     );
+
+    // 硬件断点个数(必须大于等于1)
+    localparam HwBpNum = 3;
+    localparam DbgHwNumLen = HwBpNum > 1 ? $clog2(HwBpNum) : 1;
+    localparam MaxTselect = HwBpNum - 1;
+
+    wire[31:0] max_tselect = MaxTselect;
 
     wire[31:0] misa = 32'h40001100;   // 32bits, IM
 
@@ -78,6 +88,21 @@ module csr_reg(
     reg[31:0] dcsr_d;
     wire[31:0] dcsr_q;
     reg dcsr_we;
+
+    reg[31:0] tselect_d;
+    wire[31:0] tselect_q;
+    reg tselect_we;
+    wire              tmatch_control_d;
+    wire[HwBpNum-1:0] tmatch_control_q;
+    wire[HwBpNum-1:0] tmatch_control_we;
+    wire[31:0]        tmatch_value_d;
+    wire[31:0]        tmatch_value_q[HwBpNum];
+    wire[HwBpNum-1:0] tmatch_value_we;
+    wire[HwBpNum-1:0] trigger_match;
+    wire[31:0] tmatch_control_rdata;
+    wire[31:0] tmatch_value_rdata;
+    wire       selected_tmatch_control;
+    wire[31:0] selected_tmatch_value;
 
     reg[63:0] cycle;
 
@@ -144,6 +169,15 @@ module csr_reg(
             end
             `CSR_MISA: begin
                 exu_rdata = misa;
+            end
+            `CSR_TSELECT: begin
+                exu_rdata = tselect_q;
+            end
+            `CSR_TDATA1: begin
+                exu_rdata = tmatch_control_rdata;
+            end
+            `CSR_TDATA2: begin
+                exu_rdata = tmatch_value_rdata;
             end
             default: begin
                 exu_rdata = 32'h0;
@@ -237,6 +271,61 @@ module csr_reg(
             endcase
         end
     end
+
+    // trigger control
+    assign tselect_we = (exu_waddr_i[11:0] == `CSR_TSELECT) & exu_we_i;
+
+    for (genvar i = 0; i < HwBpNum; i = i + 1) begin : dbg_tmatch_we
+        assign tmatch_control_we[i] = (i == tselect_q) &
+                                      exu_we_i &
+                                      (exu_waddr_i[11:0] == `CSR_TDATA1);
+        assign tmatch_value_we[i]   = (i == tselect_q) &
+                                      exu_we_i &
+                                      (exu_waddr_i[11:0] == `CSR_TDATA2);
+    end
+
+    assign tselect_d  = (exu_wdata_i < HwBpNum) ? exu_wdata_i : max_tselect;
+    assign tmatch_control_d = exu_wdata_i[2];
+    assign tmatch_value_d   = exu_wdata_i;
+
+    if (HwBpNum > 1) begin : dbg_tmatch_multiple_select
+        assign selected_tmatch_control = tmatch_control_q[tselect_q];
+        assign selected_tmatch_value   = tmatch_value_q[tselect_q];
+    end else begin : dbg_tmatch_single_select
+        assign selected_tmatch_control = tmatch_control_q[0];
+        assign selected_tmatch_value   = tmatch_value_q[0];
+    end
+
+    // TDATA0 - only support simple address matching
+    assign tmatch_control_rdata = {4'h2,                    // type    : address/data match
+                                   1'b1,                    // dmode   : access from D mode only
+                                   6'h00,                   // maskmax : exact match only
+                                   1'b0,                    // hit     : not supported
+                                   1'b0,                    // select  : address match only
+                                   1'b0,                    // timing  : match before execution
+                                   2'b00,                   // sizelo  : match any access
+                                   4'h1,                    // action  : enter debug mode
+                                   1'b0,                    // chain   : not supported
+                                   4'h0,                    // match   : simple match
+                                   1'b1,                    // m       : match in m-mode
+                                   1'b0,                    // 0       : zero
+                                   1'b0,                    // s       : not supported
+                                   1'b1,                    // u       : match in u-mode
+                                   selected_tmatch_control, // execute : match instruction address
+                                   1'b0,                    // store   : not supported
+                                   1'b0};                   // load    : not supported
+
+    // TDATA1 - address match value only
+    assign tmatch_value_rdata = selected_tmatch_value;
+
+    // Breakpoint matching
+    // We match against the next address, as the breakpoint must be taken before execution
+    for (genvar i = 0; i < HwBpNum; i = i + 1) begin : dbg_trigger_match
+        assign trigger_match[i] = tmatch_control_q[i] & (pc_if_i == tmatch_value_q[i]);
+    end
+
+    assign trigger_match_o = |trigger_match;
+
 
     // mtvec
     csr #(
@@ -359,6 +448,43 @@ module csr_reg(
         .rdata_o(dcsr_q)
     );
 
+    // tselect
+    csr #(
+        .RESET_VAL(32'h0)
+    ) tselect_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(tselect_d),
+        .we_i(tselect_we),
+        .rdata_o(tselect_q)
+    );
+
+    for (genvar i = 0; i < HwBpNum; i = i + 1) begin : dbg_tmatch_reg
+        // tdata1
+        csr #(
+            .RESET_VAL(1'b0),
+            .WIDTH(1)
+        ) tmatch_control_csr (
+            .clk(clk),
+            .rst_n(rst_n),
+            .wdata_i(tmatch_control_d),
+            .we_i(tmatch_control_we[i]),
+            .rdata_o(tmatch_control_q[i])
+        );
+
+        // tdata2
+        csr #(
+            .RESET_VAL(32'h0)
+        ) tmatch_value_csr (
+            .clk(clk),
+            .rst_n(rst_n),
+            .wdata_i(tmatch_value_d),
+            .we_i(tmatch_value_we[i]),
+            .rdata_o(tmatch_value_q[i])
+        );
+    end
+
+    // for debug
     wire[31:0] mtvec = mtvec_q;
     wire[31:0] mstatus = mstatus_q;
     wire[31:0] mepc = mepc_q;

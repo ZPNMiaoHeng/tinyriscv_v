@@ -21,6 +21,7 @@ ASM_SRCS += $(BSP_DIR)/vector_table.S
 C_SRCS += $(BSP_DIR)/lib/utils.c
 C_SRCS += $(BSP_DIR)/lib/xprintf.c
 C_SRCS += $(BSP_DIR)/lib/uart.c
+C_SRCS += $(BSP_DIR)/lib/sim_ctrl.c
 
 LINKER_SCRIPT := $(BSP_DIR)/link.lds
 
