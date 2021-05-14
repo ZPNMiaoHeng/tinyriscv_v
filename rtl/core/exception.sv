@@ -89,14 +89,14 @@ module exception (
     localparam FAST_INT_OFFSET              = 44;
 
 
-    localparam S_IDLE       = 4'b0001;
-    localparam S_W_MEPC     = 4'b0010;
-    localparam S_W_DCSR     = 4'b0100;
-    localparam S_ASSERT     = 4'b1000;
-
+    localparam S_IDLE       = 5'b00001;
+    localparam S_W_MEPC     = 5'b00010;
+    localparam S_W_DCSR     = 5'b00100;
+    localparam S_ASSERT     = 5'b01000;
+    localparam S_W_MSTATUS  = 5'b10000;
 
     reg debug_mode_d, debug_mode_q;
-    reg[3:0] state_d, state_q;
+    reg[4:0] state_d, state_q;
     reg[31:0] assert_addr_d, assert_addr_q;
     reg[31:0] return_addr_d, return_addr_q;
     reg csr_we;
@@ -239,13 +239,13 @@ module exception (
 
         case (state_q)
             S_IDLE: begin
-                if (int_or_exception_req) begin
+                if (int_or_exception_req & (!debug_mode_q)) begin
                     csr_we = 1'b1;
                     csr_waddr = {20'h0, `CSR_MCAUSE};
                     csr_wdata = int_or_exception_cause;
                     assert_addr_d = mtvec_i + int_or_exception_offset;
                     return_addr_d = inst_addr_i;
-                    state_d = S_W_MEPC;
+                    state_d = S_W_MSTATUS;
                 end else if (debug_mode_req) begin
                     debug_mode_d = 1'b1;
                     if (enter_debug_cause_debugger_req |
@@ -269,12 +269,22 @@ module exception (
                     end
                 end else if (inst_mret_i) begin
                     assert_addr_d = mepc_i;
+                    csr_we = 1'b1;
+                    csr_waddr = {20'h0, `CSR_MSTATUS};
+                    csr_wdata = {mstatus_i[31:4], 1'b1, mstatus_i[2:0]};
                     state_d = S_ASSERT;
                 end else if (inst_dret_i) begin
                     assert_addr_d = dpc_i;
                     state_d = S_ASSERT;
                     debug_mode_d = 1'b0;
                 end
+            end
+
+            S_W_MSTATUS: begin
+                csr_we = 1'b1;
+                csr_waddr = {20'h0, `CSR_MSTATUS};
+                csr_wdata = {mstatus_i[31:4], 1'b0, mstatus_i[2:0]};
+                state_d = S_W_MEPC;
             end
 
             S_W_MEPC: begin

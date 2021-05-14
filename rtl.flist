@@ -37,6 +37,7 @@
 ../rtl/perips/rom.sv
 ../rtl/perips/timer.sv
 ../rtl/perips/uart.sv
+../rtl/perips/machine_timer.sv
 
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv

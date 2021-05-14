@@ -39,9 +39,9 @@ module tinyriscv_soc_top(
 
     localparam int MASTERS      = 3; // Number of master ports
 `ifdef VERILATOR
-    localparam int SLAVES       = 4; // Number of slave ports
+    localparam int SLAVES       = 7; // Number of slave ports
 `else
-    localparam int SLAVES       = 3; // Number of slave ports
+    localparam int SLAVES       = 6; // Number of slave ports
 `endif
 
     // masters
@@ -53,8 +53,11 @@ module tinyriscv_soc_top(
     localparam int Rom          = 0;
     localparam int Ram          = 1;
     localparam int JtagDevice   = 2;
+    localparam int Mtimer       = 3;
+    localparam int Gpio         = 4;
+    localparam int Uart         = 5;
 `ifdef VERILATOR
-    localparam int SimCtrl      = 3;
+    localparam int SimCtrl      = 6;
 `endif
 
 
@@ -93,6 +96,12 @@ module tinyriscv_soc_top(
     wire debug_req;
     wire core_halted;
 
+    wire mtimer_irq;
+
+    wire[1:0] io_in;
+    wire[31:0] gpio_ctrl;
+    wire[31:0] gpio_data;
+
     assign halted_ind_pin = core_halted;
 
     tinyriscv_core #(
@@ -120,7 +129,7 @@ module tinyriscv_soc_top(
         .data_err_i     (1'b0),
 
         .irq_software_i (1'b0),
-        .irq_timer_i    (1'b0),
+        .irq_timer_i    (mtimer_irq),
         .irq_external_i (1'b0),
         .irq_fast_i     (15'b0),
 
@@ -129,7 +138,7 @@ module tinyriscv_soc_top(
 
     assign slave_addr_mask[Rom] = `ROM_ADDR_MASK;
     assign slave_addr_base[Rom] = `ROM_ADDR_BASE;
-    // 指令存储器
+    // 1.指令存储器
     rom #(
         .DP(`ROM_DEPTH)
     ) u_rom (
@@ -144,7 +153,7 @@ module tinyriscv_soc_top(
 
     assign slave_addr_mask[Ram] = `RAM_ADDR_MASK;
     assign slave_addr_base[Ram] = `RAM_ADDR_BASE;
-    // 数据存储器
+    // 2.数据存储器
     ram #(
         .DP(`RAM_DEPTH)
     ) u_ram (
@@ -157,17 +166,70 @@ module tinyriscv_soc_top(
         .data_o (slave_rdata[Ram])
     );
 
+    assign slave_addr_mask[Mtimer] = `MTIMER_ADDR_MASK;
+    assign slave_addr_base[Mtimer] = `MTIMER_ADDR_BASE;
+    // 3.机器定时器模块
+    machine_timer u_machine_timer(
+        .clk    (clk),
+        .rst_n  (ndmreset_n),
+        .addr_i (slave_addr[Mtimer]),
+        .data_i (slave_wdata[Mtimer]),
+        .sel_i  (slave_be[Mtimer]),
+        .we_i   (slave_we[Mtimer]),
+        .data_o (slave_rdata[Mtimer]),
+        .irq_o  (mtimer_irq)
+    );
+
+    // IO0
+    assign gpio_pins[0] = (gpio_ctrl[1:0] == 2'b01)? gpio_data[0]: 1'bz;
+    assign io_in[0] = gpio_pins[0];
+    // IO1
+    assign gpio_pins[1] = (gpio_ctrl[3:2] == 2'b01)? gpio_data[1]: 1'bz;
+    assign io_in[1] = gpio_pins[1];
+
+    assign slave_addr_mask[Gpio] = `GPIO_ADDR_MASK;
+    assign slave_addr_base[Gpio] = `GPIO_ADDR_BASE;
+    // 4.GPIO模块
+    gpio u_gpio(
+        .clk     (clk),
+        .rst_n   (ndmreset_n),
+        .addr_i  (slave_addr[Gpio]),
+        .data_i  (slave_wdata[Gpio]),
+        .sel_i   (slave_be[Gpio]),
+        .we_i    (slave_we[Gpio]),
+        .data_o  (slave_rdata[Gpio]),
+        .io_pin_i(io_in),
+        .reg_ctrl(gpio_ctrl),
+        .reg_data(gpio_data)
+    );
+
+    assign slave_addr_mask[Uart] = `UART_ADDR_MASK;
+    assign slave_addr_base[Uart] = `UART_ADDR_BASE;
+    // 5.串口模块
+    uart u_uart(
+        .clk    (clk),
+        .rst_n  (ndmreset_n),
+        .addr_i (slave_addr[Uart]),
+        .data_i (slave_wdata[Uart]),
+        .sel_i  (slave_be[Uart]),
+        .we_i   (slave_we[Uart]),
+        .data_o (slave_rdata[Uart]),
+        .tx_pin (uart_tx_pin),
+        .rx_pin (uart_rx_pin)
+    );
+
 `ifdef VERILATOR
     assign slave_addr_mask[SimCtrl] = `SIM_CTRL_ADDR_MASK;
     assign slave_addr_base[SimCtrl] = `SIM_CTRL_ADDR_BASE;
+    // 6.仿真控制模块
     sim_ctrl u_sim_ctrl(
-        .clk_i(clk),
-        .rst_ni(ndmreset_n),
-        .req_i(),
-        .gnt_o(),
-        .addr_i(slave_addr[SimCtrl]),
-        .we_i(slave_we[SimCtrl]),
-        .be_i(slave_be[SimCtrl]),
+        .clk_i  (clk),
+        .rst_ni (ndmreset_n),
+        .req_i  (),
+        .gnt_o  (),
+        .addr_i (slave_addr[SimCtrl]),
+        .we_i   (slave_we[SimCtrl]),
+        .be_i   (slave_be[SimCtrl]),
         .wdata_i(slave_wdata[SimCtrl]),
         .rdata_o(slave_rdata[SimCtrl])
     );

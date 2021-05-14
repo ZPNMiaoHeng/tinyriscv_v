@@ -46,8 +46,8 @@ module gpio(
     assign reg_ctrl = gpio_ctrl;
     assign reg_data = gpio_data;
 
-    wire wen = we_i & req_valid_i;
-    wire ren = (~we_i) & req_valid_i;
+    wire wen = we_i;
+    wire ren = (~we_i);
     wire write_reg_ctrl_en = wen & (addr_i[3:0] == GPIO_CTRL);
     wire write_reg_data_en = wen & (addr_i[3:0] == GPIO_DATA);
 

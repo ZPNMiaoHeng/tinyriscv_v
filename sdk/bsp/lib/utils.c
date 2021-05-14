@@ -24,3 +24,23 @@ void busy_wait(uint32_t us)
 
     while (get_cycle_value() < (tmp + count));
 }
+
+void global_irq_enable()
+{
+    asm volatile("csrs  mstatus, %0\n" : : "r"(0x8));
+}
+
+void global_irq_disable()
+{
+    asm volatile("csrc  mstatus, %0\n" : : "r"(0x8));
+}
+
+void mtime_irq_enable()
+{
+    asm volatile("csrs  mie, %0\n" : : "r"(0x80));
+}
+
+void mtime_irq_disable()
+{
+    asm volatile("csrc  mie, %0\n" : : "r"(0x80));
+}

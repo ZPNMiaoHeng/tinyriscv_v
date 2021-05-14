@@ -25,4 +25,9 @@
 uint64_t get_cycle_value();
 void busy_wait(uint32_t us);
 
+void global_irq_enable();
+void global_irq_disable();
+void mtime_irq_enable();
+void mtime_irq_disable();
+
 #endif
