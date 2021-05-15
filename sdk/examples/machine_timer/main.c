@@ -34,20 +34,19 @@ int main()
     machine_timer_irq_enable(1);
     machine_timer_enable(1);
 
-    GPIO_REG(GPIO_CTRL) |= 0x1;  // set gpio0 output mode
+    gpio_output_enable(GPIO0);
 
     while (1) {
         // 500ms
         if (count == 50) {
             count = 0;
-            GPIO_REG(GPIO_DATA) ^= 0x1; // toggle led
+            gpio_data_toggle(GPIO0); // toggle led
         }
     }
 #endif
 }
 
-void timer_irq_handler() __attribute__((interrupt));
-void timer_irq_handler()
+__attribute__((interrupt)) void timer_irq_handler()
 {
     count++;
 
