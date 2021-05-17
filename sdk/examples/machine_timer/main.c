@@ -28,7 +28,7 @@ int main()
 
     return 0;
 #else
-    machine_timer_set_cmp_val(500000);  // 10ms period
+    machine_timer_set_cmp_val(CPU_FREQ_MHZ * 10000);  // 10ms period
     machine_timer_clear_irq_pending();
     global_irq_enable();
     machine_timer_irq_enable(1);

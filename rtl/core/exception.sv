@@ -179,7 +179,7 @@ module exception (
     wire[31:0] int_or_exception_cause;
     wire[31:0] int_or_exception_offset;
 
-    assign int_or_exception_req     = (interrupt_req & global_int_en) | exception_req;
+    assign int_or_exception_req     = (interrupt_req & global_int_en & (~debug_mode_q)) | exception_req;
     assign int_or_exception_cause   = exception_req ? exception_cause  : interrupt_cause;
     assign int_or_exception_offset  = exception_req ? exception_offset : interrupt_offset;
 
