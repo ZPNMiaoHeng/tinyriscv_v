@@ -14,12 +14,12 @@
  limitations under the License.                                          
  */
 
-`define CPU_RESET_ADDR       32'h00000000    // CPU复位地址
-`define CPU_CLOCK_HZ         50000000        // CPU时钟(50MHZ)
+`define CPU_RESET_ADDR       32'h00000000                   // CPU复位地址
+`define CPU_CLOCK_HZ         25000000                       // CPU时钟(25MHZ)
 `define JTAG_RESET_FF_LEVELS 5
 
-`define ROM_DEPTH     8192                   // 指令存储器深度，单位为word(4字节)
-`define RAM_DEPTH     4096                   // 数据存储器深度，单位为word(4字节)
+`define ROM_DEPTH           (32 * 1024)                     // 指令存储器深度，单位为word(4字节)
+`define RAM_DEPTH           ( 8 * 1024)                     // 数据存储器深度，单位为word(4字节)
 
 // 外设地址、大小
 // ROM
@@ -47,17 +47,17 @@
 `define SIM_CTRL_ADDR_MASK  ~32'hffff
 `define SIM_CTRL_ADDR_BASE  32'hE0000000
 
-`define STALL_WIDTH  4
-`define STALL_PC     2'd0
-`define STALL_IF     2'd1
-`define STALL_ID     2'd2
-`define STALL_EX     2'd3
+`define STALL_WIDTH         4
+`define STALL_PC            2'd0
+`define STALL_IF            2'd1
+`define STALL_ID            2'd2
+`define STALL_EX            2'd3
 
-`define INST_NOP     32'h00000013
-`define INST_MRET    32'h30200073
-`define INST_ECALL   32'h00000073
-`define INST_EBREAK  32'h00100073
-`define INST_DRET    32'h7b200073
+`define INST_NOP            32'h00000013
+`define INST_MRET           32'h30200073
+`define INST_ECALL          32'h00000073
+`define INST_EBREAK         32'h00100073
+`define INST_DRET           32'h7b200073
 
 // 指令译码信息
 `define DECINFO_GRP_BUS           2:0
