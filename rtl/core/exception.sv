@@ -100,6 +100,7 @@ module exception (
     reg[4:0] state_d, state_q;
     reg[31:0] assert_addr_d, assert_addr_q;
     reg[31:0] return_addr_d, return_addr_q;
+    reg trigger_match_d, trigger_match_q;
     reg csr_we;
     reg[31:0] csr_waddr;
     reg[31:0] csr_wdata;
@@ -184,6 +185,18 @@ module exception (
     assign int_or_exception_cause   = exception_req ? exception_cause  : interrupt_cause;
     assign int_or_exception_offset  = exception_req ? exception_offset : interrupt_offset;
 
+    wire trigger_matching;
+
+    gen_ticks_sync #(
+        .DP(5),
+        .DW(1)
+    ) gen_trigger_sync (
+        .rst_n(rst_n),
+        .clk(clk),
+        .din(trigger_match_q),
+        .dout(trigger_matching)
+    );
+
     reg enter_debug_cause_debugger_req;
     reg enter_debug_cause_single_step;
     reg enter_debug_cause_ebreak;
@@ -199,7 +212,7 @@ module exception (
         enter_debug_cause_trigger = 1'b0;
         dcsr_cause_d = `DCSR_CAUSE_NONE;
 
-        if (trigger_match_i & inst_valid_i) begin
+        if (trigger_match_i & inst_valid_i & (~trigger_matching)) begin
             enter_debug_cause_trigger = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_TRIGGER;
         end else if (inst_ebreak_i & inst_valid_i) begin
@@ -237,6 +250,7 @@ module exception (
         csr_we = 1'b0;
         csr_waddr = 32'h0;
         csr_wdata = 32'h0;
+        trigger_match_d = trigger_match_q;
 
         case (state_q)
             S_IDLE: begin
@@ -261,6 +275,9 @@ module exception (
                         // "NDMRESET should move DPC to reset value."
                         //csr_wdata = enter_debug_cause_reset_halt ? (`CPU_RESET_ADDR + 4'h4) : inst_addr_i;
                     end
+                    if (enter_debug_cause_trigger) begin
+                        trigger_match_d = 1'b1;
+                    end
                     assert_addr_d = debug_halt_addr_i;
                     // ebreak do not change dpc and dcsr value
                     if (enter_debug_cause_ebreak) begin
@@ -278,6 +295,7 @@ module exception (
                     assert_addr_d = dpc_i;
                     state_d = S_ASSERT;
                     debug_mode_d = 1'b0;
+                    trigger_match_d = 1'b0;
                 end
             end
 
@@ -326,12 +344,14 @@ module exception (
             debug_mode_q <= 1'b0;
             return_addr_q <= 32'h0;
             dcsr_cause_q <= `DCSR_CAUSE_NONE;
+            trigger_match_q <= 1'b0;
         end else begin
             state_q <= state_d;
             assert_addr_q <= assert_addr_d;
             debug_mode_q <= debug_mode_d;
             return_addr_q <= return_addr_d;
             dcsr_cause_q <= dcsr_cause_d;
+            trigger_match_q <= trigger_match_d;
         end
     end
 
