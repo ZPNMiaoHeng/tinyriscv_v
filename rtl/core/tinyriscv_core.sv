@@ -114,6 +114,7 @@ module tinyriscv_core #(
     wire ex_inst_mret_o;
     wire ex_inst_dret_o;
     wire ex_inst_valid_o;
+    wire ex_inst_executed_o;
 
     // gpr_reg模块输出信号
     wire[31:0] regs_rdata1_o;
@@ -300,6 +301,7 @@ module tinyriscv_core #(
         .csr_waddr_o(ex_csr_waddr_o),
         .inst_valid_o(ex_inst_valid_o),
         .inst_valid_i(ie_inst_valid_o),
+        .inst_executed_o(ex_inst_executed_o),
         .inst_i(ie_inst_o),
         .dec_info_bus_i(ie_dec_info_bus_o),
         .dec_imm_i(ie_dec_imm_o),
@@ -313,6 +315,7 @@ module tinyriscv_core #(
         .clk(clk),
         .rst_n(rst_n),
         .inst_valid_i(ie_inst_valid_o),
+        .inst_executed_i(ex_inst_executed_o),
         .inst_ecall_i(ex_inst_ecall_o),
         .inst_ebreak_i(ex_inst_ebreak_o),
         .inst_mret_i(ex_inst_mret_o),

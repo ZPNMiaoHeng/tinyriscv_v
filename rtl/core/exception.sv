@@ -41,6 +41,7 @@ module exception (
     input wire rst_n,
 
     input wire inst_valid_i,
+    input wire inst_executed_i,
     input wire inst_ecall_i,                    // ecall指令
     input wire inst_ebreak_i,                   // ebreak指令
     input wire inst_mret_i,                     // mret指令
@@ -164,7 +165,7 @@ module exception (
     reg[31:0] exception_offset;
 
     always @ (*) begin
-        if (inst_ecall_i) begin
+        if (inst_ecall_i & inst_valid_i) begin
             exception_req = 1'b1;
             exception_cause = `CAUSE_EXCEP_ECALL_M;
             exception_offset = ECALL_OFFSET;
@@ -201,7 +202,7 @@ module exception (
         if (trigger_match_i & inst_valid_i) begin
             enter_debug_cause_trigger = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_TRIGGER;
-        end else if (inst_ebreak_i) begin
+        end else if (inst_ebreak_i & inst_valid_i) begin
             enter_debug_cause_ebreak = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_EBREAK;
         end else if ((inst_addr_i == `CPU_RESET_ADDR) & inst_valid_i & debug_req_i) begin
@@ -210,7 +211,7 @@ module exception (
         end else if ((~debug_mode_q) & debug_req_i & inst_valid_i) begin
             enter_debug_cause_debugger_req = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_DBGREQ;
-        end else if ((~debug_mode_q) & dcsr_i[2] & (state_q == S_IDLE)) begin
+        end else if ((~debug_mode_q) & dcsr_i[2] & inst_valid_i & inst_executed_i) begin
             enter_debug_cause_single_step = 1'b1;
             dcsr_cause_d = `DCSR_CAUSE_STEP;
         end

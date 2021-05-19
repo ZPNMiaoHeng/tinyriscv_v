@@ -17,7 +17,6 @@
 `include "defines.sv"
 
 // 执行模块
-// 纯组合逻辑电路
 module exu(
 
     input wire clk,
@@ -62,6 +61,7 @@ module exu(
 
     //
     output wire inst_valid_o,
+    output wire inst_executed_o,
 
     // from idu_exu
     input wire inst_valid_i,
@@ -369,7 +369,8 @@ module exu(
 
     assign reg_we_o = commit_reg_we_o & (~int_stall_i);
 
-    assign jump_flag_o = ((bjp_cmp_res_o | bjp_op_jump_o | sys_op_fence_o) & (~int_stall_i)) | int_assert_i;
+    wire inst_jump = bjp_cmp_res_o | bjp_op_jump_o | sys_op_fence_o;
+    assign jump_flag_o = (inst_jump & (~int_stall_i)) | int_assert_i;
     assign jump_addr_o = int_assert_i? int_addr_i:
                          sys_op_fence_o? next_pc_i:
                          bjp_res_o;
@@ -384,5 +385,22 @@ module exu(
     assign mem_wdata_o = mem_wdata;
 
     assign inst_valid_o = hold_flag_o? 1'b0: inst_valid_i;
+
+    reg inst_executed_q;
+
+    always @ (posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            inst_executed_q <= 1'b0;
+        end else begin
+            if (inst_valid_i) begin
+                inst_executed_q <= (inst_jump & (~int_stall_i)) |
+                                   reg_we_o |
+                                   csr_we_o |
+                                   mem_we_o;
+            end
+        end
+    end
+
+    assign inst_executed_o = inst_executed_q;
 
 endmodule
