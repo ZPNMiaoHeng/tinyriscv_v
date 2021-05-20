@@ -1,10 +1,10 @@
 # 时钟约束50MHz
-set_property -dict { PACKAGE_PIN N14 IOSTANDARD LVCMOS33 } [get_ports {clk}]; 
-create_clock -add -name sys_clk_pin -period 20.00 -waveform {0 10} [get_ports {clk}];
+set_property -dict { PACKAGE_PIN N14 IOSTANDARD LVCMOS33 } [get_ports {clk_50m_i}]; 
+create_clock -add -name sys_clk_pin -period 20.00 -waveform {0 10} [get_ports {clk_50m_i}];
 
 # 时钟引脚
-set_property IOSTANDARD LVCMOS33 [get_ports clk]
-set_property PACKAGE_PIN N14 [get_ports clk]
+set_property IOSTANDARD LVCMOS33 [get_ports clk_50m_i]
+set_property PACKAGE_PIN N14 [get_ports clk_50m_i]
 
 # 复位引脚
 set_property IOSTANDARD LVCMOS33 [get_ports rst_ext_ni]

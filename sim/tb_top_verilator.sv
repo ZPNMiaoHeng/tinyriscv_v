@@ -74,7 +74,7 @@ module tb_top_verilator #(
     end
 
     tinyriscv_soc_top u_tinyriscv_soc_top(
-        .clk(clk_i),
+        .clk_50m_i(clk_i),
         .rst_ext_ni(rst_ni),
         .halted_ind_pin(halted)
     );

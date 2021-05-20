@@ -20,7 +20,7 @@
 // tinyriscv soc顶层模块
 module tinyriscv_soc_top(
 
-    input wire clk,                 // 时钟引脚
+    input wire clk_50m_i,           // 时钟引脚
     input wire rst_ext_ni,          // 复位引脚，低电平有效
 
     output wire halted_ind_pin,     // jtag是否已经halt住CPU，高电平有效
@@ -90,6 +90,8 @@ module tinyriscv_soc_top(
     wire          sim_jtag_tdo;
     wire [31:0]   sim_jtag_exit;
 `endif
+
+    wire clk;
 
     wire ndmreset;
     wire ndmreset_n;
@@ -260,6 +262,16 @@ module tinyriscv_soc_top(
         .slave_wdata_o      (slave_wdata),
         .slave_rdata_i      (slave_rdata)
     );
+
+`ifdef VERILATOR
+    assign clk = clk_50m_i;
+`else
+    mmcm_main_clk u_mmcm_main_clk(
+      .clk_out1(clk),
+      .resetn(rst_ext_ni),
+      .clk_in1(clk_50m_i)
+    );
+`endif
 
     rst_gen #(
         .RESET_FIFO_DEPTH(5)
