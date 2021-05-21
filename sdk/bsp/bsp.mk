@@ -1,4 +1,4 @@
-RISCV_TOOLS_PATH := /opt/riscv/bin
+RISCV_TOOLS_PATH := /opt/riscv32/bin
 RISCV_TOOLS_PREFIX := riscv32-unknown-elf-
 
 RISCV_GCC     := $(abspath $(RISCV_TOOLS_PATH)/$(RISCV_TOOLS_PREFIX)gcc)
