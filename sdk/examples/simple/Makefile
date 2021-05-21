@@ -7,6 +7,7 @@ TARGET = simple
 
 
 CFLAGS += -DSIMULATION
+CFLAGS += -g
 #CFLAGS += -O2
 #ASM_SRCS +=
 #LDFLAGS +=
