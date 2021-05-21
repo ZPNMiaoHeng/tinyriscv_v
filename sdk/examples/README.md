@@ -6,12 +6,12 @@
 
 **simple**: 简单的加、减、乘、除运算测试例程。
 
-**timer_int**: 定时器中断测试例程，每500ms翻转一下IO口的电平。在FPGA上运行时需要将其Makefile里的CFLAGS += -DSIMULATION这一行注释掉。
+**machine_timer**: 定时器中断测试例程，每500ms翻转一下IO口的电平。在FPGA上运行时需要将其Makefile里的CFLAGS += -DSIMULATION这一行注释掉。
 
-**uart_tx**: 串口发送测试例程，向上位机发送hello world字符串。
+**coremark**: 已经移植好的coremark跑分测试例程。
 
-**uart_rx：**串口接收测试例程，将接收到的数据发回给上位机(echo)。
+**freertos**: FreeRTOS嵌入式操作系统测试例程，效果：每1s翻转一下IO口的电平。
 
-**coremark：**已经移植好的coremark跑分测试例程。
+**uart_loopback**: 串口收发例程。
 
-**FreeRTOS：**FreeRTOS嵌入式操作系统测试例程，效果：每1s翻转一下IO口的电平。
+**hello_world**: 串口发送hello world字符串。
