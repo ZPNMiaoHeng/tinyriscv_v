@@ -100,9 +100,9 @@ MAIN_RETURN_TYPE main(int argc, char *argv[]) {
 #if (MEM_METHOD==MEM_STACK)
 	ee_u8 stack_memblock[TOTAL_DATA_SIZE*MULTITHREAD];
 #endif
-    ee_printf("Test running, please wait...\n");
 	/* first call any initializations needed */
 	portable_init(&(results[0].port), &argc, argv);
+    ee_printf("Test running, please wait...\n");
 	/* First some checks to make sure benchmark will run ok */
 	if (sizeof(struct list_head_s)>128) {
 		ee_printf("list_head structure too big for comparable data!\n");
