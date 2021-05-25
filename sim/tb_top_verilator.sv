@@ -44,7 +44,9 @@ module tb_top_verilator #(
         if (!rst_ni) begin
             result_printed <= 1'b0;
         end else begin
-            if (!result_printed) begin
+            if (u_tinyriscv_soc_top.ndmreset) begin
+                result_printed <= 1'b0;
+            end else if (!result_printed) begin
                 if (x26 == 32'b1) begin
                     if (x27 == 32'b1) begin
                         $display("~~~~~~~~~~~~~~~~~~~ TEST_PASS ~~~~~~~~~~~~~~~~~~~");

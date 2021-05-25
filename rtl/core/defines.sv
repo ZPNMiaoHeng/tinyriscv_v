@@ -18,8 +18,8 @@
 `define CPU_CLOCK_HZ         25000000                       // CPU时钟(25MHZ)
 `define JTAG_RESET_FF_LEVELS 5
 
-`define ROM_DEPTH           (32 * 1024)                     // 指令存储器深度，单位为word(4字节)
-`define RAM_DEPTH           (16 * 1024)                     // 数据存储器深度，单位为word(4字节)
+`define ROM_DEPTH           (32 * 256)                     // 32KB，指令存储器深度，单位为word(4字节)
+`define RAM_DEPTH           (16 * 256)                     // 16KB，数据存储器深度，单位为word(4字节)
 
 // 外设地址、大小
 // ROM

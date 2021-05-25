@@ -303,6 +303,7 @@ module idu(
 
     assign stall_o = 1'b0;
 
-    assign illegal_inst_o = ~(|dec_info_bus_o);
+    //assign illegal_inst_o = ~(|dec_info_bus_o);
+    assign illegal_inst_o = 1'b0;
 
 endmodule

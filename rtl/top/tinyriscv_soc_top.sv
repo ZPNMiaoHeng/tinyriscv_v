@@ -104,7 +104,12 @@ module tinyriscv_soc_top(
     wire[31:0] gpio_ctrl;
     wire[31:0] gpio_data;
 
+`ifdef VERILATOR
     assign halted_ind_pin = core_halted;
+`else
+    // FPGA低电平点亮LED
+    assign halted_ind_pin = ~core_halted;
+`endif
 
     tinyriscv_core #(
         .DEBUG_HALT_ADDR(`DEBUG_ADDR_BASE + `HaltAddress),
