@@ -78,6 +78,7 @@ module tinyriscv_core #(
     wire id_stall_o;
     wire[31:0] id_rs1_rdata_o;
     wire[31:0] id_rs2_rdata_o;
+    wire id_illegal_inst_o;
 
     // idu_exu模块输出信号
     wire[31:0] ie_inst_o;
@@ -233,6 +234,7 @@ module tinyriscv_core #(
         .rs1_rdata_o(id_rs1_rdata_o),
         .rs2_rdata_o(id_rs2_rdata_o),
         .stall_o(id_stall_o),
+        .illegal_inst_o(id_illegal_inst_o),
         .dec_info_bus_o(id_dec_info_bus_o),
         .dec_imm_o(id_dec_imm_o),
         .dec_pc_o(id_dec_pc_o),
@@ -314,6 +316,7 @@ module tinyriscv_core #(
     exception u_exception(
         .clk(clk),
         .rst_n(rst_n),
+        .illegal_inst_i(id_illegal_inst_o),
         .inst_valid_i(ie_inst_valid_o),
         .inst_executed_i(ex_inst_executed_o),
         .inst_ecall_i(ex_inst_ecall_o),

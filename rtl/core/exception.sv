@@ -22,6 +22,7 @@
 
 `define CAUSE_EXCEP_ECALL_M     {1'b0, 31'd11}
 `define CAUSE_EXCEP_EBREAK_M    {1'b0, 31'd3}
+`define CAUSE_EXCEP_ILLEGAL_INST_M     {1'b0, 31'd2}
 
 `define MIE_MTIE_BIT            7
 `define MIE_MEIE_BIT            11
@@ -47,6 +48,8 @@ module exception (
     input wire inst_mret_i,                     // mret指令
     input wire inst_dret_i,                     // dret指令
     input wire[31:0] inst_addr_i,               // 指令地址
+
+    input wire illegal_inst_i,
 
     input wire[31:0] mtvec_i,                   // mtvec寄存器
     input wire[31:0] mepc_i,                    // mepc寄存器
@@ -166,7 +169,11 @@ module exception (
     reg[31:0] exception_offset;
 
     always @ (*) begin
-        if (inst_ecall_i & inst_valid_i) begin
+        if (illegal_inst_i) begin
+            exception_req = 1'b1;
+            exception_cause = `CAUSE_EXCEP_ILLEGAL_INST_M;
+            exception_offset = ILLEGAL_INSTR_OFFSET;
+        end else if (inst_ecall_i & inst_valid_i) begin
             exception_req = 1'b1;
             exception_cause = `CAUSE_EXCEP_ECALL_M;
             exception_offset = ECALL_OFFSET;

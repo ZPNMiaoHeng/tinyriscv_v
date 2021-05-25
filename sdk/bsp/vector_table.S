@@ -46,7 +46,13 @@ handle_exception_unknown:
     j handle_exception_unknown
 
 illegal_instruction_handler:
-    j illegal_instruction_handler
+#ifdef SIMULATION
+    call sim_ctrl_init
+    la a0, illegal_instruction_msg
+    jal ra, xputs
+#endif
+illegal_instruction_loop:
+    j illegal_instruction_loop
 
 instruction_addr_misaligned_handler:
     j instruction_addr_misaligned_handler
@@ -89,3 +95,7 @@ fast_irq4_handler:
 
 fast_irq_handler:
     j fast_irq_handler
+
+.section .rodata
+illegal_instruction_msg:
+	.string "illegal instruction exception handler entered\n"

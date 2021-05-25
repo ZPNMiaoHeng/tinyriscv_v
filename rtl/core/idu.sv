@@ -32,6 +32,7 @@ module idu(
     input wire[31:0] rs2_rdata_i,      // 通用寄存器2输入数据
 
     output wire stall_o,
+    output wire illegal_inst_o,
 
     // to id_ex
     output wire[31:0] inst_o,
@@ -301,5 +302,7 @@ module idu(
     assign rd_we_o = access_rd;
 
     assign stall_o = 1'b0;
+
+    assign illegal_inst_o = ~(|dec_info_bus_o);
 
 endmodule
