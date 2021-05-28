@@ -49,8 +49,8 @@ module jtag_top(
 
     );
 
-    // addr + data + op = 6 + 32 + 2 = 40
-    localparam DMI_DATA_WIDTH = 40;
+    // addr + data + op = 7 + 32 + 2 = 41
+    localparam DMI_DATA_WIDTH = 41;
 
 
     wire [DMI_DATA_WIDTH-1:0]   dm_to_dmi_data;

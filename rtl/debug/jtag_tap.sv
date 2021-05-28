@@ -16,7 +16,7 @@
 
 
 module jtag_tap #(
-    parameter DMI_ADDR_BITS = 6,
+    parameter DMI_ADDR_BITS = 7,
     parameter DMI_DATA_BITS = 32,
     parameter DMI_OP_BITS   = 2,
     parameter IR_BITS       = 5,

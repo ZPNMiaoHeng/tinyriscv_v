@@ -17,7 +17,7 @@
 `include "jtag_def.sv"
 
 module jtag_dtm #(
-    parameter DMI_ADDR_BITS  = 6,
+    parameter DMI_ADDR_BITS  = 7,
     parameter DMI_DATA_BITS  = 32,
     parameter DMI_OP_BITS    = 2,
     parameter TAP_REQ_BITS  = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS,
@@ -76,7 +76,7 @@ module jtag_dtm #(
     wire dtm_busy;
     wire[DMI_OP_BITS-1:0] op;
     wire[1:0] dtm_state;
-    wire[DMI_ADDR_BITS-1:0] addr_bits = DMI_ADDR_BITS[5:0];
+    wire[DMI_ADDR_BITS-1:0] addr_bits = DMI_ADDR_BITS[6:0];
 
     assign idcode_o = {IDCODE_VERSION, IDCODE_PART_NUMBER, IDCODE_MANUFLD, 1'h1};
     assign dtmcs_o = {14'b0,

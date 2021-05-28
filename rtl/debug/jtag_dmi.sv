@@ -16,7 +16,7 @@
 
 
 module jtag_dmi #(
-    parameter DATA_WIDTH = 40
+    parameter DATA_WIDTH = 41
     )(
 
     // JTAG side(master side)

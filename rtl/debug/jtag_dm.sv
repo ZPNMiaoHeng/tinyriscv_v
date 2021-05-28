@@ -17,7 +17,7 @@
 `include "jtag_def.sv"
 
 module jtag_dm #(
-    parameter DMI_ADDR_BITS  = 6,
+    parameter DMI_ADDR_BITS  = 7,
     parameter DMI_DATA_BITS  = 32,
     parameter DMI_OP_BITS    = 2,
     parameter DMI_REQ_BITS  = DMI_ADDR_BITS + DMI_DATA_BITS + DMI_OP_BITS,
