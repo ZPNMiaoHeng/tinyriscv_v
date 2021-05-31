@@ -161,7 +161,7 @@ module jtag_dm #(
     end
 
     // we always ready to receive dmi request
-    assign dm_ready_o = 1'b1;
+    assign dm_ready_o = ~sbbusy;
     assign dm_valid_o = dm_valid_q;
     assign dm_data_o  = {{DMI_ADDR_BITS{1'b0}}, dm_resp_data_q, 2'b00};  // response successfully
 

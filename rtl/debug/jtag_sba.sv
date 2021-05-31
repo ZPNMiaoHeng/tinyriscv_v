@@ -165,7 +165,7 @@ module jtag_sba(
                 end
             end
 
-            default:;
+            default: state_d = S_IDLE;
         endcase
 
         if ((sbaccess_i > 3'h2) & (state_q != S_IDLE)) begin
@@ -181,7 +181,8 @@ module jtag_sba(
     assign master_addr_o    = master_addr;
     assign master_wdata_o   = master_wdata;
 
-    assign sbdata_valid_o   = master_rvalid_i;
+    assign sbdata_valid_o   = master_rvalid_i &
+                              ((state_q == S_WAIT_READ) || (state_q == S_WAIT_WRITE));
     assign sbdata_o         = master_rdata_i;
     assign sberror_o        = sberror;
     assign sbaddress_o      = sbaddress;

@@ -44,6 +44,7 @@ module jtag_dtm #(
     // from jtag_tap
     input  wire                     tap_req_i,
     input  wire [TAP_REQ_BITS-1:0]  tap_data_i,
+    input  wire                     dmireset_i,
 
     // to jtag_tap
     output wire [DTM_RESP_BITS-1:0] data_o,
@@ -71,6 +72,7 @@ module jtag_dtm #(
     reg[DTM_REQ_BITS-1:0] dtm_data_d;
     reg[DTM_RESP_BITS-1:0] resp_tap_data_q;
     reg is_busy;
+    reg stick_busy;
 
     wire[DTM_RESP_BITS-1:0] busy_response;
     wire dtm_busy;
@@ -90,10 +92,9 @@ module jtag_dtm #(
 
     assign busy_response = {{(DMI_ADDR_BITS + DMI_DATA_BITS){1'b0}}, {(DMI_OP_BITS){1'b1}}};  // op = 2'b11
 
-    assign dmistat = is_busy ? 2'b11 : 2'b00;
+    assign dmistat = (stick_busy | is_busy) ? 2'b11 : 2'b00;
 
     assign op = tap_data_i[DMI_OP_BITS-1:0];
-
 
     always @ (*) begin
         state_d = state_q;
@@ -169,19 +170,22 @@ module jtag_dtm #(
 
     always @ (posedge jtag_tck_i or negedge jtag_trst_ni) begin
         if (!jtag_trst_ni) begin
-            resp_tap_data_q <= {DTM_RESP_BITS{1'b0}};
             is_busy <= 1'b0;
+            stick_busy <= 1'b0;
         end else begin
+            if (dmireset_i) begin
+                stick_busy <= 1'b0;
+            end else if ((state_q != S_IDLE) && tap_req_i) begin
+                stick_busy <= 1'b1;
+            end
             if (state_q != S_IDLE) begin
-                resp_tap_data_q <= busy_response;
                 is_busy <= 1'b1;
             end else begin
-                resp_tap_data_q <= dtm_data_q;
                 is_busy <= 1'b0;
             end
         end
     end
 
-    assign data_o = resp_tap_data_q;
+    assign data_o = (stick_busy | is_busy) ? busy_response : dtm_data_q;
 
 endmodule

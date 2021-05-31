@@ -124,6 +124,7 @@ module jtag_top(
     wire [DMI_DATA_WIDTH-1:0]   dtm_to_tap_data;
     wire [31:0]                 idcode;
     wire [31:0]                 dtmcs;
+    wire                        dmireset;
 
     jtag_dtm #(
 
@@ -138,6 +139,7 @@ module jtag_top(
         .dtm_ready_o    (dtm_to_dmi_ready),
         .tap_req_i      (tap_to_dtm_req),
         .tap_data_i     (tap_to_dtm_data),
+        .dmireset_i     (dmireset),
         .data_o         (dtm_to_tap_data),
         .idcode_o       (idcode),
         .dtmcs_o        (dtmcs)
@@ -153,6 +155,7 @@ module jtag_top(
         .jtag_tdo_o     (jtag_tdo_o),
         .tap_req_o      (tap_to_dtm_req),
         .tap_data_o     (tap_to_dtm_data),
+        .dmireset_o     (dmireset),
         .dtm_data_i     (dtm_to_tap_data),
         .idcode_i       (idcode),
         .dtmcs_i        (dtmcs)

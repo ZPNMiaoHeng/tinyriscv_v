@@ -32,6 +32,7 @@ module jtag_tap #(
 
     output wire tap_req_o,
     output wire[TAP_REQ_BITS-1:0] tap_data_o,
+    output wire dmireset_o,
 
     input wire[DTM_RESP_BITS-1:0] dtm_data_i,
     input wire[31:0] idcode_i,
@@ -171,5 +172,21 @@ module jtag_tap #(
     end
 
     assign jtag_tdo_o = jtag_tdo_q;
+
+    reg dmireset_q;
+
+    always @ (posedge jtag_tck_i or negedge jtag_trst_ni) begin
+        if (!jtag_trst_ni) begin
+            dmireset_q <= 1'b0;
+        end else begin
+            if ((tap_state == UPDATE_DR) && (ir_reg == REG_DTMCS)) begin
+                dmireset_q <= shift_reg[16];
+            end else begin
+                dmireset_q <= 1'b0;
+            end
+        end
+    end
+
+    assign dmireset_o = dmireset_q;
 
 endmodule
