@@ -22,7 +22,7 @@ module machine_timer(
     input wire[31:0] data_i,
     input wire[3:0] sel_i,
     input wire we_i,
-	output wire[31:0] data_o,
+    output wire[31:0] data_o,
     output wire irq_o
 
     );
@@ -37,7 +37,7 @@ module machine_timer(
     reg[31:0] mtime_ctrl_d, mtime_ctrl_q;
     reg[31:0] mtime_cmp_d, mtime_cmp_q;
     reg[31:0] mtime_count_q;
-    reg data_q;
+    reg[31:0] data_d, data_q;
 
     wire[3:0] rw_addr = addr_i[3:0];
     wire w0 = we_i & sel_i[0];
@@ -77,12 +77,12 @@ module machine_timer(
 
     // read
     always @ (*) begin
-        data_q = 32'h0;
+        data_d = data_q;
 
         case (rw_addr)
-            mtime_ctrl_reg:     data_q = mtime_ctrl_q;
-            mtime_cmp_reg:      data_q = mtime_cmp_q;
-            mtime_count_reg:    data_q = mtime_count_q;
+            mtime_ctrl_reg:     data_d = mtime_ctrl_q;
+            mtime_cmp_reg:      data_d = mtime_cmp_q;
+            mtime_count_reg:    data_d = mtime_count_q;
             default:;
         endcase
     end
@@ -93,9 +93,11 @@ module machine_timer(
         if (!rst_n) begin
             mtime_ctrl_q <= 32'h0;
             mtime_cmp_q <= 32'h0;
+            data_q <= 32'h0;
         end else begin
             mtime_ctrl_q <= mtime_ctrl_d;
             mtime_cmp_q <= mtime_cmp_d;
+            data_q <= data_d;
         end
     end
 
