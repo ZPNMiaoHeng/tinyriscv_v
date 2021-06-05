@@ -14,6 +14,12 @@
  limitations under the License.                                          
  */
 
+// 二选一，都不选时表示测试用户自定义程序
+// tests/isa测试
+//`define TEST_ISA                1
+// tests/riscv-compliance测试
+//`define TEST_RISCV_COMPLIANCE   1
+
 module tb_top_verilator #(
 
     ) (
@@ -23,8 +29,13 @@ module tb_top_verilator #(
 
     wire halted;
 
+    wire[31:0] x3  = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[3];
     wire[31:0] x26 = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[26];
     wire[31:0] x27 = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[27];
+
+    wire[31:0] end_flag         = u_tinyriscv_soc_top.u_ram.u_gen_ram.ram[4];
+    wire[31:0] begin_signature  = u_tinyriscv_soc_top.u_ram.u_gen_ram.ram[2];
+    wire[31:0] end_signature    = u_tinyriscv_soc_top.u_ram.u_gen_ram.ram[3];
 
     initial begin: load_prog
         automatic logic [1023:0] firmware;
@@ -38,6 +49,7 @@ module tb_top_verilator #(
         end
     end
 
+    integer r;
     reg result_printed;
 
     always @(posedge clk_i or negedge rst_ni) begin
@@ -47,30 +59,42 @@ module tb_top_verilator #(
             if (u_tinyriscv_soc_top.ndmreset) begin
                 result_printed <= 1'b0;
             end else if (!result_printed) begin
-                if (x26 == 32'b1) begin
-                    if (x27 == 32'b1) begin
-                        $display("~~~~~~~~~~~~~~~~~~~ TEST_PASS ~~~~~~~~~~~~~~~~~~~");
-                        $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                        $display("~~~~~~~~~ #####     ##     ####    #### ~~~~~~~~~");
-                        $display("~~~~~~~~~ #    #   #  #   #       #     ~~~~~~~~~");
-                        $display("~~~~~~~~~ #    #  #    #   ####    #### ~~~~~~~~~");
-                        $display("~~~~~~~~~ #####   ######       #       #~~~~~~~~~");
-                        $display("~~~~~~~~~ #       #    #  #    #  #    #~~~~~~~~~");
-                        $display("~~~~~~~~~ #       #    #   ####    #### ~~~~~~~~~");
-                        $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                    end else begin
-                        $display("~~~~~~~~~~~~~~~~~~~ TEST_FAIL ~~~~~~~~~~~~~~~~~~~~");
-                        $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-                        $display("~~~~~~~~~~######    ##       #    #     ~~~~~~~~~~");
-                        $display("~~~~~~~~~~#        #  #      #    #     ~~~~~~~~~~");
-                        $display("~~~~~~~~~~#####   #    #     #    #     ~~~~~~~~~~");
-                        $display("~~~~~~~~~~#       ######     #    #     ~~~~~~~~~~");
-                        $display("~~~~~~~~~~#       #    #     #    #     ~~~~~~~~~~");
-                        $display("~~~~~~~~~~#       #    #     #    ######~~~~~~~~~~");
-                        $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                `ifdef TEST_RISCV_COMPLIANCE
+                    if (end_flag == 32'h1) begin
+                        for (r = begin_signature; r < end_signature; r = r + 4) begin
+                            $display("%x", u_tinyriscv_soc_top.u_rom.u_gen_ram.ram[r[31:2]]);
+                        end
+                        $finish;
                     end
-                    result_printed <= 1'b1;
-                end
+                `else
+                    if (x26 == 32'b1) begin
+                        if (x27 == 32'b1) begin
+                            $display("~~~~~~~~~~~~~~~~~~~ TEST_PASS ~~~~~~~~~~~~~~~~~~~");
+                            $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                            $display("~~~~~~~~~ #####     ##     ####    #### ~~~~~~~~~");
+                            $display("~~~~~~~~~ #    #   #  #   #       #     ~~~~~~~~~");
+                            $display("~~~~~~~~~ #    #  #    #   ####    #### ~~~~~~~~~");
+                            $display("~~~~~~~~~ #####   ######       #       #~~~~~~~~~");
+                            $display("~~~~~~~~~ #       #    #  #    #  #    #~~~~~~~~~");
+                            $display("~~~~~~~~~ #       #    #   ####    #### ~~~~~~~~~");
+                            $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                        end else begin
+                            $display("~~~~~~~~~~~~~~~~~~~ TEST_FAIL ~~~~~~~~~~~~~~~~~~~~");
+                            $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                            $display("~~~~~~~~~~######    ##       #    #     ~~~~~~~~~~");
+                            $display("~~~~~~~~~~#        #  #      #    #     ~~~~~~~~~~");
+                            $display("~~~~~~~~~~#####   #    #     #    #     ~~~~~~~~~~");
+                            $display("~~~~~~~~~~#       ######     #    #     ~~~~~~~~~~");
+                            $display("~~~~~~~~~~#       #    #     #    #     ~~~~~~~~~~");
+                            $display("~~~~~~~~~~#       #    #     #    ######~~~~~~~~~~");
+                            $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                            `ifdef TEST_ISA
+                            $display("fail testnum = %2d", x3);
+                            `endif
+                        end
+                        result_printed <= 1'b1;
+                    end
+                `endif
             end
         end
     end
