@@ -45,8 +45,8 @@ module tinyriscv_soc_top(
 `endif
 
     // masters
-    localparam int CoreD        = 0;
-    localparam int JtagHost     = 1;
+    localparam int JtagHost     = 0;
+    localparam int CoreD        = 1;
     localparam int CoreI        = 2;
 
     // slaves
