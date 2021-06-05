@@ -126,45 +126,60 @@ module exu_mem(
 
     assign mem_wdata_o = mem_wdata;
 
-
     wire op_load = mem_op_lb_i | mem_op_lh_i | mem_op_lw_i | mem_op_lbu_i | mem_op_lhu_i;
     wire op_store = mem_op_sb_i | mem_op_sh_i | mem_op_sw_i;
 
-    localparam S_IDLE       = 2'b01;
-    localparam S_MEM        = 2'b10;
+    localparam S_IDLE       = 3'b001;
+    localparam S_WAIT_READ  = 3'b010;
+    localparam S_WAIT_WRITE = 3'b100;
 
-    reg[1:0] state;
-    reg[1:0] next_state;
-
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            state <= S_IDLE;
-        end else begin
-            state <= next_state;
-        end
-    end
+    reg[2:0] state_d, state_q;
+    reg mem_stall_d;
+    reg mem_reg_we_d;
+    reg mem_mem_we_d;
 
     always @ (*) begin
-        case (state)
+        state_d = state_q;
+
+        mem_stall_d = 1'b0;
+        mem_reg_we_d = 1'b0;
+        mem_mem_we_d = 1'b0;
+
+        case (state_q)
             S_IDLE: begin
-                if (mem_req_o & mem_gnt_i) begin
-                    next_state = S_MEM;
-                end else begin
-                    next_state = S_IDLE;
+                if (mem_req_o) begin
+                    mem_stall_d = 1'b1;
+                    if (mem_gnt_i) begin
+                        if (op_load) begin
+                            state_d = S_WAIT_READ;
+                        end else if (op_store) begin
+                            state_d = S_WAIT_WRITE;
+                            mem_mem_we_d = 1'b1;
+                        end
+                    end
                 end
             end
 
-            S_MEM: begin
+            S_WAIT_READ: begin
                 if (mem_rvalid_i) begin
-                    next_state = S_IDLE;
+                    mem_stall_d = 1'b0;
+                    state_d = S_IDLE;
+                    mem_reg_we_d = 1'b1;
                 end else begin
-                    next_state = S_MEM;
+                    mem_stall_d = 1'b1;
                 end
             end
 
-            default: begin
-                next_state = S_IDLE;
+            S_WAIT_WRITE: begin
+                if (mem_rvalid_i) begin
+                    mem_stall_d = 1'b0;
+                    state_d = S_IDLE;
+                end else begin
+                    mem_stall_d = 1'b1;
+                end
             end
+
+            default:;
         endcase
     end
 
@@ -172,52 +187,22 @@ module exu_mem(
     assign mem_addr_o = mem_addr_i;
 
     // 暂停流水线
-    assign mem_stall_o = ((state == S_IDLE) & req_mem_i) |
-                         ((state == S_MEM) & (~mem_rvalid_i));
-
-    // 写内存使能
-    assign mem_mem_we_o = op_store & (state == S_MEM) & mem_rvalid_i;
-
+    assign mem_stall_o = mem_stall_d;
     // 写寄存器使能
-    assign mem_reg_we_o = op_load & (state == S_MEM) & mem_rvalid_i;
+    assign mem_reg_we_o = mem_reg_we_d;
+    // 写内存使能
+    assign mem_mem_we_o = mem_mem_we_d;
 
     assign mem_access_misaligned_o = (mem_op_sw_i | mem_op_lw_i)? (mem_addr_i[0] | mem_addr_i[1]):
                                      (mem_op_sh_i | mem_op_lh_i | mem_op_lhu_i)? mem_addr_i[0]:
                                      0;
-
-
-
-/*
-    wire mem_req_hsked = (mem_req_valid_o & mem_req_ready_i);
-    wire mem_rsp_hsked = (mem_rsp_valid_i & mem_rsp_ready_o);
-
-    reg mem_rsp_hsked_r;
 
     always @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            mem_rsp_hsked_r <= 1'b0;
+            state_q <= S_IDLE;
         end else begin
-            mem_rsp_hsked_r <= mem_rsp_hsked & (~mem_rsp_hsked_r);
+            state_q <= state_d;
         end
     end
 
-    assign mem_rsp_ready_o = 1'b1;
-
-    // 请求访问总线
-    assign mem_req_valid_o = req_mem_i;
-    // 暂停流水线
-    assign mem_stall_o = req_mem_i & (~mem_rsp_hsked_r);
-    // 读、写内存地址
-    assign mem_addr_o = mem_addr_i;
-
-    // 写寄存器使能，收到ack时数据才有效
-    assign mem_reg_we_o = (mem_op_lb_i | mem_op_lh_i | mem_op_lw_i | mem_op_lbu_i | mem_op_lhu_i) & mem_rsp_hsked_r;
-
-    // 写内存使能
-    assign mem_mem_we_o = (mem_op_sb_i | mem_op_sh_i | mem_op_sw_i) & mem_rsp_hsked_r;
-
-    assign mem_access_misaligned_o = (mem_op_sw_i | mem_op_lw_i)? (mem_addr_i[0] | mem_addr_i[1]):
-                                     (mem_op_sh_i | mem_op_lh_i | mem_op_lhu_i)? mem_addr_i[0]:
-                                     0;
-*/
 endmodule
