@@ -192,15 +192,15 @@ Disassembly of section .text.init:
  250:	00301863          	bne	zero,gp,260 <pass>
 
 00000254 <fail>:
- 254:	00100d13          	li	s10,1
- 258:	00000d93          	li	s11,0
+ 254:	00000d93          	li	s11,0
+ 258:	00100d13          	li	s10,1
 
 0000025c <loop_fail>:
  25c:	0000006f          	j	25c <loop_fail>
 
 00000260 <pass>:
- 260:	00100d13          	li	s10,1
- 264:	00100d93          	li	s11,1
+ 260:	00100d93          	li	s11,1
+ 264:	00100d13          	li	s10,1
 
 00000268 <loop_pass>:
  268:	0000006f          	j	268 <loop_pass>
@@ -228,3 +228,18 @@ Disassembly of section .tohost:
 
 00001080 <fromhost>:
 	...
+
+Disassembly of section .riscv.attributes:
+
+00000000 <.riscv.attributes>:
+   0:	1941                	addi	s2,s2,-16
+   2:	0000                	unimp
+   4:	7200                	flw	fs0,32(a2)
+   6:	7369                	lui	t1,0xffffa
+   8:	01007663          	bgeu	zero,a6,14 <test_2+0xc>
+   c:	0000000f          	fence	unknown,unknown
+  10:	7205                	lui	tp,0xfffe1
+  12:	3376                	fld	ft6,376(sp)
+  14:	6932                	flw	fs2,12(sp)
+  16:	7032                	flw	ft0,44(sp)
+  18:	0030                	addi	a2,sp,8

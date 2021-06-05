@@ -127,16 +127,16 @@ _start:                                                                 \
 //-----------------------------------------------------------------------
 
 #define RVTEST_PASS                                                     \
-        li x26, 0x01;                                                   \
         li x27, 0x01;                                                   \
+        li x26, 0x01;                                                   \
 loop_pass:                                                              \
         j loop_pass
 
 #define TESTNUM gp
 
 #define RVTEST_FAIL                                                     \
-        li x26, 0x01;                                                   \
         li x27, 0x00;                                                   \
+        li x26, 0x01;                                                   \
 loop_fail:                                                              \
         j loop_fail
 
