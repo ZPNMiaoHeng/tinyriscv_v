@@ -73,33 +73,35 @@ telnet localhost 4444
 
 然后就可以使用各种命令进行调试了。下面介绍一些常用的命令：
 
-halt：停住MCU，进入调试模式；
+**halt**：停住MCU，进入调试模式；
 
-resume：MCU从停住的地方继续执行，退出调试模式；
+**resume**：MCU从停住的地方继续执行，退出调试模式；
 
-reset：复位MCU，复位之后就开始执行。通常在下载完程序后使用该命令来运行程序；
+**reset**：复位MCU，复位之后就开始执行。通常在下载完程序后使用该命令来运行程序；
 
-reset halt：复位MCU，然后停住MCU，即MCU停在复位地址处；
+**reset halt**：复位MCU，然后停住MCU，即MCU停在复位地址处；
 
-bp 0x00000010 4 hw：打断点，其中0x00000010是断点的地址，4表示地址长度为4个字节，hw表示硬件断点。tinyriscv只支持硬件断点。
+**bp 0x00000010 4 hw**：打断点，其中0x00000010是断点的地址，4表示地址长度为4个字节，hw表示硬件断点。tinyriscv只支持硬件断点。
 
-rbp 0x00000010：删除0x00000010地址处的断点；
+**rbp 0x00000010**：删除0x00000010地址处的断点；
 
-bp：查看所有断点信息；
+**bp**：查看所有断点信息；
 
-step：单步执行；
+**step**：单步执行，每次执行一条指令；
 
-mww 0x00000010 0x1234：即memory write word，往0x00000010地址处写入0x1234，长度为4个字节；
+**mww 0x00000010 0x1234**：即memory write word，往0x00000010地址处写入0x1234，长度为4个字节；
 
-mdw 0x00000010 2：即memory display word，从0x00000010地址处读取2个word；
+**mdw 0x00000010 2**：即memory display word，从0x00000010地址处读取2个word；
 
-reg sp：读取sp寄存器的值；
+**reg sp**：读取sp寄存器的值；
 
-reg sp 0x10：往sp寄存器写入0x10；
+**reg sp 0x10**：往sp寄存器写入0x10；
 
-load_image：加载image文件，比如：load_image filename address bin min_address max_length，其中filename表示要加载的文件，address表示要加载到哪个地址，bin表示文件的类型，min_address表示最小地址，该值与address相同即可，max_length表示文件的最大长度。目前使用这个命令来下载C语言程序。
+**load_image**：加载image文件，比如：load_image filename address bin min_address max_length，其中filename表示要加载的文件，address表示要加载到哪个地址，bin表示文件的类型，min_address表示最小地址，该值与address相同即可，max_length表示文件的最大长度。目前使用这个命令来下载C语言程序。
 
-verify_image：比如：verify_image filename offset，其中filename表示已经下载了的文件，offset表示从哪个地址开始校验。目前使用这个命令来校验下载进去的程序是否正确。
+**verify_image**：比如：verify_image filename offset，其中filename表示已经下载了的文件，offset表示从哪个地址开始校验。使用这个命令来校验下载进去的程序是否正确。
+
+**load_bin**：如果觉得load_image命令的参数比较多，可以使用load_bin命令，比如：load_bin bin_file 0x0 1，表示将bin_file二进制文件下载到0x0地址处，并且校验。
 
 ### 2.3.2使用gdb进行调试
 
