@@ -58,6 +58,7 @@ module exu_dispatch(
     output wire bjp_op_bltu_o,
     output wire bjp_op_bge_o,
     output wire bjp_op_bgeu_o,
+    output wire bjp_op_jalr_o,
 
     // dispatch to MULDIV
     output wire req_muldiv_o,
@@ -152,6 +153,7 @@ module exu_dispatch(
     assign bjp_op_bge_o = bjp_info[`DECINFO_BJP_BGE];
     assign bjp_op_bgeu_o = bjp_info[`DECINFO_BJP_BGEU];
     assign req_bjp_o = op_bjp;
+    assign bjp_op_jalr_o = bjp_op1_rs1;
 
     // MULDIV info
     wire op_muldiv = (disp_info_grp == `DECINFO_GRP_MULDIV);

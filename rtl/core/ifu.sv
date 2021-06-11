@@ -48,6 +48,8 @@ module ifu(
 
     reg[1:0] state;
     reg[1:0] next_state;
+    wire prdt_taken;
+    wire[31:0] prdt_addr;
 
     always @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -90,6 +92,7 @@ module ifu(
     wire fetch_addr_en = instr_req_o & instr_gnt_i & (~stall_i[`STALL_PC]);
 
     assign fetch_addr_d = flush_i? flush_addr_i:
+                          prdt_taken? prdt_addr:
                           stall_i[`STALL_PC]? fetch_addr_q:
                           inst_valid? fetch_addr_q + 4'h4:
                           fetch_addr_q;
@@ -105,5 +108,15 @@ module ifu(
 
     assign instr_addr_o = {fetch_addr_d[31:2], 2'b00};
     assign pc_o = fetch_addr_q;
+
+    bpu u_bpu(
+        .clk(clk),
+        .rst_n(rst_n),
+        .inst_i(instr_rdata_i),
+        .inst_valid_i(inst_valid),
+        .pc_i(fetch_addr_q),
+        .prdt_taken_o(prdt_taken),
+        .prdt_addr_o(prdt_addr)
+    );
 
 endmodule

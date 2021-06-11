@@ -77,6 +77,8 @@ module exu(
 
     );
 
+    wire[31:0] next_pc = dec_pc_i + 4'h4;
+
     // dispatch to ALU
     wire[31:0] alu_op1_o;
     wire[31:0] alu_op2_o;
@@ -106,6 +108,7 @@ module exu(
     wire bjp_op_bltu_o;
     wire bjp_op_bge_o;
     wire bjp_op_bgeu_o;
+    wire bjp_op_jalr_o;
     // dispatch to MULDIV
     wire req_muldiv_o;
     wire[31:0] muldiv_op1_o;
@@ -184,6 +187,7 @@ module exu(
         .bjp_op_bltu_o(bjp_op_bltu_o),
         .bjp_op_bge_o(bjp_op_bge_o),
         .bjp_op_bgeu_o(bjp_op_bgeu_o),
+        .bjp_op_jalr_o(bjp_op_jalr_o),
         // dispatch to MULDIV
         .req_muldiv_o(req_muldiv_o),
         .muldiv_op1_o(muldiv_op1_o),
@@ -357,7 +361,7 @@ module exu(
         .csr_reg_wdata_i(csr_rdata_i),
         .req_bjp_i(req_bjp_o),
         .bjp_reg_we_i(bjp_op_jump_o),
-        .bjp_reg_wdata_i(next_pc_i),
+        .bjp_reg_wdata_i(next_pc),
         .bjp_reg_waddr_i(rd_waddr_i),
         .rd_we_i(rd_we_i),
         .rd_waddr_i(rd_waddr_i),
@@ -369,10 +373,21 @@ module exu(
 
     assign reg_we_o = commit_reg_we_o & (~int_stall_i);
 
-    wire inst_jump = bjp_cmp_res_o | bjp_op_jump_o | sys_op_fence_o;
-    assign jump_flag_o = (inst_jump & (~int_stall_i)) | int_assert_i;
+                       // jal
+    wire prdt_taken = ((~bjp_op_jalr_o) & bjp_op_jump_o) |
+                       // bxx & imm[31]
+                      (req_bjp_o & (~bjp_op_jump_o) & dec_imm_i[31]);
+
+    // bxx分支预测错误
+    wire prdt_taken_error = prdt_taken & (~bjp_cmp_res_o) & req_bjp_o & (~bjp_op_jump_o);
+
+    wire inst_jump = (bjp_cmp_res_o & (~prdt_taken)) |
+                     (bjp_op_jump_o & (~prdt_taken)) |
+                     sys_op_fence_o;
+    assign jump_flag_o = ((inst_jump | prdt_taken_error) & (~int_stall_i)) | int_assert_i;
     assign jump_addr_o = int_assert_i? int_addr_i:
-                         sys_op_fence_o? next_pc_i:
+                         sys_op_fence_o? next_pc:
+                         prdt_taken_error? next_pc:
                          bjp_res_o;
     assign hold_flag_o = muldiv_stall_o | mem_stall_o;
 

@@ -21,6 +21,7 @@
 ../rtl/core/rst_gen.sv
 ../rtl/core/tinyriscv_core.sv
 ../rtl/core/tracer.sv
+../rtl/core/bpu.sv
 
 ../rtl/debug/jtag_def.sv
 ../rtl/debug/jtag_tap.sv
