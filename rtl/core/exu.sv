@@ -19,10 +19,10 @@
 // 执行模块
 module exu(
 
-    input wire clk,
-    input wire rst_n,
+    input wire clk,                         // 时钟
+    input wire rst_n,                       // 复位
 
-    // clint
+    // exception
     input wire int_assert_i,                // 中断发生标志
     input wire[31:0] int_addr_i,            // 中断跳转地址
     input wire int_stall_i,                 // 暂停标志
@@ -33,22 +33,22 @@ module exu(
 
     // mem
     input wire[31:0] mem_rdata_i,           // 内存输入数据
-    input wire mem_gnt_i,
-    input wire mem_rvalid_i,
+    input wire mem_gnt_i,                   // 总线授权
+    input wire mem_rvalid_i,                // 总线响应
     output wire[31:0] mem_wdata_o,          // 写内存数据
     output wire[31:0] mem_addr_o,           // 读、写内存地址
     output wire mem_we_o,                   // 是否要写内存
     output wire[3:0] mem_be_o,              // 字节位
-    output wire mem_req_o,
-    output wire mem_access_misaligned_o,
+    output wire mem_req_o,                  // 访存请求
+    output wire mem_access_misaligned_o,    // 访存不对齐
 
-    // gpr_reg
+    // to gpr_reg
     output wire[31:0] reg_wdata_o,          // 写寄存器数据
     output wire reg_we_o,                   // 是否要写通用寄存器
     output wire[4:0] reg_waddr_o,           // 写通用寄存器地址
 
     // csr_reg
-    input wire[31:0] csr_rdata_i,
+    input wire[31:0] csr_rdata_i,           // CSR寄存器数据
     output wire[31:0] csr_raddr_o,          // 读CSR寄存器地址
     output wire[31:0] csr_wdata_o,          // 写CSR寄存器数据
     output wire csr_we_o,                   // 是否要写CSR寄存器
@@ -60,8 +60,8 @@ module exu(
     output wire[31:0] jump_addr_o,          // 跳转目的地址
 
     //
-    output wire inst_valid_o,
-    output wire inst_executed_o,
+    output wire inst_valid_o,               // 指令有效
+    output wire inst_executed_o,            // 指令已经执行完毕
 
     // from idu_exu
     input wire inst_valid_i,

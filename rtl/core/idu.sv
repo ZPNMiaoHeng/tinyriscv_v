@@ -20,52 +20,59 @@
 // 纯组合逻辑电路
 module idu(
 
-	input wire clk,
-	input wire rst_n,
+    input wire clk,                                     // 时钟
+    input wire rst_n,                                   // 复位
 
-    // from if_id
-    input wire[31:0] inst_i,            // 指令内容
-    input wire[31:0] inst_addr_i,       // 指令地址
+    // from ifu_idu
+    input wire[31:0] inst_i,                            // 指令内容
+    input wire[31:0] inst_addr_i,                       // 指令地址
+    input wire inst_valid_i,                            // 指令有效
 
     // from gpr_reg
-    input wire[31:0] rs1_rdata_i,      // 通用寄存器1输入数据
-    input wire[31:0] rs2_rdata_i,      // 通用寄存器2输入数据
+    input wire[31:0] rs1_rdata_i,                       // 通用寄存器1输入数据
+    input wire[31:0] rs2_rdata_i,                       // 通用寄存器2输入数据
 
-    output wire stall_o,
-    output wire illegal_inst_o,
+    output wire stall_o,                                // 流水线暂停
+    output wire illegal_inst_o,                         // 非法指令
 
-    // to id_ex
-    output wire[31:0] inst_o,
-    output wire[`DECINFO_WIDTH-1:0] dec_info_bus_o,
-    output wire[31:0] dec_imm_o,
-    output wire[31:0] dec_pc_o,
-    output wire[4:0] rs1_raddr_o,
-    output wire[4:0] rs2_raddr_o,
-    output wire[31:0] rs1_rdata_o,
-    output wire[31:0] rs2_rdata_o,
-    output wire[4:0] rd_waddr_o,
-    output wire rd_we_o
+    // to gpr_reg
+    output wire[4:0] rs1_raddr_o,                       // 寄存器1地址
+    output wire[4:0] rs2_raddr_o,                       // 寄存器2地址
+
+    // to idu_exu
+    output wire inst_valid_o,                           // 指令有效
+    output wire[31:0] inst_o,                           // 指令内容
+    output wire[`DECINFO_WIDTH-1:0] dec_info_bus_o,     // 译码信息
+    output wire[31:0] dec_imm_o,                        // 立即数
+    output wire[31:0] dec_pc_o,                         // 指令地址
+    output wire[31:0] rs1_rdata_o,                      // 寄存器1数据
+    output wire[31:0] rs2_rdata_o,                      // 寄存器2数据
+    output wire[4:0] rd_waddr_o,                        // 写寄存器地址
+    output wire rd_we_o                                 // 写寄存器使能
 
     );
 
-    assign inst_o = inst_i;
+    wire[31:0] inst = inst_valid_i? inst_i: `INST_NOP;
+
+    assign inst_valid_o = inst_valid_i;
+    assign inst_o = inst;
     assign rs1_rdata_o = rs1_rdata_i;
     assign rs2_rdata_o = rs2_rdata_i;
 
     // 取出指令中的每一个域
-    wire[6:0] opcode = inst_i[6:0];
-    wire[2:0] funct3 = inst_i[14:12];
-    wire[6:0] funct7 = inst_i[31:25];
-    wire[4:0] rd = inst_i[11:7];
-    wire[4:0] rs1 = inst_i[19:15];
-    wire[4:0] rs2 = inst_i[24:20];
-    wire[11:0] type_i_imm_11_0 = inst_i[31:20];
-    wire[6:0] type_s_imm_11_5 = inst_i[31:25];
-    wire[4:0] type_s_imm_4_0 = inst_i[11:7];
-    wire[6:0] type_b_imm_12_10_5 = inst_i[31:25];
-    wire[4:0] type_b_imm_4_1_11 = inst_i[11:7];
-    wire[19:0] type_u_imm_31_12 = inst_i[31:12];
-    wire[19:0] type_j_imm_31_12 = inst_i[31:12];
+    wire[6:0] opcode = inst[6:0];
+    wire[2:0] funct3 = inst[14:12];
+    wire[6:0] funct7 = inst[31:25];
+    wire[4:0] rd = inst[11:7];
+    wire[4:0] rs1 = inst[19:15];
+    wire[4:0] rs2 = inst[24:20];
+    wire[11:0] type_i_imm_11_0 = inst[31:20];
+    wire[6:0] type_s_imm_11_5 = inst[31:25];
+    wire[4:0] type_s_imm_4_0 = inst[11:7];
+    wire[6:0] type_b_imm_12_10_5 = inst[31:25];
+    wire[4:0] type_b_imm_4_1_11 = inst[11:7];
+    wire[19:0] type_u_imm_31_12 = inst[31:12];
+    wire[19:0] type_j_imm_31_12 = inst[31:12];
 
     // 指令opcode域的取值
     wire opcode_0110111 = (opcode == 7'b0110111);
@@ -138,8 +145,8 @@ module idu(
     wire inst_or = opcode_0110011 & funct3_110 & funct7_0000000;
     wire inst_and = opcode_0110011 & funct3_111 & funct7_0000000;
     wire inst_fence = opcode_0001111 & funct3_000;
-    wire inst_ecall = (inst_i == `INST_ECALL);
-    wire inst_ebreak = (inst_i == `INST_EBREAK);
+    wire inst_ecall = (inst == `INST_ECALL);
+    wire inst_ebreak = (inst == `INST_EBREAK);
     wire inst_fence_i = opcode_0001111 & funct3_001;
     wire inst_csrrw = opcode_1110011 & funct3_001;
     wire inst_csrrs = opcode_1110011 & funct3_010;
@@ -155,9 +162,9 @@ module idu(
     wire inst_divu = opcode_0110011 & funct3_101 & funct7_0000001;
     wire inst_rem = opcode_0110011 & funct3_110 & funct7_0000001;
     wire inst_remu = opcode_0110011 & funct3_111 & funct7_0000001;
-    wire inst_nop = (inst_i == `INST_NOP);
-    wire inst_mret = (inst_i == `INST_MRET);
-    wire inst_dret = (inst_i == `INST_DRET);
+    wire inst_nop = (inst == `INST_NOP);
+    wire inst_mret = (inst == `INST_MRET);
+    wire inst_dret = (inst == `INST_DRET);
 
     // 将指令分类
     wire inst_type_load = opcode_0000011;
@@ -211,7 +218,7 @@ module idu(
     assign dec_csr_info_bus[`DECINFO_CSR_CSRRS] = inst_csrrs | inst_csrrsi;
     assign dec_csr_info_bus[`DECINFO_CSR_CSRRC] = inst_csrrc | inst_csrrci;
     assign dec_csr_info_bus[`DECINFO_CSR_RS1IMM] = inst_csrrwi | inst_csrrsi | inst_csrrci;
-    assign dec_csr_info_bus[`DECINFO_CSR_CSRADDR] = inst_i[31:20];
+    assign dec_csr_info_bus[`DECINFO_CSR_CSRADDR] = inst[31:20];
 
     wire[`DECINFO_MEM_BUS_WIDTH-1:0] dec_mem_info_bus;
     assign dec_mem_info_bus[`DECINFO_GRP_BUS] = `DECINFO_GRP_MEM;
@@ -234,13 +241,13 @@ module idu(
     assign dec_sys_info_bus[`DECINFO_SYS_FENCE] = inst_fence | inst_fence_i;
 
     // 指令中的立即数
-    wire[31:0] inst_u_type_imm = {inst_i[31:12], 12'b0};
-    wire[31:0] inst_j_type_imm = {{12{inst_i[31]}}, inst_i[19:12], inst_i[20], inst_i[30:21], 1'b0};
-    wire[31:0] inst_b_type_imm = {{20{inst_i[31]}}, inst_i[7], inst_i[30:25], inst_i[11:8], 1'b0};
-    wire[31:0] inst_s_type_imm = {{20{inst_i[31]}}, inst_i[31:25], inst_i[11:7]};
-    wire[31:0] inst_i_type_imm = {{20{inst_i[31]}}, inst_i[31:20]};
-    wire[31:0] inst_csr_type_imm = {27'h0, inst_i[19:15]};
-    wire[31:0] inst_shift_type_imm = {27'h0, inst_i[24:20]};
+    wire[31:0] inst_u_type_imm = {inst[31:12], 12'b0};
+    wire[31:0] inst_j_type_imm = {{12{inst[31]}}, inst[19:12], inst[20], inst[30:21], 1'b0};
+    wire[31:0] inst_b_type_imm = {{20{inst[31]}}, inst[7], inst[30:25], inst[11:8], 1'b0};
+    wire[31:0] inst_s_type_imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
+    wire[31:0] inst_i_type_imm = {{20{inst[31]}}, inst[31:20]};
+    wire[31:0] inst_csr_type_imm = {27'h0, inst[19:15]};
+    wire[31:0] inst_shift_type_imm = {27'h0, inst[24:20]};
 
     wire inst_sel_u_imm = inst_lui | inst_auipc;
     wire inst_sel_j_imm = inst_jal;

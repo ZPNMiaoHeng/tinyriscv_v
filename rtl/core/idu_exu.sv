@@ -19,12 +19,13 @@
 // 将译码结果向执行模块传递
 module idu_exu(
 
-    input wire clk,
-    input wire rst_n,
+    input wire clk,                           // 时钟
+    input wire rst_n,                         // 复位
 
     input wire[`STALL_WIDTH-1:0] stall_i,     // 流水线暂停
     input wire flush_i,                       // 流水线冲刷
 
+    // 输入
     input wire[31:0] inst_i,
     input wire inst_valid_i,
     input wire[`DECINFO_WIDTH-1:0] dec_info_bus_i,
@@ -35,6 +36,7 @@ module idu_exu(
     input wire[4:0] rd_waddr_i,
     input wire rd_we_i,
 
+    // 输出
     output wire[31:0] inst_o,
     output wire inst_valid_o,
     output wire[`DECINFO_WIDTH-1:0] dec_info_bus_o,
@@ -47,7 +49,7 @@ module idu_exu(
 
     );
 
-    wire en = !stall_i[`STALL_EX] | flush_i;
+    wire en = (~stall_i[`STALL_EX]) | flush_i;
 
     wire[`DECINFO_WIDTH-1:0] i_dec_info_bus = flush_i? {`DECINFO_WIDTH{1'b0}}: dec_info_bus_i;
     wire[`DECINFO_WIDTH-1:0] dec_info_bus;
@@ -84,14 +86,14 @@ module idu_exu(
     gen_en_dff #(1) rd_we_ff(clk, rst_n, en, i_rd_we, rd_we);
     assign rd_we_o = rd_we;
 
-    wire[31:0] i_inst = flush_i? 32'h0: inst_i;
+    wire[31:0] i_inst = flush_i? `INST_NOP: inst_i;
     wire[31:0] inst;
     gen_en_dff #(32) inst_ff(clk, rst_n, en, i_inst, inst);
     assign inst_o = inst;
 
-    wire i_inst_valid = flush_i? 1'b0: stall_i[`STALL_EX]? 1'b1: inst_valid_i;
+    wire i_inst_valid = flush_i? 1'b0: inst_valid_i;
     wire inst_valid;
-    gen_en_dff #(1) inst_valid_ff(clk, rst_n, 1'b1, i_inst_valid, inst_valid);
+    gen_en_dff #(1) inst_valid_ff(clk, rst_n, en, i_inst_valid, inst_valid);
     assign inst_valid_o = inst_valid;
 
 endmodule
