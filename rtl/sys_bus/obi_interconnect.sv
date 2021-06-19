@@ -1,3 +1,18 @@
+ /*                                                                      
+ Copyright 2021 Blue Liang, liangkangnan@163.com
+                                                                         
+ Licensed under the Apache License, Version 2.0 (the "License");         
+ you may not use this file except in compliance with the License.        
+ You may obtain a copy of the License at                                 
+                                                                         
+     http://www.apache.org/licenses/LICENSE-2.0                          
+                                                                         
+ Unless required by applicable law or agreed to in writing, software    
+ distributed under the License is distributed on an "AS IS" BASIS,       
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and     
+ limitations under the License.                                          
+ */
 
 // obi总线交叉互联矩阵，支持一对多、多对一、多对多
 // master之间采用优先级总裁方式，LSB优先级最高，MSB优先级最低
