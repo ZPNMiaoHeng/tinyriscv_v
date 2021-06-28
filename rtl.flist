@@ -50,3 +50,4 @@
 ../rtl/utils/gen_dff.sv
 ../rtl/utils/gen_ram.sv
 ../rtl/utils/cdc_2phase.sv
+../rtl/utils/sync_fifo.sv
