@@ -19,7 +19,8 @@
 // tinyriscv处理器核顶层模块
 module tinyriscv_core #(
     parameter int unsigned DEBUG_HALT_ADDR      = 32'h10000800,
-    parameter int unsigned DEBUG_EXCEPTION_ADDR = 32'h10000808
+    parameter int unsigned DEBUG_EXCEPTION_ADDR = 32'h10000808,
+    parameter bit          BranchPredictor      = 1'b1
     )(
 
     input wire clk,
@@ -147,7 +148,9 @@ module tinyriscv_core #(
     wire clint_int_assert_o;
 
 
-    ifu u_ifu(
+    ifu #(
+        .BranchPredictor(BranchPredictor)
+    ) u_ifu (
         .clk(clk),
         .rst_n(rst_n),
         .flush_addr_i(ctrl_flush_addr_o),
@@ -272,7 +275,9 @@ module tinyriscv_core #(
         .rd_we_o(ie_rd_we_o)
     );
 
-    exu u_exu(
+    exu #(
+        .BranchPredictor(BranchPredictor)
+    ) u_exu (
         .clk(clk),
         .rst_n(rst_n),
         .reg1_rdata_i(ie_rs1_rdata_o),

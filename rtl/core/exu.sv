@@ -17,8 +17,9 @@
 `include "defines.sv"
 
 // 执行模块
-module exu(
-
+module exu #(
+    parameter bit          BranchPredictor      = 1'b1
+    )(
     input wire clk,                         // 时钟
     input wire rst_n,                       // 复位
 
@@ -373,10 +374,16 @@ module exu(
 
     assign reg_we_o = commit_reg_we_o & (~int_stall_i);
 
-                       // jal
-    wire prdt_taken = ((~bjp_op_jalr_o) & bjp_op_jump_o) |
-                       // bxx & imm[31]
-                      (req_bjp_o & (~bjp_op_jump_o) & dec_imm_i[31]);
+    wire prdt_taken;
+
+    if (BranchPredictor) begin: g_branch_predictor
+                            // jal
+        assign prdt_taken = ((~bjp_op_jalr_o) & bjp_op_jump_o) |
+                            // bxx & imm[31]
+                            (req_bjp_o & (~bjp_op_jump_o) & dec_imm_i[31]);
+    end else begin: g_no_branch_predictor
+        assign prdt_taken = 1'b0;
+    end
 
     // bxx分支预测错误
     wire prdt_taken_error = prdt_taken & (~bjp_cmp_res_o) & req_bjp_o & (~bjp_op_jump_o);

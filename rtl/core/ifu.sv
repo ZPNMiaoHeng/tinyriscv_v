@@ -17,25 +17,29 @@
 `include "defines.sv"
 
 // 取指模块
-module ifu(
+module ifu #(
+    parameter bit          BranchPredictor      = 1'b1
+    )(
 
-    input wire clk,
-    input wire rst_n,
+    input wire                      clk,
+    input wire                      rst_n,
 
-    input wire flush_i,                        // 跳转标志
-    input wire[31:0] flush_addr_i,             // 跳转地址
-    input wire[`STALL_WIDTH-1:0] stall_i,      // 流水线暂停标志
-    input wire jtag_halt_i,
-    output wire[31:0] inst_o,
-    output wire[31:0] pc_o,
-    output wire inst_valid_o,
+    input wire                      flush_i,      // 冲刷标志
+    input wire[31:0]                flush_addr_i, // 冲刷地址
+    input wire[`STALL_WIDTH-1:0]    stall_i,      // 流水线暂停标志
 
-    output wire instr_req_o,
-    input wire instr_gnt_i,
-    input wire instr_rvalid_i,
-    output wire[31:0] instr_addr_o,
-    input wire[31:0] instr_rdata_i,
-    input wire instr_err_i
+    // to ifu_idu
+    output wire[31:0]               inst_o,
+    output wire[31:0]               pc_o,
+    output wire                     inst_valid_o,
+
+    // 指令总线信号
+    output wire                     instr_req_o,
+    input  wire                     instr_gnt_i,
+    input  wire                     instr_rvalid_i,
+    output wire[31:0]               instr_addr_o,
+    input  wire[31:0]               instr_rdata_i,
+    input  wire                     instr_err_i
 
     );
 
@@ -109,14 +113,19 @@ module ifu(
     assign instr_addr_o = {fetch_addr_d[31:2], 2'b00};
     assign pc_o = fetch_addr_q;
 
-    bpu u_bpu(
-        .clk(clk),
-        .rst_n(rst_n),
-        .inst_i(instr_rdata_i),
-        .inst_valid_i(inst_valid),
-        .pc_i(fetch_addr_q),
-        .prdt_taken_o(prdt_taken),
-        .prdt_addr_o(prdt_addr)
-    );
+    if (BranchPredictor) begin: g_branch_predictor
+        bpu u_bpu(
+            .clk(clk),
+            .rst_n(rst_n),
+            .inst_i(instr_rdata_i),
+            .inst_valid_i(inst_valid),
+            .pc_i(fetch_addr_q),
+            .prdt_taken_o(prdt_taken),
+            .prdt_addr_o(prdt_addr)
+        );
+    end else begin: g_no_branch_predictor
+        assign prdt_taken = 1'b0;
+        assign prdt_addr = 32'h0;
+    end
 
 endmodule
