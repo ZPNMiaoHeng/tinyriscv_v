@@ -20,43 +20,50 @@
 // 发出暂停、冲刷流水线信号
 module pipe_ctrl(
 
-    input wire clk,
-    input wire rst_n,
+    input wire                    clk,
+    input wire                    rst_n,
 
-    input wire stall_from_id_i,
-    input wire stall_from_ex_i,
-    input wire stall_from_jtag_i,
-    input wire stall_from_clint_i,
-    input wire jump_assert_i,
-    input wire[31:0] jump_addr_i,
+    input wire                    stall_from_id_i,
+    input wire                    stall_from_ex_i,
+    input wire                    stall_from_jtag_i,
+    input wire                    stall_from_clint_i,
+    input wire                    jump_assert_i,
+    input wire[31:0]              jump_addr_i,
 
-    output wire flush_o,
-    output wire[`STALL_WIDTH-1:0] stall_o,
-    output wire[31:0] flush_addr_o
+    output wire                   flush_o,              // 冲刷标志
+    output wire[`STALL_WIDTH-1:0] stall_o,              // 暂停标志
+    output wire[31:0]             flush_addr_o          // 冲刷地址
 
     );
 
     assign flush_addr_o = jump_addr_i;
-    assign flush_o = jump_assert_i | stall_from_clint_i;
+    assign flush_o      = jump_assert_i;
 
     reg[`STALL_WIDTH-1:0] stall;
 
     always @ (*) begin
-        if (stall_from_ex_i | stall_from_clint_i) begin
+        stall[`STALL_EX] = 1'b0;
+        stall[`STALL_ID] = 1'b0;
+        stall[`STALL_IF] = 1'b0;
+        stall[`STALL_PC] = 1'b0;
+
+        if (stall_from_clint_i) begin
             stall[`STALL_EX] = 1'b1;
             stall[`STALL_ID] = 1'b1;
             stall[`STALL_IF] = 1'b1;
             stall[`STALL_PC] = 1'b1;
-        end else if (stall_from_id_i) begin
-            stall[`STALL_EX] = 1'b0;
-            stall[`STALL_ID] = 1'b0;
+        end
+
+        if (stall_from_ex_i) begin
+            stall[`STALL_EX] = 1'b1;
+            stall[`STALL_ID] = 1'b1;
             stall[`STALL_IF] = 1'b1;
             stall[`STALL_PC] = 1'b1;
-        end else begin
-            stall[`STALL_EX] = 1'b0;
-            stall[`STALL_ID] = 1'b0;
-            stall[`STALL_IF] = 1'b0;
-            stall[`STALL_PC] = 1'b0;
+        end
+
+        if (stall_from_id_i) begin
+            stall[`STALL_IF] = 1'b1;
+            stall[`STALL_PC] = 1'b1;
         end
     end
 
