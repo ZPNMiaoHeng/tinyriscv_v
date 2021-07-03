@@ -65,6 +65,7 @@ module tinyriscv_core #(
 	wire[31:0] if_inst_o;
     wire[31:0] if_inst_addr_o;
     wire if_inst_valid_o;
+    wire if_ready_o;
 
     // idu模块输出信号
     wire[31:0] id_inst_o;
@@ -156,6 +157,7 @@ module tinyriscv_core #(
         .flush_addr_i(ctrl_flush_addr_o),
         .stall_i(ctrl_stall_o),
         .flush_i(ctrl_flush_o),
+        .id_ready_i(if_ready_o),
         .inst_o(ifetch_inst_o),
         .pc_o(ifetch_pc_o),
         .inst_valid_o(ifetch_inst_valid_o),
@@ -222,6 +224,7 @@ module tinyriscv_core #(
         .stall_i(ctrl_stall_o),
         .flush_i(ctrl_flush_o),
         .inst_valid_i(ifetch_inst_valid_o),
+        .ready_o(if_ready_o),
         .inst_valid_o(if_inst_valid_o),
         .inst_o(if_inst_o),
         .inst_addr_o(if_inst_addr_o)

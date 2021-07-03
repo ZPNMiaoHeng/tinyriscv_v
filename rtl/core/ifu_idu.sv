@@ -29,6 +29,7 @@ module ifu_idu(
     input wire[31:0] inst_addr_i,           // 指令地址
     input wire inst_valid_i,                // 指令有效
 
+    output wire ready_o,                    // 可以接收指令
     output wire[31:0] inst_o,               // 指令内容
     output wire[31:0] inst_addr_o,          // 指令地址
     output wire inst_valid_o                // 指令有效
@@ -37,6 +38,8 @@ module ifu_idu(
 
     // 使能信号，只要流水线不暂停就传递
     wire en = (~stall_i[`STALL_ID]) | flush_i;
+
+    assign ready_o = en;
 
     // 指令内容传递，冲刷或指令无效时传递NOP指令
     wire[31:0] i_inst = (flush_i | (~inst_valid_i))? `INST_NOP: inst_i;

@@ -27,6 +27,7 @@ module ifu #(
     input wire                      flush_i,      // 冲刷标志
     input wire[31:0]                flush_addr_i, // 冲刷地址
     input wire[`STALL_WIDTH-1:0]    stall_i,      // 流水线暂停标志
+    input wire                      id_ready_i,   // ID模块可以接收指令
 
     // to ifu_idu
     output wire[31:0]               inst_o,
@@ -43,76 +44,89 @@ module ifu #(
 
     );
 
+    localparam S_RESET    = 3'b001;
+    localparam S_FETCH    = 3'b010;
+    localparam S_VALID    = 3'b100;
 
-    assign instr_req_o = ((~rst_n) | stall_i[`STALL_PC])? 1'b0: 1'b1;
+    reg[2:0] state_d, state_q;
 
+    wire inst_valid;
+    wire req_valid;
+    wire[31:0] fetch_addr_n;
+    reg[31:0] fetch_addr_q;
 
-    localparam S_FETCH       = 2'b01;
-    localparam S_VALID       = 2'b10;
-
-    reg[1:0] state;
-    reg[1:0] next_state;
     wire prdt_taken;
     wire[31:0] prdt_addr;
 
-    always @ (posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            state <= S_FETCH;
-        end else begin
-            state <= next_state;
-        end
-    end
+    // 取指请求有效
+    assign req_valid = instr_gnt_i & (~stall_i[`STALL_IF]);
 
+    // 状态切换
+    // 取指模块需要实现连续不断地取指，因此
+    // 在S_FETCH和S_VALID这两个状态都要进行取指操作
     always @ (*) begin
-        case (state)
+        state_d = state_q;
+
+        case (state_q)
+            // 复位
+            S_RESET: begin
+                // 复位撤销后转到取指状态
+                if (rst_n) begin
+                    state_d = S_FETCH;
+                end
+            end
+            // 取指
             S_FETCH: begin
-                if (instr_gnt_i & (~stall_i[`STALL_PC]) & (~flush_i)) begin
-                    next_state = S_VALID;
-                end else begin
-                    next_state = S_FETCH;
+                // 取指有效
+                if (req_valid) begin
+                    state_d = S_VALID;
                 end
             end
-
+            // 指令有效
             S_VALID: begin
-                if (stall_i[`STALL_PC] | flush_i) begin
-                    next_state = S_FETCH;
-                end else begin
-                    next_state = S_VALID;
+                // 取指无效
+                if (~req_valid) begin
+                    state_d = S_FETCH;
                 end
             end
 
-            default: begin
-                next_state = S_FETCH;
-            end
+            default: ;
         endcase
     end
 
-    wire inst_valid = (state == S_VALID) & instr_rvalid_i;
+    // 指令有效
+    assign inst_valid   = (state_q == S_VALID) & instr_rvalid_i & id_ready_i;
     assign inst_valid_o = inst_valid;
-    assign inst_o = inst_valid? instr_rdata_i: `INST_NOP;
+    // 指令无效时有nop指令代替
+    assign inst_o       = inst_valid ? instr_rdata_i: `INST_NOP;
+    assign pc_o         = fetch_addr_q;
 
-    wire[31:0] fetch_addr_d;
-    reg[31:0] fetch_addr_q;
-    wire fetch_addr_en = instr_req_o & instr_gnt_i & (~stall_i[`STALL_PC]);
-
-    assign fetch_addr_d = flush_i? flush_addr_i:
-                          prdt_taken? prdt_addr:
-                          stall_i[`STALL_PC]? fetch_addr_q:
-                          inst_valid? fetch_addr_q + 4'h4:
+    // 更新取指地址
+    assign fetch_addr_n = flush_i            ? flush_addr_i:
+                          prdt_taken         ? prdt_addr:
+                          //stall_i[`STALL_IF] ? fetch_addr_q:
+                          inst_valid         ? fetch_addr_q + 4'h4:
                           fetch_addr_q;
 
+    // 取指请求
+    assign instr_req_o  = (~stall_i[`STALL_IF]) & (state_q != S_RESET);
+    // 取指地址(4字节对齐)
+    assign instr_addr_o = {fetch_addr_n[31:2], 2'b00};
+
     always @ (posedge clk or negedge rst_n) begin
-        // 复位
         if (!rst_n) begin
+            state_q <= S_RESET;
             fetch_addr_q <= `CPU_RESET_ADDR;
-        end else if (fetch_addr_en) begin
-            fetch_addr_q <= fetch_addr_d;
+        end else begin
+            state_q <= state_d;
+            // 取指有效时保存当前取指地址
+            if (req_valid | flush_i) begin
+                fetch_addr_q <= fetch_addr_n;
+            end
         end
     end
 
-    assign instr_addr_o = {fetch_addr_d[31:2], 2'b00};
-    assign pc_o = fetch_addr_q;
-
+    // 分支预测
     if (BranchPredictor) begin: g_branch_predictor
         bpu u_bpu(
             .clk(clk),
@@ -125,7 +139,7 @@ module ifu #(
         );
     end else begin: g_no_branch_predictor
         assign prdt_taken = 1'b0;
-        assign prdt_addr = 32'h0;
+        assign prdt_addr  = 32'h0;
     end
 
 endmodule
