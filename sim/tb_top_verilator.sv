@@ -99,7 +99,9 @@ module tb_top_verilator #(
         end
     end
 
-    tinyriscv_soc_top u_tinyriscv_soc_top(
+    tinyriscv_soc_top #(
+        .TRACE_ENABLE(1'b1)
+    ) u_tinyriscv_soc_top (
         .clk_50m_i(clk_i),
         .rst_ext_ni(rst_ni),
         .halted_ind_pin(halted)

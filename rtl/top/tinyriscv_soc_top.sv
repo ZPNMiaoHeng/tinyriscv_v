@@ -18,7 +18,9 @@
 `include "../debug/jtag_def.sv"
 
 // tinyriscv soc顶层模块
-module tinyriscv_soc_top(
+module tinyriscv_soc_top #(
+    parameter bit          TRACE_ENABLE         = 1'b0
+    )(
 
     input wire clk_50m_i,           // 时钟引脚
     input wire rst_ext_ni,          // 复位引脚，低电平有效
@@ -113,7 +115,9 @@ module tinyriscv_soc_top(
 
     tinyriscv_core #(
         .DEBUG_HALT_ADDR(`DEBUG_ADDR_BASE + `HaltAddress),
-        .DEBUG_EXCEPTION_ADDR(`DEBUG_ADDR_BASE + `ExceptionAddress)
+        .DEBUG_EXCEPTION_ADDR(`DEBUG_ADDR_BASE + `ExceptionAddress),
+        .BranchPredictor(1'b1),
+        .TRACE_ENABLE(TRACE_ENABLE)
     ) u_tinyriscv_core (
         .clk            (clk),
         .rst_n          (ndmreset_n),

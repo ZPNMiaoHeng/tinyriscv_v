@@ -30,7 +30,7 @@ module ram #(
 
     );
 
-    wire[31:0] addr = addr_i[31:2];
+    wire[31:0] addr = {6'h0, addr_i[27:2]};
 
     gen_ram #(
         .DP(DP),

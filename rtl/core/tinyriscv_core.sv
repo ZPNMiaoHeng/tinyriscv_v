@@ -20,7 +20,8 @@
 module tinyriscv_core #(
     parameter int unsigned DEBUG_HALT_ADDR      = 32'h10000800,
     parameter int unsigned DEBUG_EXCEPTION_ADDR = 32'h10000808,
-    parameter bit          BranchPredictor      = 1'b1
+    parameter bit          BranchPredictor      = 1'b1,
+    parameter bit          TRACE_ENABLE         = 1'b0
     )(
 
     input wire clk,
@@ -45,13 +46,13 @@ module tinyriscv_core #(
     input wire[31:0] data_rdata_i,
     input wire data_err_i,
 
-    // interrupt inputs
+    // interrupt input
     input wire irq_software_i,
     input wire irq_timer_i,
     input wire irq_external_i,
     input wire[14:0] irq_fast_i,
 
-    // debug req signal
+    // debug request signal
     input wire debug_req_i
 
     );
@@ -140,13 +141,13 @@ module tinyriscv_core #(
     wire ctrl_flush_o;
     wire[`STALL_WIDTH-1:0] ctrl_stall_o;
 
-    // clint模块输出信号
-    wire clint_csr_we_o;
-    wire[31:0] clint_csr_waddr_o;
-    wire[31:0] clint_csr_wdata_o;
-    wire clint_stall_flag_o;
-    wire[31:0] clint_int_addr_o;
-    wire clint_int_assert_o;
+    // exception模块输出信号
+    wire excep_csr_we_o;
+    wire[31:0] excep_csr_waddr_o;
+    wire[31:0] excep_csr_wdata_o;
+    wire excep_stall_flag_o;
+    wire[31:0] excep_int_addr_o;
+    wire excep_int_assert_o;
 
 
     ifu #(
@@ -175,7 +176,7 @@ module tinyriscv_core #(
         .stall_from_id_i(id_stall_o),
         .stall_from_ex_i(ex_hold_flag_o),
         .stall_from_jtag_i(1'b0),
-        .stall_from_clint_i(clint_stall_flag_o),
+        .stall_from_clint_i(excep_stall_flag_o),
         .jump_assert_i(ex_jump_flag_o),
         .jump_addr_i(ex_jump_addr_o),
         .flush_o(ctrl_flush_o),
@@ -205,9 +206,9 @@ module tinyriscv_core #(
         .exu_waddr_i(ex_csr_waddr_o),
         .exu_wdata_i(ex_csr_wdata_o),
         .exu_rdata_o(csr_ex_data_o),
-        .clint_we_i(clint_csr_we_o),
-        .clint_waddr_i(clint_csr_waddr_o),
-        .clint_wdata_i(clint_csr_wdata_o),
+        .excep_we_i(excep_csr_we_o),
+        .excep_waddr_i(excep_csr_waddr_o),
+        .excep_wdata_i(excep_csr_wdata_o),
         .mtvec_o(csr_mtvec_o),
         .mepc_o(csr_mepc_o),
         .mstatus_o(csr_mstatus_o),
@@ -300,13 +301,13 @@ module tinyriscv_core #(
         .hold_flag_o(ex_hold_flag_o),
         .jump_flag_o(ex_jump_flag_o),
         .jump_addr_o(ex_jump_addr_o),
-        .int_assert_i(clint_int_assert_o),
-        .int_addr_i(clint_int_addr_o),
+        .int_assert_i(excep_int_assert_o),
+        .int_addr_i(excep_int_addr_o),
         .inst_ecall_o(ex_inst_ecall_o),
         .inst_ebreak_o(ex_inst_ebreak_o),
         .inst_mret_o(ex_inst_mret_o),
         .inst_dret_o(ex_inst_dret_o),
-        .int_stall_i(clint_stall_flag_o),
+        .int_stall_i(excep_stall_flag_o),
         .csr_raddr_o(ex_csr_raddr_o),
         .csr_rdata_i(csr_ex_data_o),
         .csr_wdata_o(ex_csr_wdata_o),
@@ -348,22 +349,22 @@ module tinyriscv_core #(
         .irq_fast_i(irq_fast_i),
         .debug_halt_addr_i(DEBUG_HALT_ADDR),
         .debug_req_i(debug_req_i),
-        .csr_we_o(clint_csr_we_o),
-        .csr_waddr_o(clint_csr_waddr_o),
-        .csr_wdata_o(clint_csr_wdata_o),
-        .stall_flag_o(clint_stall_flag_o),
-        .int_addr_o(clint_int_addr_o),
-        .int_assert_o(clint_int_assert_o)
+        .csr_we_o(excep_csr_we_o),
+        .csr_waddr_o(excep_csr_waddr_o),
+        .csr_wdata_o(excep_csr_wdata_o),
+        .stall_flag_o(excep_stall_flag_o),
+        .int_addr_o(excep_int_addr_o),
+        .int_assert_o(excep_int_assert_o)
     );
 
-`ifdef TRACE_ENABLED
-    tracer u_tracer(
-        .clk(clk),
-        .rst_n(rst_n),
-        .inst_i(ie_inst_o),
-        .pc_i(ie_dec_pc_o),
-        .inst_valid_i(ex_inst_valid_o)
-    );
-`endif
+    if (TRACE_ENABLE) begin: instr_trace
+        tracer u_tracer(
+            .clk(clk),
+            .rst_n(rst_n),
+            .inst_i(ie_inst_o),
+            .pc_i(ie_dec_pc_o),
+            .inst_valid_i(ex_inst_valid_o)
+        );
+    end
 
 endmodule

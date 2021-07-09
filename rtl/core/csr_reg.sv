@@ -22,7 +22,7 @@ module csr_reg(
     input wire clk,
     input wire rst_n,
 
-    // exu
+    // from exu
     input wire exu_we_i,                    // exu模块写寄存器标志
     input wire[31:0] exu_waddr_i,           // exu模块写寄存器地址
     input wire[31:0] exu_wdata_i,           // exu模块写寄存器数据
@@ -32,10 +32,10 @@ module csr_reg(
     input wire[31:0] pc_if_i,               // 取指地址
     output wire trigger_match_o,            // 断点
 
-    // clint
-    input wire clint_we_i,                  // clint模块写寄存器标志
-    input wire[31:0] clint_waddr_i,         // clint模块写寄存器地址
-    input wire[31:0] clint_wdata_i,         // clint模块写寄存器数据
+    // form exception
+    input wire excep_we_i,                  // exception模块写寄存器标志
+    input wire[31:0] excep_waddr_i,         // exception模块写寄存器地址
+    input wire[31:0] excep_wdata_i,         // exception模块写寄存器数据
 
     output wire[31:0] mtvec_o,              // mtvec寄存器值
     output wire[31:0] mepc_o,               // mepc寄存器值
@@ -188,9 +188,9 @@ module csr_reg(
     assign exu_rdata_o = exu_rdata;
 
     // 写CSR寄存器
-    wire we = exu_we_i | clint_we_i;
-    wire[31:0] waddr = exu_we_i? exu_waddr_i: clint_waddr_i;
-    wire[31:0] wdata = exu_we_i? exu_wdata_i: clint_wdata_i;
+    wire we = exu_we_i | excep_we_i;
+    wire[31:0] waddr = exu_we_i? exu_waddr_i: excep_waddr_i;
+    wire[31:0] wdata = exu_we_i? exu_wdata_i: excep_wdata_i;
 
     always @ (*) begin
         mtvec_d = mtvec_q;
