@@ -17,8 +17,8 @@
 
 
 #ifdef SIMULATION
-#define set_test_pass() asm("li x27, 0x01")
-#define set_test_fail() asm("li x27, 0x00")
+#define set_test_pass() asm("csrrwi x0, sstatus, 0x3")
+#define set_test_fail() asm("csrrwi x0, sstatus, 0x1")
 #endif
 
 

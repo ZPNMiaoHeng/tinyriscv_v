@@ -29,10 +29,12 @@ module tb_top_verilator #(
 
     wire halted;
 
-    wire[31:0] x3  = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[3];
-    wire[31:0] x26 = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[26];
-    wire[31:0] x27 = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[27];
-
+    // ISA、自定义程序测试
+    wire[31:0] fail_num   = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.regs[3];
+    wire[31:0] sim_result = u_tinyriscv_soc_top.u_tinyriscv_core.u_csr_reg.sstatus_q;
+    wire sim_end          = sim_result[0];
+    wire sim_succ         = sim_result[1];
+    // riscv compliance测试
     wire[31:0] end_flag         = u_tinyriscv_soc_top.u_ram.u_gen_ram.ram[4];
     wire[31:0] begin_signature  = u_tinyriscv_soc_top.u_ram.u_gen_ram.ram[2];
     wire[31:0] end_signature    = u_tinyriscv_soc_top.u_ram.u_gen_ram.ram[3];
@@ -67,8 +69,8 @@ module tb_top_verilator #(
                         $finish;
                     end
                 `else
-                    if (x26 == 32'b1) begin
-                        if (x27 == 32'b1) begin
+                    if (sim_end == 1'b1) begin
+                        if (sim_succ == 1'b1) begin
                             $display("~~~~~~~~~~~~~~~~~~~ TEST_PASS ~~~~~~~~~~~~~~~~~~~");
                             $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                             $display("~~~~~~~~~ #####     ##     ####    #### ~~~~~~~~~");
@@ -89,7 +91,7 @@ module tb_top_verilator #(
                             $display("~~~~~~~~~~#       #    #     #    ######~~~~~~~~~~");
                             $display("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                             `ifdef TEST_ISA
-                            $display("fail testnum = %2d", x3);
+                            $display("fail testnum = %2d", fail_num);
                             `endif
                         end
                         result_printed <= 1'b1;

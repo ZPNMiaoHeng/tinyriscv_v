@@ -144,6 +144,8 @@
 `define CSR_MSCRATCH    12'h340
 `define CSR_MHARTID     12'hF14
 `define CSR_MISA        12'h301
+// only used for verification
+`define CSR_SSTATUS     12'h100
 // Debug
 `define CSR_DCSR        12'h7b0
 `define CSR_DPC         12'h7b1

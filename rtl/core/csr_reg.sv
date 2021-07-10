@@ -55,6 +55,11 @@ module csr_reg(
 
     wire[31:0] misa = 32'h40001100;   // 32bits, IM
 
+    // for verification result
+    reg[31:0] sstatus_d;
+    wire[31:0] sstatus_q;
+    reg sstatus_we;
+
     reg[31:0] mtvec_d;
     wire[31:0] mtvec_q;
     reg mtvec_we;
@@ -215,6 +220,8 @@ module csr_reg(
         dpc_we = 1'b0;
         dcsr_d = dcsr_q;
         dcsr_we = 1'b0;
+        sstatus_d = sstatus_q;
+        sstatus_we = 1'b0;
 
         if (we) begin
             case (waddr[11:0])
@@ -253,6 +260,10 @@ module csr_reg(
                 `CSR_MHARTID: begin
                     mhartid_d = wdata;
                     mhartid_we = 1'b1;
+                end
+                `CSR_SSTATUS: begin
+                    sstatus_d = wdata;
+                    sstatus_we = 1'b1;
                 end
                 `CSR_DPC: begin
                     dpc_d = wdata;
@@ -457,6 +468,17 @@ module csr_reg(
         .wdata_i(tselect_d),
         .we_i(tselect_we),
         .rdata_o(tselect_q)
+    );
+
+    // sstatus
+    csr #(
+        .RESET_VAL(32'h0)
+    ) sstatus_csr (
+        .clk(clk),
+        .rst_n(rst_n),
+        .wdata_i(sstatus_d),
+        .we_i(sstatus_we),
+        .rdata_o(sstatus_q)
     );
 
     for (genvar i = 0; i < HwBpNum; i = i + 1) begin : dbg_tmatch_reg
