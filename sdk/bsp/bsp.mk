@@ -24,6 +24,7 @@ C_SRCS += $(BSP_DIR)/lib/uart.c
 C_SRCS += $(BSP_DIR)/lib/sim_ctrl.c
 C_SRCS += $(BSP_DIR)/lib/machine_timer.c
 C_SRCS += $(BSP_DIR)/lib/gpio.c
+C_SRCS += $(BSP_DIR)/lib/rvic.c
 
 LINKER_SCRIPT := $(BSP_DIR)/link.lds
 

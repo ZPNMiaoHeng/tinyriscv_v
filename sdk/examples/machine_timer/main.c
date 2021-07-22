@@ -2,6 +2,7 @@
 
 #include "../../bsp/include/machine_timer.h"
 #include "../../bsp/include/utils.h"
+#include "../../bsp/include/rvic.h"
 #include "../../bsp/include/gpio.h"
 
 static volatile uint32_t count;
@@ -15,6 +16,7 @@ int main()
     machine_timer_clear_irq_pending();
     global_irq_enable();
     machine_timer_irq_enable(1);
+    rvic_irq_enable(0);
     machine_timer_enable(1);
 
     while (1) {
@@ -32,6 +34,7 @@ int main()
     machine_timer_clear_irq_pending();
     global_irq_enable();
     machine_timer_irq_enable(1);
+    rvic_irq_enable(0);
     machine_timer_enable(1);
 
     gpio_output_enable(GPIO0);
@@ -46,9 +49,10 @@ int main()
 #endif
 }
 
-__attribute__((interrupt)) void timer_irq_handler()
+void timer_irq_handler()
 {
     count++;
 
     machine_timer_clear_irq_pending();
+    rvic_clear_irq_pending(0);
 }
