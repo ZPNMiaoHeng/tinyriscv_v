@@ -16,17 +16,10 @@
 
 `include "defines.sv"
 
-`define CAUSE_IRQ_EXTERNAL_M    {1'b1, 31'd11}
-`define CAUSE_IRQ_SOFTWARE_M    {1'b1, 31'd3}
-`define CAUSE_IRQ_TIMER_M       {1'b1, 31'd7}
 
 `define CAUSE_EXCEP_ECALL_M     {1'b0, 31'd11}
 `define CAUSE_EXCEP_EBREAK_M    {1'b0, 31'd3}
 `define CAUSE_EXCEP_ILLEGAL_INST_M     {1'b0, 31'd2}
-
-`define MIE_MTIE_BIT            7
-`define MIE_MEIE_BIT            11
-`define MIE_MSIE_BIT            3
 
 `define DCSR_CAUSE_NONE         3'h0
 `define DCSR_CAUSE_STEP         3'h4
@@ -49,7 +42,7 @@ module exception (
     input wire inst_dret_i,                     // dret指令
     input wire[31:0] inst_addr_i,               // 指令地址
 
-    input wire illegal_inst_i,
+    input wire illegal_inst_i,                  // 非法指令
 
     input wire[31:0] mtvec_i,                   // mtvec寄存器
     input wire[31:0] mepc_i,                    // mepc寄存器
@@ -58,10 +51,8 @@ module exception (
     input wire[31:0] dpc_i,                     // dpc寄存器
     input wire[31:0] dcsr_i,                    // dcsr寄存器
 
-    input wire irq_software_i,
-    input wire irq_timer_i,
-    input wire irq_external_i,
-    input wire[14:0] irq_fast_i,
+    input wire int_req_i,
+    input wire[7:0] int_id_i,
 
     input wire trigger_match_i,
 
@@ -78,6 +69,7 @@ module exception (
 
     );
 
+    // 异常偏移
     localparam ILLEGAL_INSTR_OFFSET         = 0;
     localparam INSTR_ADDR_MISA_OFFSET       = 4;
     localparam ECALL_OFFSET                 = 8;
@@ -86,12 +78,8 @@ module exception (
     localparam STORE_MISA_OFFSET            = 20;
     localparam RESERVED1_EXCEPTION_OFFSET   = 24;
     localparam RESERVED2_EXCEPTION_OFFSET   = 28;
-
-    localparam EXTERNAL_INT_OFFSET          = 32;
-    localparam SOFTWARE_INT_OFFSET          = 36;
-    localparam TIMER_INT_OFFSET             = 40;
-    localparam FAST_INT_OFFSET              = 44;
-
+    // 中断偏移
+    localparam INT_OFFSET                   = 32;
 
     localparam S_IDLE       = 5'b00001;
     localparam S_W_MEPC     = 5'b00010;
@@ -108,61 +96,16 @@ module exception (
     reg[31:0] csr_waddr;
     reg[31:0] csr_wdata;
 
+    reg[7:0] int_id_d, int_id_q;
+    reg in_irq_context_d, in_irq_context_q;
     wire global_int_en;
+    wire interrupt_req_valid;
 
     assign global_int_en = mstatus_i[3];
 
-    reg[3:0] fast_irq_id;
-    wire fast_irq_req;
-
-    always @ (*) begin
-        if      (irq_fast_i[ 0]) fast_irq_id = 4'd0;
-        else if (irq_fast_i[ 1]) fast_irq_id = 4'd1;
-        else if (irq_fast_i[ 2]) fast_irq_id = 4'd2;
-        else if (irq_fast_i[ 3]) fast_irq_id = 4'd3;
-        else if (irq_fast_i[ 4]) fast_irq_id = 4'd4;
-        else if (irq_fast_i[ 5]) fast_irq_id = 4'd5;
-        else if (irq_fast_i[ 6]) fast_irq_id = 4'd6;
-        else if (irq_fast_i[ 7]) fast_irq_id = 4'd7;
-        else if (irq_fast_i[ 8]) fast_irq_id = 4'd8;
-        else if (irq_fast_i[ 9]) fast_irq_id = 4'd9;
-        else if (irq_fast_i[10]) fast_irq_id = 4'd10;
-        else if (irq_fast_i[11]) fast_irq_id = 4'd11;
-        else if (irq_fast_i[12]) fast_irq_id = 4'd12;
-        else if (irq_fast_i[13]) fast_irq_id = 4'd13;
-        else                     fast_irq_id = 4'd14;
-    end
-
-    assign fast_irq_req = |irq_fast_i;
-
-    reg interrupt_req_tmp;
-    reg[31:0] interrupt_cause;
-    reg[31:0] interrupt_offset;
-    wire interrupt_req = inst_valid_i & interrupt_req_tmp;
-
-    always @ (*) begin
-        if (fast_irq_req) begin
-            interrupt_req_tmp = 1'b1;
-            interrupt_cause = {1'b1, {26{1'b0}}, 1'b1, fast_irq_id};
-            interrupt_offset = {fast_irq_id, 2'b0} + FAST_INT_OFFSET;
-        end else if (irq_external_i & mie_i[`MIE_MEIE_BIT]) begin
-            interrupt_req_tmp = 1'b1;
-            interrupt_cause = `CAUSE_IRQ_EXTERNAL_M;
-            interrupt_offset = EXTERNAL_INT_OFFSET;
-        end else if (irq_software_i & mie_i[`MIE_MSIE_BIT]) begin
-            interrupt_req_tmp = 1'b1;
-            interrupt_cause = `CAUSE_IRQ_SOFTWARE_M;
-            interrupt_offset = SOFTWARE_INT_OFFSET;
-        end else if (irq_timer_i & mie_i[`MIE_MTIE_BIT]) begin
-            interrupt_req_tmp = 1'b1;
-            interrupt_cause = `CAUSE_IRQ_TIMER_M;
-            interrupt_offset = TIMER_INT_OFFSET;
-        end else begin
-            interrupt_req_tmp = 1'b0;
-            interrupt_cause = 32'h0;
-            interrupt_offset = 32'h0;
-        end
-    end
+    assign interrupt_req_valid = inst_valid_i &
+                                 int_req_i &
+                                 ((int_id_i != int_id_q) | (~in_irq_context_q));
 
     reg exception_req;
     reg[31:0] exception_cause;
@@ -188,9 +131,9 @@ module exception (
     wire[31:0] int_or_exception_cause;
     wire[31:0] int_or_exception_offset;
 
-    assign int_or_exception_req     = (interrupt_req & global_int_en & (~debug_mode_q)) | exception_req;
-    assign int_or_exception_cause   = exception_req ? exception_cause  : interrupt_cause;
-    assign int_or_exception_offset  = exception_req ? exception_offset : interrupt_offset;
+    assign int_or_exception_req     = (interrupt_req_valid & global_int_en & (~debug_mode_q)) | exception_req;
+    assign int_or_exception_cause   = exception_req ? exception_cause  : int_id_i;
+    assign int_or_exception_offset  = exception_req ? exception_offset : INT_OFFSET;
 
     wire trigger_matching;
 
@@ -244,7 +187,7 @@ module exception (
                           enter_debug_cause_ebreak;
 
     assign stall_flag_o = ((state_q != S_IDLE) & (state_q != S_ASSERT)) |
-                          (interrupt_req & global_int_en) | exception_req |
+                          int_or_exception_req |
                           debug_mode_req |
                           inst_mret_i |
                           inst_dret_i;
@@ -258,6 +201,8 @@ module exception (
         csr_waddr = 32'h0;
         csr_wdata = 32'h0;
         trigger_match_d = trigger_match_q;
+        int_id_d = int_id_q;
+        in_irq_context_d = in_irq_context_q;
 
         case (state_q)
             S_IDLE: begin
@@ -268,6 +213,8 @@ module exception (
                     assert_addr_d = mtvec_i + int_or_exception_offset;
                     return_addr_d = inst_addr_i;
                     state_d = S_W_MSTATUS;
+                    int_id_d = int_id_i;
+                    in_irq_context_d = 1'b1;
                 end else if (debug_mode_req) begin
                     debug_mode_d = 1'b1;
                     if (enter_debug_cause_debugger_req |
@@ -293,9 +240,11 @@ module exception (
                         state_d = S_W_DCSR;
                     end
                 end else if (inst_mret_i) begin
+                    in_irq_context_d = 1'b0;
                     assert_addr_d = mepc_i;
                     csr_we = 1'b1;
                     csr_waddr = {20'h0, `CSR_MSTATUS};
+                    // 开全局中断
                     csr_wdata = {mstatus_i[31:4], 1'b1, mstatus_i[2:0]};
                     state_d = S_ASSERT;
                 end else if (inst_dret_i) begin
@@ -309,6 +258,7 @@ module exception (
             S_W_MSTATUS: begin
                 csr_we = 1'b1;
                 csr_waddr = {20'h0, `CSR_MSTATUS};
+                // 关全局中断
                 csr_wdata = {mstatus_i[31:4], 1'b0, mstatus_i[2:0]};
                 state_d = S_W_MEPC;
             end
@@ -352,6 +302,8 @@ module exception (
             return_addr_q <= 32'h0;
             dcsr_cause_q <= `DCSR_CAUSE_NONE;
             trigger_match_q <= 1'b0;
+            int_id_q <= 8'h0;
+            in_irq_context_q <= 1'b0;
         end else begin
             state_q <= state_d;
             assert_addr_q <= assert_addr_d;
@@ -359,6 +311,8 @@ module exception (
             return_addr_q <= return_addr_d;
             dcsr_cause_q <= dcsr_cause_d;
             trigger_match_q <= trigger_match_d;
+            int_id_q <= int_id_d;
+            in_irq_context_q <= in_irq_context_d;
         end
     end
 

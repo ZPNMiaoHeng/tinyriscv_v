@@ -43,6 +43,9 @@
 // Machine Timer
 `define MTIMER_ADDR_MASK    ~32'hffff
 `define MTIMER_ADDR_BASE    32'hA0000000
+// Interrupt controller
+`define RVIC_ADDR_MASK      ~32'hffff
+`define RVIC_ADDR_BASE      32'hD0000000
 // SIM CTRL
 `define SIM_CTRL_ADDR_MASK  ~32'hffff
 `define SIM_CTRL_ADDR_BASE  32'hE0000000

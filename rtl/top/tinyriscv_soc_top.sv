@@ -41,9 +41,9 @@ module tinyriscv_soc_top #(
 
     localparam int MASTERS      = 3; // Number of master ports
 `ifdef VERILATOR
-    localparam int SLAVES       = 7; // Number of slave ports
+    localparam int SLAVES       = 8; // Number of slave ports
 `else
-    localparam int SLAVES       = 6; // Number of slave ports
+    localparam int SLAVES       = 7; // Number of slave ports
 `endif
 
     // masters
@@ -58,8 +58,9 @@ module tinyriscv_soc_top #(
     localparam int Mtimer       = 3;
     localparam int Gpio         = 4;
     localparam int Uart         = 5;
+    localparam int Rvic         = 6;
 `ifdef VERILATOR
-    localparam int SimCtrl      = 6;
+    localparam int SimCtrl      = 7;
 `endif
 
 
@@ -85,12 +86,12 @@ module tinyriscv_soc_top #(
     wire [31:0]    slave_addr_base  [SLAVES];
 
 `ifdef VERILATOR
-    wire          sim_jtag_tck;
-    wire          sim_jtag_tms;
-    wire          sim_jtag_tdi;
-    wire          sim_jtag_trstn;
-    wire          sim_jtag_tdo;
-    wire [31:0]   sim_jtag_exit;
+    wire           sim_jtag_tck;
+    wire           sim_jtag_tms;
+    wire           sim_jtag_tdi;
+    wire           sim_jtag_trstn;
+    wire           sim_jtag_tdo;
+    wire [31:0]    sim_jtag_exit;
 `endif
 
     wire clk;
@@ -100,11 +101,20 @@ module tinyriscv_soc_top #(
     wire debug_req;
     wire core_halted;
 
+    reg[31:0] irq_src;
+    wire int_req;
+    wire[7:0] int_id;
+
     wire mtimer_irq;
 
     wire[1:0] io_in;
     wire[31:0] gpio_ctrl;
     wire[31:0] gpio_data;
+
+    always @ (*) begin
+        irq_src    = 32'h0;
+        irq_src[0] = mtimer_irq;
+    end
 
 `ifdef VERILATOR
     assign halted_ind_pin = core_halted;
@@ -139,10 +149,8 @@ module tinyriscv_soc_top #(
         .data_rdata_i   (master_rdata[CoreD]),
         .data_err_i     (1'b0),
 
-        .irq_software_i (1'b0),
-        .irq_timer_i    (mtimer_irq),
-        .irq_external_i (1'b0),
-        .irq_fast_i     (15'b0),
+        .int_req_i      (int_req),
+        .int_id_i       (int_id),
 
         .debug_req_i    (debug_req)
     );
@@ -229,10 +237,26 @@ module tinyriscv_soc_top #(
         .rx_pin (uart_rx_pin)
     );
 
+    assign slave_addr_mask[Rvic] = `RVIC_ADDR_MASK;
+    assign slave_addr_base[Rvic] = `RVIC_ADDR_BASE;
+    // 6.中断控制器模块
+    rvic u_rvic(
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .src_i      (irq_src),
+        .irq_o      (int_req),
+        .irq_id_o   (int_id),
+        .addr_i     (slave_addr[Rvic]),
+        .data_i     (slave_wdata[Rvic]),
+        .be_i       (slave_be[Rvic]),
+        .we_i       (slave_we[Rvic]),
+        .data_o     (slave_rdata[Rvic])
+    );
+
 `ifdef VERILATOR
     assign slave_addr_mask[SimCtrl] = `SIM_CTRL_ADDR_MASK;
     assign slave_addr_base[SimCtrl] = `SIM_CTRL_ADDR_BASE;
-    // 6.仿真控制模块
+    // 7.仿真控制模块
     sim_ctrl u_sim_ctrl(
         .clk_i  (clk),
         .rst_ni (ndmreset_n),

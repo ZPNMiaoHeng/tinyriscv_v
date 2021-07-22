@@ -47,10 +47,8 @@ module tinyriscv_core #(
     input wire data_err_i,
 
     // interrupt input
-    input wire irq_software_i,
-    input wire irq_timer_i,
-    input wire irq_external_i,
-    input wire[14:0] irq_fast_i,
+    input wire int_req_i,
+    input wire[7:0] int_id_i,
 
     // debug request signal
     input wire debug_req_i
@@ -343,10 +341,8 @@ module tinyriscv_core #(
         .dpc_i(csr_dpc_o),
         .dcsr_i(csr_dcsr_o),
         .trigger_match_i(csr_trigger_match_o),
-        .irq_software_i(irq_software_i),
-        .irq_timer_i(irq_timer_i),
-        .irq_external_i(irq_external_i),
-        .irq_fast_i(irq_fast_i),
+        .int_req_i(int_req_i),
+        .int_id_i(int_id_i),
         .debug_halt_addr_i(DEBUG_HALT_ADDR),
         .debug_req_i(debug_req_i),
         .csr_we_o(excep_csr_we_o),
