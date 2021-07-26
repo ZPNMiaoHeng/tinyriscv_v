@@ -78,27 +78,22 @@ registers must be saved by the portasmSAVE_ADDITIONAL_REGISTERS and
 portasmRESTORE_ADDITIONAL_REGISTERS macros - which can be defined in a chip
 specific version of freertos_risc_v_chip_specific_extensions.h.  See the notes
 at the top of this file. */
-#define portCONTEXT_SIZE ( 30 * portWORD_SIZE )
+#define portCONTEXT_SIZE ( 28 * portWORD_SIZE )
 
 .global timer_irq_handler
 .global ecall_handler
 .global xPortStartFirstTask
 .global freertos_risc_v_trap_handler
 .global pxPortInitialiseStack
+.extern vector_table
 .extern pxCurrentTCB
 .extern ulPortTrapHandler
 .extern vTaskSwitchContext
 .extern xTaskIncrementTick
-#.extern Timer_IRQHandler
-#.extern pullMachineTimerCompareRegister
-#.extern pullNextTime
-#.extern uxTimerIncrementsForOneTick /* size_t type so 32-bit on 32-bit core and 64-bits on 64-bit core. */
 .extern xISRStackTop
-#.extern portasmHANDLE_INTERRUPT
 .extern xPortClearTimerIntPending
 /*-----------------------------------------------------------*/
 
-.align 8
 .func
 freertos_risc_v_trap_handler:
 	addi sp, sp, -portCONTEXT_SIZE
@@ -131,125 +126,18 @@ freertos_risc_v_trap_handler:
 	store_x x30, 27 * portWORD_SIZE( sp )
 	store_x x31, 28 * portWORD_SIZE( sp )
 
-	csrr t0, mstatus					/* Required for MPIE bit. */
-	store_x t0, 29 * portWORD_SIZE( sp )
+    /* 读取异常(中断)号 */
+    csrr a1, mcause
+    /* 计算偏移地址: id * 4 */
+    slli a1, a1, 2
+    la a0, vector_table
+    add a1, a0, a1
+    /* 读取异常(中断)处理函数地址 */
+    lw a1, 0(a1)
+    /* 跳转到异常(中断)处理函数 */
+    jalr ra, 0(a1)
 
-	portasmSAVE_ADDITIONAL_REGISTERS	/* Defined in freertos_risc_v_chip_specific_extensions.h to save any registers unique to the RISC-V implementation. */
-
-	load_x  t0, pxCurrentTCB			/* Load pxCurrentTCB. */
-	store_x  sp, 0( t0 )				/* Write sp to first TCB member. */
-
-	csrr a0, mcause
-	csrr a1, mepc
-
-test_if_asynchronous:
-	srli a2, a0, __riscv_xlen - 1		/* MSB of mcause is 1 if handing an asynchronous interrupt - shift to LSB to clear other bits. */
-	beq a2, x0, handle_synchronous		/* Branch past interrupt handing if not asynchronous. */
-	store_x a1, 0( sp )					/* Asynch so save unmodified exception return address. */
-
-handle_asynchronous:
-
-#if 0
-#if( portasmHAS_MTIME != 0 )
-
-	test_if_mtimer:						/* If there is a CLINT then the mtimer is used to generate the tick interrupt. */
-
-		addi t0, x0, 1
-
-		slli t0, t0, __riscv_xlen - 1   /* LSB is already set, shift into MSB.  Shift 31 on 32-bit or 63 on 64-bit cores. */
-		addi t1, t0, 7					/* 0x8000[]0007 == machine timer interrupt. */
-		bne a0, t1, test_if_external_interrupt
-
-		load_x t0, pullMachineTimerCompareRegister  /* Load address of compare register into t0. */
-		load_x t1, pullNextTime  		/* Load the address of ullNextTime into t1. */
-
-		#if( __riscv_xlen == 32 )
-
-			/* Update the 64-bit mtimer compare match value in two 32-bit writes. */
-			li t4, -1
-			lw t2, 0(t1)				/* Load the low word of ullNextTime into t2. */
-			lw t3, 4(t1)				/* Load the high word of ullNextTime into t3. */
-			sw t4, 0(t0)				/* Low word no smaller than old value to start with - will be overwritten below. */
-			sw t3, 4(t0)				/* Store high word of ullNextTime into compare register.  No smaller than new value. */
-			sw t2, 0(t0)				/* Store low word of ullNextTime into compare register. */
-			lw t0, uxTimerIncrementsForOneTick	/* Load the value of ullTimerIncrementForOneTick into t0 (could this be optimized by storing in an array next to pullNextTime?). */
-			add t4, t0, t2				/* Add the low word of ullNextTime to the timer increments for one tick (assumes timer increment for one tick fits in 32-bits). */
-			sltu t5, t4, t2				/* See if the sum of low words overflowed (what about the zero case?). */
-			add t6, t3, t5				/* Add overflow to high word of ullNextTime. */
-			sw t4, 0(t1)				/* Store new low word of ullNextTime. */
-			sw t6, 4(t1)				/* Store new high word of ullNextTime. */
-
-		#endif /* __riscv_xlen == 32 */
-
-		#if( __riscv_xlen == 64 )
-
-			/* Update the 64-bit mtimer compare match value. */
-			ld t2, 0(t1)			 	/* Load ullNextTime into t2. */
-			sd t2, 0(t0)				/* Store ullNextTime into compare register. */
-			ld t0, uxTimerIncrementsForOneTick  /* Load the value of ullTimerIncrementForOneTick into t0 (could this be optimized by storing in an array next to pullNextTime?). */
-			add t4, t0, t2				/* Add ullNextTime to the timer increments for one tick. */
-			sd t4, 0(t1)				/* Store ullNextTime. */
-
-		#endif /* __riscv_xlen == 64 */
-
-		load_x sp, xISRStackTop			/* Switch to ISR stack before function call. */
-		jal xTaskIncrementTick
-		beqz a0, processed_source		/* Don't switch context if incrementing tick didn't unblock a task. */
-		jal vTaskSwitchContext
-		j processed_source
-
-	test_if_external_interrupt:			/* If there is a CLINT and the mtimer interrupt is not pending then check to see if an external interrupt is pending. */
-		addi t1, t1, 4					/* 0x80000007 + 4 = 0x8000000b == Machine external interrupt. */
-		bne a0, t1, as_yet_unhandled	/* Something as yet unhandled. */
-
-#endif /* portasmHAS_MTIME */
-#endif
-
-    /* TODO: 判断是定时器中断还是其他(外部)中断 */
-	load_x sp, xISRStackTop				/* Switch to ISR stack before function call. */
-    call xPortClearTimerIntPending
-    jal xTaskIncrementTick
-    beqz a0, processed_source		/* Don't switch context if incrementing tick didn't unblock a task. */
-    jal vTaskSwitchContext
-	#jal portasmHANDLE_INTERRUPT			/* Jump to the interrupt handler if there is no CLINT or if there is a CLINT and it has been determined that an external interrupt is pending. */
-	j processed_source
-
-handle_synchronous:
-	addi a1, a1, 4						/* Synchronous so updated exception return address to the instruction after the instruction that generated the exeption. */
-	store_x a1, 0( sp )					/* Save updated exception return address. */
-
-test_if_environment_call:
-	li t0, 11 							/* 11 == environment call. */
-	bne a0, t0, is_exception			/* Not an M environment call, so some other exception. */
-	load_x sp, xISRStackTop				/* Switch to ISR stack before function call. */
-	jal vTaskSwitchContext
-	j processed_source
-
-is_exception:
-	csrr t0, mcause						/* For viewing in the debugger only. */
-	csrr t1, mepc						/* For viewing in the debugger only */
-	csrr t2, mstatus
-	j is_exception						/* No other exceptions handled yet. */
-
-as_yet_unhandled:
-	csrr t0, mcause						/* For viewing in the debugger only. */
-	j as_yet_unhandled
-
-processed_source:
-	load_x  t1, pxCurrentTCB			/* Load pxCurrentTCB. */
-	load_x  sp, 0( t1 )				 	/* Read sp from first TCB member. */
-
-	/* Load mret with the address of the next instruction in the task to run next. */
-	load_x t0, 0( sp )
-	csrw mepc, t0
-
-	portasmRESTORE_ADDITIONAL_REGISTERS	/* Defined in freertos_risc_v_chip_specific_extensions.h to restore any registers unique to the RISC-V implementation. */
-
-	/* Load mstatus with the interrupt enable bits used by the task. */
-	load_x  t0, 29 * portWORD_SIZE( sp )
-	csrw mstatus, t0						/* Required for MPIE bit. */
-
-	load_x  x1, 1 * portWORD_SIZE( sp )
+	load_x  x1, 1 * portWORD_SIZE( sp )     /* ra */
 	load_x  x5, 2 * portWORD_SIZE( sp )		/* t0 */
 	load_x  x6, 3 * portWORD_SIZE( sp )		/* t1 */
 	load_x  x7, 4 * portWORD_SIZE( sp )		/* t2 */
@@ -280,42 +168,12 @@ processed_source:
 	addi sp, sp, portCONTEXT_SIZE
 
 	mret
-	.endfunc
-/*-----------------------------------------------------------*/
+    .endfunc
 
 .align 3
 .func
 timer_irq_handler:
-
-	addi sp, sp, -portCONTEXT_SIZE
-	store_x x1, 1 * portWORD_SIZE( sp )
-	store_x x5, 2 * portWORD_SIZE( sp )
-	store_x x6, 3 * portWORD_SIZE( sp )
-	store_x x7, 4 * portWORD_SIZE( sp )
-	store_x x8, 5 * portWORD_SIZE( sp )
-	store_x x9, 6 * portWORD_SIZE( sp )
-	store_x x10, 7 * portWORD_SIZE( sp )
-	store_x x11, 8 * portWORD_SIZE( sp )
-	store_x x12, 9 * portWORD_SIZE( sp )
-	store_x x13, 10 * portWORD_SIZE( sp )
-	store_x x14, 11 * portWORD_SIZE( sp )
-	store_x x15, 12 * portWORD_SIZE( sp )
-	store_x x16, 13 * portWORD_SIZE( sp )
-	store_x x17, 14 * portWORD_SIZE( sp )
-	store_x x18, 15 * portWORD_SIZE( sp )
-	store_x x19, 16 * portWORD_SIZE( sp )
-	store_x x20, 17 * portWORD_SIZE( sp )
-	store_x x21, 18 * portWORD_SIZE( sp )
-	store_x x22, 19 * portWORD_SIZE( sp )
-	store_x x23, 20 * portWORD_SIZE( sp )
-	store_x x24, 21 * portWORD_SIZE( sp )
-	store_x x25, 22 * portWORD_SIZE( sp )
-	store_x x26, 23 * portWORD_SIZE( sp )
-	store_x x27, 24 * portWORD_SIZE( sp )
-	store_x x28, 25 * portWORD_SIZE( sp )
-	store_x x29, 26 * portWORD_SIZE( sp )
-	store_x x30, 27 * portWORD_SIZE( sp )
-	store_x x31, 28 * portWORD_SIZE( sp )
+    addi s1, ra, 0                      /* save return address */
 
     load_x  t0, pxCurrentTCB			/* Load pxCurrentTCB. */
 	store_x  sp, 0( t0 )				/* Write sp to first TCB member. */
@@ -337,72 +195,14 @@ not_switch:
 	load_x t0, 0( sp )
 	csrw mepc, t0
 
-	load_x  x1, 1 * portWORD_SIZE( sp )
-	load_x  x5, 2 * portWORD_SIZE( sp )		/* t0 */
-	load_x  x6, 3 * portWORD_SIZE( sp )		/* t1 */
-	load_x  x7, 4 * portWORD_SIZE( sp )		/* t2 */
-	load_x  x8, 5 * portWORD_SIZE( sp )		/* s0/fp */
-	load_x  x9, 6 * portWORD_SIZE( sp )		/* s1 */
-	load_x  x10, 7 * portWORD_SIZE( sp )	/* a0 */
-	load_x  x11, 8 * portWORD_SIZE( sp )	/* a1 */
-	load_x  x12, 9 * portWORD_SIZE( sp )	/* a2 */
-	load_x  x13, 10 * portWORD_SIZE( sp )	/* a3 */
-	load_x  x14, 11 * portWORD_SIZE( sp )	/* a4 */
-	load_x  x15, 12 * portWORD_SIZE( sp )	/* a5 */
-	load_x  x16, 13 * portWORD_SIZE( sp )	/* a6 */
-	load_x  x17, 14 * portWORD_SIZE( sp )	/* a7 */
-	load_x  x18, 15 * portWORD_SIZE( sp )	/* s2 */
-	load_x  x19, 16 * portWORD_SIZE( sp )	/* s3 */
-	load_x  x20, 17 * portWORD_SIZE( sp )	/* s4 */
-	load_x  x21, 18 * portWORD_SIZE( sp )	/* s5 */
-	load_x  x22, 19 * portWORD_SIZE( sp )	/* s6 */
-	load_x  x23, 20 * portWORD_SIZE( sp )	/* s7 */
-	load_x  x24, 21 * portWORD_SIZE( sp )	/* s8 */
-	load_x  x25, 22 * portWORD_SIZE( sp )	/* s9 */
-	load_x  x26, 23 * portWORD_SIZE( sp )	/* s10 */
-	load_x  x27, 24 * portWORD_SIZE( sp )	/* s11 */
-	load_x  x28, 25 * portWORD_SIZE( sp )	/* t3 */
-	load_x  x29, 26 * portWORD_SIZE( sp )	/* t4 */
-	load_x  x30, 27 * portWORD_SIZE( sp )	/* t5 */
-	load_x  x31, 28 * portWORD_SIZE( sp )	/* t6 */
-	addi sp, sp, portCONTEXT_SIZE
-
-	mret
+    addi ra, s1, 0                      /* restore return address */
+    ret
 	.endfunc
 
 .align 3
 .func
 ecall_handler:
-
-	addi sp, sp, -portCONTEXT_SIZE
-	store_x x1, 1 * portWORD_SIZE( sp )
-	store_x x5, 2 * portWORD_SIZE( sp )
-	store_x x6, 3 * portWORD_SIZE( sp )
-	store_x x7, 4 * portWORD_SIZE( sp )
-	store_x x8, 5 * portWORD_SIZE( sp )
-	store_x x9, 6 * portWORD_SIZE( sp )
-	store_x x10, 7 * portWORD_SIZE( sp )
-	store_x x11, 8 * portWORD_SIZE( sp )
-	store_x x12, 9 * portWORD_SIZE( sp )
-	store_x x13, 10 * portWORD_SIZE( sp )
-	store_x x14, 11 * portWORD_SIZE( sp )
-	store_x x15, 12 * portWORD_SIZE( sp )
-	store_x x16, 13 * portWORD_SIZE( sp )
-	store_x x17, 14 * portWORD_SIZE( sp )
-	store_x x18, 15 * portWORD_SIZE( sp )
-	store_x x19, 16 * portWORD_SIZE( sp )
-	store_x x20, 17 * portWORD_SIZE( sp )
-	store_x x21, 18 * portWORD_SIZE( sp )
-	store_x x22, 19 * portWORD_SIZE( sp )
-	store_x x23, 20 * portWORD_SIZE( sp )
-	store_x x24, 21 * portWORD_SIZE( sp )
-	store_x x25, 22 * portWORD_SIZE( sp )
-	store_x x26, 23 * portWORD_SIZE( sp )
-	store_x x27, 24 * portWORD_SIZE( sp )
-	store_x x28, 25 * portWORD_SIZE( sp )
-	store_x x29, 26 * portWORD_SIZE( sp )
-	store_x x30, 27 * portWORD_SIZE( sp )
-	store_x x31, 28 * portWORD_SIZE( sp )
+    addi s1, ra, 0                      /* save return address */
 
     load_x  t0, pxCurrentTCB			/* Load pxCurrentTCB. */
 	store_x  sp, 0( t0 )				/* Write sp to first TCB member. */
@@ -421,50 +221,15 @@ ecall_handler:
 	load_x t0, 0( sp )
 	csrw mepc, t0
 
-	load_x  x1, 1 * portWORD_SIZE( sp )
-	load_x  x5, 2 * portWORD_SIZE( sp )		/* t0 */
-	load_x  x6, 3 * portWORD_SIZE( sp )		/* t1 */
-	load_x  x7, 4 * portWORD_SIZE( sp )		/* t2 */
-	load_x  x8, 5 * portWORD_SIZE( sp )		/* s0/fp */
-	load_x  x9, 6 * portWORD_SIZE( sp )		/* s1 */
-	load_x  x10, 7 * portWORD_SIZE( sp )	/* a0 */
-	load_x  x11, 8 * portWORD_SIZE( sp )	/* a1 */
-	load_x  x12, 9 * portWORD_SIZE( sp )	/* a2 */
-	load_x  x13, 10 * portWORD_SIZE( sp )	/* a3 */
-	load_x  x14, 11 * portWORD_SIZE( sp )	/* a4 */
-	load_x  x15, 12 * portWORD_SIZE( sp )	/* a5 */
-	load_x  x16, 13 * portWORD_SIZE( sp )	/* a6 */
-	load_x  x17, 14 * portWORD_SIZE( sp )	/* a7 */
-	load_x  x18, 15 * portWORD_SIZE( sp )	/* s2 */
-	load_x  x19, 16 * portWORD_SIZE( sp )	/* s3 */
-	load_x  x20, 17 * portWORD_SIZE( sp )	/* s4 */
-	load_x  x21, 18 * portWORD_SIZE( sp )	/* s5 */
-	load_x  x22, 19 * portWORD_SIZE( sp )	/* s6 */
-	load_x  x23, 20 * portWORD_SIZE( sp )	/* s7 */
-	load_x  x24, 21 * portWORD_SIZE( sp )	/* s8 */
-	load_x  x25, 22 * portWORD_SIZE( sp )	/* s9 */
-	load_x  x26, 23 * portWORD_SIZE( sp )	/* s10 */
-	load_x  x27, 24 * portWORD_SIZE( sp )	/* s11 */
-	load_x  x28, 25 * portWORD_SIZE( sp )	/* t3 */
-	load_x  x29, 26 * portWORD_SIZE( sp )	/* t4 */
-	load_x  x30, 27 * portWORD_SIZE( sp )	/* t5 */
-	load_x  x31, 28 * portWORD_SIZE( sp )	/* t6 */
-	addi sp, sp, portCONTEXT_SIZE
-
-	mret
+    addi ra, s1, 0                      /* restore return address */
+	ret
 	.endfunc
 
 .align 8
 .func
 xPortStartFirstTask:
-
-#if( portasmHAS_SIFIVE_CLINT != 0 )
-	/* If there is a clint then interrupts can branch directly to the FreeRTOS
-	trap handler.  Otherwise the interrupt controller will need to be configured
-	outside of this file. */
 	la t0, freertos_risc_v_trap_handler
 	csrw mtvec, t0
-#endif /* portasmHAS_CLILNT */
 
 	load_x  sp, pxCurrentTCB			/* Load pxCurrentTCB. */
 	load_x  sp, 0( sp )				 	/* Read sp from first TCB member. */

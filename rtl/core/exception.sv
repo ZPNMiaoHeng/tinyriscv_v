@@ -16,11 +16,6 @@
 
 `include "defines.sv"
 
-
-`define CAUSE_EXCEP_ECALL_M     {1'b0, 31'd11}
-`define CAUSE_EXCEP_EBREAK_M    {1'b0, 31'd3}
-`define CAUSE_EXCEP_ILLEGAL_INST_M     {1'b0, 31'd2}
-
 `define DCSR_CAUSE_NONE         3'h0
 `define DCSR_CAUSE_STEP         3'h4
 `define DCSR_CAUSE_DBGREQ       3'h3
@@ -109,31 +104,25 @@ module exception (
 
     reg exception_req;
     reg[31:0] exception_cause;
-    reg[31:0] exception_offset;
 
     always @ (*) begin
         if (illegal_inst_i) begin
             exception_req = 1'b1;
-            exception_cause = `CAUSE_EXCEP_ILLEGAL_INST_M;
-            exception_offset = ILLEGAL_INSTR_OFFSET;
+            exception_cause = 32'h0;
         end else if (inst_ecall_i & inst_valid_i) begin
             exception_req = 1'b1;
-            exception_cause = `CAUSE_EXCEP_ECALL_M;
-            exception_offset = ECALL_OFFSET;
+            exception_cause = 32'h2;
         end else begin
             exception_req = 1'b0;
             exception_cause = 32'h0;
-            exception_offset = 32'h0;
         end
     end
 
     wire int_or_exception_req;
     wire[31:0] int_or_exception_cause;
-    wire[31:0] int_or_exception_offset;
 
-    assign int_or_exception_req     = (interrupt_req_valid & global_int_en & (~debug_mode_q)) | exception_req;
-    assign int_or_exception_cause   = exception_req ? exception_cause  : int_id_i;
-    assign int_or_exception_offset  = exception_req ? exception_offset : INT_OFFSET;
+    assign int_or_exception_req   = (interrupt_req_valid & global_int_en & (~debug_mode_q)) | exception_req;
+    assign int_or_exception_cause = exception_req ? exception_cause : (32'h8 + {24'h0, int_id_i});
 
     wire trigger_matching;
 
@@ -210,7 +199,7 @@ module exception (
                     csr_we = 1'b1;
                     csr_waddr = {20'h0, `CSR_MCAUSE};
                     csr_wdata = int_or_exception_cause;
-                    assert_addr_d = mtvec_i + int_or_exception_offset;
+                    assert_addr_d = mtvec_i;
                     return_addr_d = inst_addr_i;
                     state_d = S_W_MSTATUS;
                     int_id_d = int_id_i;

@@ -37,8 +37,8 @@ _start:
 	bltu a0, a1, 1b
 2:
 
-    /* set exception and interrupt vector table */
-    la a0, vector_table
+    /* set exception and interrupt entry */
+    la a0, trap_entry
     csrw mtvec, a0
 
     li a0, 0

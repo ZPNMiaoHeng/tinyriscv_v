@@ -38,6 +38,7 @@
 #include "string.h"
 
 #include "include/machine_timer.h"
+#include "include/rvic.h"
 
 /* Let the user override the pre-loading of the initial LR with the address of
 prvTaskExitError() in case it messes up unwinding of the stack in the
@@ -138,6 +139,7 @@ volatile uint32_t ulHartId;
     machine_timer_set_cmp_val(uxTimerIncrementsForOneTick);
 #endif
     machine_timer_irq_enable(1);// enable timer interrupt
+    rvic_irq_enable(0);
     machine_timer_enable(1);     // start timer
 }
 /*-----------------------------------------------------------*/
@@ -145,6 +147,7 @@ volatile uint32_t ulHartId;
 void xPortClearTimerIntPending()
 {
     machine_timer_clear_irq_pending();  // clear int pending
+    rvic_clear_irq_pending(0);
 }
 
 BaseType_t xPortStartScheduler( void )

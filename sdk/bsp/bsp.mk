@@ -16,7 +16,7 @@ BIN_TO_MEM    := $(BSP_DIR)/../../tools/BinToMem.py
 all: $(TARGET)
 
 ASM_SRCS += $(BSP_DIR)/crt0.S
-ASM_SRCS += $(BSP_DIR)/vector_table.S
+ASM_SRCS += $(BSP_DIR)/trap_entry.S
 
 C_SRCS += $(BSP_DIR)/lib/utils.c
 C_SRCS += $(BSP_DIR)/lib/xprintf.c

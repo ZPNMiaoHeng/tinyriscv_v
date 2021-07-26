@@ -53,7 +53,7 @@
 #include <task.h>
 
 #include "include/gpio.h"
-
+#include "include/utils.h"
 
 /* Set mainCREATE_SIMPLE_BLINKY_DEMO_ONLY to one to run the simple blinky demo,
 or 0 to run the more comprehensive test and demo application. */
@@ -189,8 +189,7 @@ void vToggleLED( void )
 {
 #ifdef SIMULATION
     // 运行成功
-    asm("li x27, 0x01");
-    asm("li x26, 0x01");
+    set_test_pass();
     while (1);
 #else
     GPIO_REG(GPIO_DATA) ^= 0x1;
