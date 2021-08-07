@@ -37,9 +37,9 @@
 // Timer
 `define TIMER_ADDR_MASK     ~32'hffff
 `define TIMER_ADDR_BASE     32'h40000000
-// UART
-`define UART_ADDR_MASK      ~32'hffff
-`define UART_ADDR_BASE      32'h50000000
+// UART0
+`define UART0_ADDR_MASK     ~32'hffff
+`define UART0_ADDR_BASE     32'h50000000
 // Machine Timer
 `define MTIMER_ADDR_MASK    ~32'hffff
 `define MTIMER_ADDR_BASE    32'hA0000000

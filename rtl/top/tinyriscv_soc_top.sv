@@ -57,7 +57,7 @@ module tinyriscv_soc_top #(
     localparam int JtagDevice   = 2;
     localparam int Mtimer       = 3;
     localparam int Gpio         = 4;
-    localparam int Uart         = 5;
+    localparam int Uart0        = 5;
     localparam int Rvic         = 6;
 `ifdef VERILATOR
     localparam int SimCtrl      = 7;
@@ -106,6 +106,7 @@ module tinyriscv_soc_top #(
     wire[7:0] int_id;
 
     wire mtimer_irq;
+    wire uart0_irq;
 
     wire[1:0] io_in;
     wire[31:0] gpio_ctrl;
@@ -114,6 +115,7 @@ module tinyriscv_soc_top #(
     always @ (*) begin
         irq_src    = 32'h0;
         irq_src[0] = mtimer_irq;
+        irq_src[1] = uart0_irq;
     end
 
 `ifdef VERILATOR
@@ -222,19 +224,21 @@ module tinyriscv_soc_top #(
         .reg_data(gpio_data)
     );
 
-    assign slave_addr_mask[Uart] = `UART_ADDR_MASK;
-    assign slave_addr_base[Uart] = `UART_ADDR_BASE;
-    // 5.串口模块
-    uart u_uart(
-        .clk    (clk),
-        .rst_n  (ndmreset_n),
-        .addr_i (slave_addr[Uart]),
-        .data_i (slave_wdata[Uart]),
-        .sel_i  (slave_be[Uart]),
-        .we_i   (slave_we[Uart]),
-        .data_o (slave_rdata[Uart]),
-        .tx_pin (uart_tx_pin),
-        .rx_pin (uart_rx_pin)
+    assign slave_addr_mask[Uart0] = `UART0_ADDR_MASK;
+    assign slave_addr_base[Uart0] = `UART0_ADDR_BASE;
+    // 5.串口0模块
+    uart_top uart0 (
+        .clk_i  (clk),
+        .rst_ni (ndmreset_n),
+        .rx_i   (uart_rx_pin),
+        .tx_o   (uart_tx_pin),
+        .irq_o  (uart0_irq),
+        .req_i  (slave_req[Uart0]),
+        .we_i   (slave_we[Uart0]),
+        .be_i   (slave_be[Uart0]),
+        .addr_i (slave_addr[Uart0]),
+        .data_i (slave_wdata[Uart0]),
+        .data_o (slave_rdata[Uart0])
     );
 
     assign slave_addr_mask[Rvic] = `RVIC_ADDR_MASK;

@@ -37,9 +37,14 @@
 ../rtl/perips/ram.sv
 ../rtl/perips/rom.sv
 ../rtl/perips/timer.sv
-../rtl/perips/uart.sv
 ../rtl/perips/machine_timer.sv
 ../rtl/perips/rvic.sv
+../rtl/perips/uart/uart_reg_pkg.sv
+../rtl/perips/uart/uart_reg_top.sv
+../rtl/perips/uart/uart_core.sv
+../rtl/perips/uart/uart_rx.sv
+../rtl/perips/uart/uart_top.sv
+../rtl/perips/uart/uart_tx.sv
 
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
@@ -52,3 +57,8 @@
 ../rtl/utils/gen_ram.sv
 ../rtl/utils/cdc_2phase.sv
 ../rtl/utils/sync_fifo.sv
+../rtl/utils/clk_div.sv
+../rtl/utils/edge_detect.sv
+../rtl/utils/prim_subreg.sv
+../rtl/utils/prim_subreg_arb.sv
+../rtl/utils/prim_subreg_ext.sv
