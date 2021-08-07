@@ -7,23 +7,24 @@
 // send one char to uart
 void uart_putc(uint8_t c)
 {
-    while (UART0_REG(UART0_STATUS) & 0x1);
-    UART0_REG(UART0_TXDATA) = c;
+    while (UART0_REG(UART_STATUS_REG_OFFSET) & (1 << UART_STATUS_TXFULL_BIT));
+
+    UART0_REG(UART_TXDATA_REG_OFFSET) = c;
 }
 
 // Block, get one char from uart.
 uint8_t uart_getc()
 {
-    UART0_REG(UART0_STATUS) &= ~0x2;
-    while (!(UART0_REG(UART0_STATUS) & 0x2));
-    return (UART0_REG(UART0_RXDATA) & 0xff);
+    while ((UART0_REG(UART_STATUS_REG_OFFSET) & (1 << UART_STATUS_RXEMPTY_BIT)));
+
+    return (UART0_REG(UART_RXDATA_REG_OFFSET) & 0xff);
 }
 
 // 115200bps, 8 N 1
 void uart_init()
 {
     // enable tx and rx
-    UART0_REG(UART0_CTRL) = 0x3;
+    UART0_REG(UART_CTRL_REG_OFFSET) |= 0x3;
 
     xdev_out(uart_putc);
 }

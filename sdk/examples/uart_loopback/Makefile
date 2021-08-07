@@ -3,7 +3,7 @@ RISCV_ABI := ilp32
 RISCV_MCMODEL := medlow
 
 
-TARGET = uart_rx
+TARGET = uart_loopback
 
 
 #CFLAGS += -DSIMULATION
