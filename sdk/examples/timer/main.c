@@ -17,6 +17,7 @@ int main()
     timer0_clear_int_pending();
     timer0_set_int_enable(1);
     timer0_set_mode_auto_reload();
+    rvic_set_irq_prio_level(0, 1);
     global_irq_enable();
     rvic_irq_enable(0);
     timer0_start(1);
@@ -37,6 +38,7 @@ int main()
     timer0_clear_int_pending();
     timer0_set_int_enable(1);
     timer0_set_mode_auto_reload();
+    rvic_set_irq_prio_level(0, 1);
     global_irq_enable();
     rvic_irq_enable(0);
     timer0_start(1);
