@@ -11,7 +11,7 @@ int main()
 #ifdef SIMULATION
     sim_ctrl_init();
 #else
-    uart_init();
+    uart0_init(uart0_putc);
 #endif
 
     xprintf("hello world\n");

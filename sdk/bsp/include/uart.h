@@ -50,9 +50,11 @@ extern "C" {
 #define UART_RXDATA_RXDATA_FIELD \
   ((bitfield_field32_t) { .mask = UART_RXDATA_RXDATA_MASK, .index = UART_RXDATA_RXDATA_OFFSET })
 
-void uart_init();
-uint8_t uart_getc();
-void uart_putc(uint8_t c);
+typedef void (*putc)(uint8_t);
+
+void uart0_init(putc put);
+uint8_t uart0_getc();
+void uart0_putc(uint8_t c);
 
 #ifdef __cplusplus
 }  // extern "C"

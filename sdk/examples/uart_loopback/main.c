@@ -7,10 +7,10 @@
 
 int main()
 {
-    uart_init();
+    uart0_init(uart0_putc);
 
     while (1) {
         // loopback
-        xprintf("%c", uart_getc());
+        xprintf("%c", uart0_getc());
     }
 }
