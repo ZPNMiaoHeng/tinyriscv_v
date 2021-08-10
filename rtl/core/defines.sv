@@ -34,15 +34,12 @@
 // GPIO
 `define GPIO_ADDR_MASK      ~32'hffff
 `define GPIO_ADDR_BASE      32'h30000000
-// Timer
-`define TIMER_ADDR_MASK     ~32'hffff
-`define TIMER_ADDR_BASE     32'h40000000
+// Timer0
+`define TIMER0_ADDR_MASK    ~32'hffff
+`define TIMER0_ADDR_BASE    32'h40000000
 // UART0
 `define UART0_ADDR_MASK     ~32'hffff
 `define UART0_ADDR_BASE     32'h50000000
-// Machine Timer
-`define MTIMER_ADDR_MASK    ~32'hffff
-`define MTIMER_ADDR_BASE    32'hA0000000
 // Interrupt controller
 `define RVIC_ADDR_MASK      ~32'hffff
 `define RVIC_ADDR_BASE      32'hD0000000

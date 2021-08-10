@@ -55,7 +55,7 @@ module tinyriscv_soc_top #(
     localparam int Rom          = 0;
     localparam int Ram          = 1;
     localparam int JtagDevice   = 2;
-    localparam int Mtimer       = 3;
+    localparam int Timer0       = 3;
     localparam int Gpio         = 4;
     localparam int Uart0        = 5;
     localparam int Rvic         = 6;
@@ -105,7 +105,7 @@ module tinyriscv_soc_top #(
     wire int_req;
     wire[7:0] int_id;
 
-    wire mtimer_irq;
+    wire timer0_irq;
     wire uart0_irq;
 
     wire[1:0] io_in;
@@ -114,7 +114,7 @@ module tinyriscv_soc_top #(
 
     always @ (*) begin
         irq_src    = 32'h0;
-        irq_src[0] = mtimer_irq;
+        irq_src[0] = timer0_irq;
         irq_src[1] = uart0_irq;
     end
 
@@ -187,18 +187,19 @@ module tinyriscv_soc_top #(
         .data_o (slave_rdata[Ram])
     );
 
-    assign slave_addr_mask[Mtimer] = `MTIMER_ADDR_MASK;
-    assign slave_addr_base[Mtimer] = `MTIMER_ADDR_BASE;
-    // 3.机器定时器模块
-    machine_timer u_machine_timer(
-        .clk    (clk),
-        .rst_n  (ndmreset_n),
-        .addr_i (slave_addr[Mtimer]),
-        .data_i (slave_wdata[Mtimer]),
-        .sel_i  (slave_be[Mtimer]),
-        .we_i   (slave_we[Mtimer]),
-        .data_o (slave_rdata[Mtimer]),
-        .irq_o  (mtimer_irq)
+    assign slave_addr_mask[Timer0] = `TIMER0_ADDR_MASK;
+    assign slave_addr_base[Timer0] = `TIMER0_ADDR_BASE;
+    // 3.定时器0模块
+    timer_top timer0(
+        .clk_i  (clk),
+        .rst_ni (ndmreset_n),
+        .irq_o  (timer0_irq),
+        .req_i  (slave_req[Timer0]),
+        .we_i   (slave_we[Timer0]),
+        .be_i   (slave_be[Timer0]),
+        .addr_i (slave_addr[Timer0]),
+        .data_i (slave_wdata[Timer0]),
+        .data_o (slave_rdata[Timer0])
     );
 
     // IO0

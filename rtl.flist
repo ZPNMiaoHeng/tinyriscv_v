@@ -36,8 +36,6 @@
 ../rtl/perips/gpio.sv
 ../rtl/perips/ram.sv
 ../rtl/perips/rom.sv
-../rtl/perips/timer.sv
-../rtl/perips/machine_timer.sv
 ../rtl/perips/rvic.sv
 ../rtl/perips/uart/uart_reg_pkg.sv
 ../rtl/perips/uart/uart_reg_top.sv
@@ -45,6 +43,10 @@
 ../rtl/perips/uart/uart_rx.sv
 ../rtl/perips/uart/uart_top.sv
 ../rtl/perips/uart/uart_tx.sv
+../rtl/perips/timer/timer_reg_pkg.sv
+../rtl/perips/timer/timer_reg_top.sv
+../rtl/perips/timer/timer_core.sv
+../rtl/perips/timer/timer_top.sv
 
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
