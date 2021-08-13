@@ -54,5 +54,5 @@ secs_ret time_in_secs(CORE_TICKS ticks)
 
 void portable_init(core_portable *p, int *argc, char *argv[])
 {
-    uart_init();
+    uart0_init(uart0_putc);
 }

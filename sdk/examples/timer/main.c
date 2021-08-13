@@ -43,13 +43,13 @@ int main()
     rvic_irq_enable(0);
     timer0_start(1);
 
-    gpio_output_enable(GPIO0);
+    gpio_set_mode(GPIO0, GPIO_MODE_OUTPUT);
 
     while (1) {
         // 500ms
         if (count == 50) {
             count = 0;
-            gpio_data_toggle(GPIO0); // toggle led
+            gpio_set_output_toggle(GPIO0); // toggle led
         }
     }
 #endif

@@ -21,7 +21,7 @@ uint8_t uart0_getc()
 }
 
 // 115200bps, 8 N 1
-void uart0_init(putc put)
+void uart0_init(myputc put)
 {
     // enable tx and rx
     UART0_REG(UART_CTRL_REG_OFFSET) |= 0x3;

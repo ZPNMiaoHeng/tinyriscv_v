@@ -37,7 +37,7 @@
 /* Standard includes. */
 #include "string.h"
 
-#include "include/machine_timer.h"
+#include "include/timer.h"
 #include "include/rvic.h"
 
 /* Let the user override the pre-loading of the initial LR with the address of
@@ -134,19 +134,23 @@ volatile uint32_t ulHartId;
 #endif
 
 #ifdef SIMULATION
-    machine_timer_set_cmp_val(5000);
+    timer0_set_div(50);
+    timer0_set_value(100);    // 100us period
 #else
-    machine_timer_set_cmp_val(uxTimerIncrementsForOneTick);
+    timer0_set_div(configCPU_CLOCK_HZ/1000000);
+    timer0_set_value(1000000/configTICK_RATE_HZ);    // 10ms period
 #endif
-    machine_timer_irq_enable(1);// enable timer interrupt
+    timer0_set_int_enable(1);
+    timer0_set_mode_auto_reload();
+    rvic_set_irq_prio_level(0, 1);
     rvic_irq_enable(0);
-    machine_timer_enable(1);     // start timer
+    timer0_start(1);     // start timer
 }
 /*-----------------------------------------------------------*/
 
 void xPortClearTimerIntPending()
 {
-    machine_timer_clear_irq_pending();  // clear int pending
+    timer0_clear_int_pending();
     rvic_clear_irq_pending(0);
 }
 
