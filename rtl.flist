@@ -33,7 +33,6 @@
 ../rtl/debug/jtag_top.sv
 ../rtl/debug/debug_rom.sv
 
-../rtl/perips/gpio.sv
 ../rtl/perips/ram.sv
 ../rtl/perips/rom.sv
 ../rtl/perips/rvic.sv
@@ -47,6 +46,10 @@
 ../rtl/perips/timer/timer_reg_top.sv
 ../rtl/perips/timer/timer_core.sv
 ../rtl/perips/timer/timer_top.sv
+../rtl/perips/gpio/gpio_reg_pkg.sv
+../rtl/perips/gpio/gpio_reg_top.sv
+../rtl/perips/gpio/gpio_core.sv
+../rtl/perips/gpio/gpio_top.sv
 
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
@@ -64,3 +67,4 @@
 ../rtl/utils/prim_subreg.sv
 ../rtl/utils/prim_subreg_arb.sv
 ../rtl/utils/prim_subreg_ext.sv
+../rtl/utils/prim_filter.sv

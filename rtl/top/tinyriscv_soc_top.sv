@@ -19,7 +19,8 @@
 
 // tinyriscv soc顶层模块
 module tinyriscv_soc_top #(
-    parameter bit          TRACE_ENABLE         = 1'b0
+    parameter bit          TRACE_ENABLE         = 1'b0,
+    parameter int          GPIO_NUM             = 2
     )(
 
     input wire clk_50m_i,           // 时钟引脚
@@ -107,15 +108,19 @@ module tinyriscv_soc_top #(
 
     wire timer0_irq;
     wire uart0_irq;
+    wire gpio0_irq;
+    wire gpio1_irq;
 
-    wire[1:0] io_in;
-    wire[31:0] gpio_ctrl;
-    wire[31:0] gpio_data;
+    wire[GPIO_NUM-1:0] gpio_data_in;
+    wire[GPIO_NUM-1:0] gpio_oe;
+    wire[GPIO_NUM-1:0] gpio_data_out;
 
     always @ (*) begin
         irq_src    = 32'h0;
         irq_src[0] = timer0_irq;
         irq_src[1] = uart0_irq;
+        irq_src[2] = gpio0_irq;
+        irq_src[3] = gpio1_irq;
     end
 
 `ifdef VERILATOR
@@ -202,27 +207,32 @@ module tinyriscv_soc_top #(
         .data_o (slave_rdata[Timer0])
     );
 
-    // IO0
-    assign gpio_pins[0] = (gpio_ctrl[1:0] == 2'b01)? gpio_data[0]: 1'bz;
-    assign io_in[0] = gpio_pins[0];
-    // IO1
-    assign gpio_pins[1] = (gpio_ctrl[3:2] == 2'b01)? gpio_data[1]: 1'bz;
-    assign io_in[1] = gpio_pins[1];
+    for (genvar i = 0; i < GPIO_NUM; i = i + 1) begin : g_gpio_data
+        assign gpio_pins[i] = gpio_oe[i] ? gpio_data_out[i] : 1'bz;
+        assign gpio_data_in[i] = gpio_pins[i];
+    end
 
     assign slave_addr_mask[Gpio] = `GPIO_ADDR_MASK;
     assign slave_addr_base[Gpio] = `GPIO_ADDR_BASE;
     // 4.GPIO模块
-    gpio u_gpio(
-        .clk     (clk),
-        .rst_n   (ndmreset_n),
-        .addr_i  (slave_addr[Gpio]),
-        .data_i  (slave_wdata[Gpio]),
-        .sel_i   (slave_be[Gpio]),
-        .we_i    (slave_we[Gpio]),
-        .data_o  (slave_rdata[Gpio]),
-        .io_pin_i(io_in),
-        .reg_ctrl(gpio_ctrl),
-        .reg_data(gpio_data)
+    gpio_top #(
+        .GPIO_NUM(GPIO_NUM)
+    ) u_gpio (
+        .clk_i          (clk),
+        .rst_ni         (ndmreset_n),
+        .gpio_oe_o      (gpio_oe),
+        .gpio_data_o    (gpio_data_out),
+        .gpio_data_i    (gpio_data_in),
+        .irq_gpio0_o    (gpio0_irq),
+        .irq_gpio1_o    (gpio1_irq),
+        .irq_gpio2_4_o  (),
+        .irq_gpio5_7_o  (),
+        .req_i          (slave_req[Gpio]),
+        .we_i           (slave_we[Gpio]),
+        .be_i           (slave_be[Gpio]),
+        .addr_i         (slave_addr[Gpio]),
+        .data_i         (slave_wdata[Gpio]),
+        .data_o         (slave_rdata[Gpio])
     );
 
     assign slave_addr_mask[Uart0] = `UART0_ADDR_MASK;
