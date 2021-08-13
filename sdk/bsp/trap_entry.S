@@ -17,6 +17,9 @@ vector_table:
     .word handle_exception_unknown
     .word handle_exception_unknown
     .word timer_irq_handler
+    .word uart0_irq_handler
+    .word gpio0_irq_handler
+    .word gpio1_irq_handler
     /* add your ISR here */
 
 .weak illegal_instruction_handler
@@ -27,6 +30,9 @@ vector_table:
 .weak store_misaligned_handler
 .weak handle_exception_unknown
 .weak timer_irq_handler
+.weak uart0_irq_handler
+.weak gpio0_irq_handler
+.weak gpio1_irq_handler
 
 handle_exception_unknown:
     j handle_exception_unknown
@@ -57,6 +63,15 @@ store_misaligned_handler:
 
 timer_irq_handler:
     j timer_irq_handler
+
+uart0_irq_handler:
+    j uart0_irq_handler
+
+gpio0_irq_handler:
+    j gpio0_irq_handler
+
+gpio1_irq_handler:
+    j gpio1_irq_handler
 
 /* 异常和中断总入口 */
 trap_entry:

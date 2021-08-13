@@ -3,35 +3,56 @@
 #include "../../bsp/include/gpio.h"
 #include "../../bsp/include/utils.h"
 
-void gpio_output_enable(uint8_t gpio)
+void gpio_set_mode(gpio_e gpio, gpio_mode_e mode)
 {
-    GPIO_REG(GPIO_CTRL) &= ~(0x3 << (gpio << 1));
-    GPIO_REG(GPIO_CTRL) |= GPIO_OUTPUT << (gpio << 1);
+    GPIO_REG(GPIO_MODE_REG_OFFSET) &= ~(0x3 << (gpio << 1));
+    GPIO_REG(GPIO_MODE_REG_OFFSET) |= ((uint8_t)mode) << (gpio << 1);
 }
 
-void gpio_input_enable(uint8_t gpio)
+uint8_t gpio_get_input_data(gpio_e gpio)
 {
-    GPIO_REG(GPIO_CTRL) &= ~(0x3 << (gpio << 1));
-    GPIO_REG(GPIO_CTRL) |= GPIO_INPUT << (gpio << 1);
-}
-
-uint8_t gpio_get_data(uint8_t gpio)
-{
-    if (GPIO_REG(GPIO_DATA) & (1 << gpio))
+    if (GPIO_REG(GPIO_DATA_REG_OFFSET) & (1 << gpio))
         return 1;
     else
         return 0;
 }
 
-void gpio_set_data(uint8_t gpio, uint8_t data)
+void gpio_set_output_data(gpio_e gpio, uint8_t data)
 {
     if (data)
-        GPIO_REG(GPIO_DATA) |= 1 << gpio;
+        GPIO_REG(GPIO_DATA_REG_OFFSET) |= 1 << gpio;
     else
-        GPIO_REG(GPIO_DATA) &= ~(1 << gpio);
+        GPIO_REG(GPIO_DATA_REG_OFFSET) &= ~(1 << gpio);
 }
 
-void gpio_data_toggle(uint8_t gpio)
+void gpio_set_output_toggle(gpio_e gpio)
 {
-    GPIO_REG(GPIO_DATA) ^= 1 << gpio;
+    GPIO_REG(GPIO_DATA_REG_OFFSET) ^= 1 << gpio;
+}
+
+void gpio_set_input_filter_enable(gpio_e gpio, uint8_t en)
+{
+    if (en)
+        GPIO_REG(GPIO_FILTER_REG_OFFSET) |= 1 << gpio;
+    else
+        GPIO_REG(GPIO_FILTER_REG_OFFSET) &= ~(1 << gpio);
+}
+
+void gpio_set_interrupt_mode(gpio_e gpio, gpio_intr_mode_e mode)
+{
+    GPIO_REG(GPIO_INTR_REG_OFFSET) &= ~(0x3 << (gpio << 1));
+    GPIO_REG(GPIO_INTR_REG_OFFSET) |= ((uint8_t)mode) << (gpio << 1);
+}
+
+void gpio_clear_intr_pending(gpio_e gpio)
+{
+    GPIO_REG(GPIO_INTR_REG_OFFSET) |= 1 << (gpio + 16);
+}
+
+uint8_t gpio_get_intr_pending(gpio_e gpio)
+{
+    if (GPIO_REG(GPIO_INTR_REG_OFFSET) & (1 << (gpio + 16)))
+        return 1;
+    else
+        return 0;
 }
