@@ -255,16 +255,17 @@ module tinyriscv_soc_top #(
     assign slave_addr_mask[Rvic] = `RVIC_ADDR_MASK;
     assign slave_addr_base[Rvic] = `RVIC_ADDR_BASE;
     // 6.中断控制器模块
-    rvic u_rvic(
+    rvic_top u_rvic(
         .clk_i      (clk),
         .rst_ni     (ndmreset_n),
         .src_i      (irq_src),
         .irq_o      (int_req),
         .irq_id_o   (int_id),
+        .req_i      (slave_req[Rvic]),
+        .we_i       (slave_we[Rvic]),
+        .be_i       (slave_be[Rvic]),
         .addr_i     (slave_addr[Rvic]),
         .data_i     (slave_wdata[Rvic]),
-        .be_i       (slave_be[Rvic]),
-        .we_i       (slave_we[Rvic]),
         .data_o     (slave_rdata[Rvic])
     );
 

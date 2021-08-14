@@ -35,7 +35,6 @@
 
 ../rtl/perips/ram.sv
 ../rtl/perips/rom.sv
-../rtl/perips/rvic.sv
 ../rtl/perips/uart/uart_reg_pkg.sv
 ../rtl/perips/uart/uart_reg_top.sv
 ../rtl/perips/uart/uart_core.sv
@@ -50,6 +49,10 @@
 ../rtl/perips/gpio/gpio_reg_top.sv
 ../rtl/perips/gpio/gpio_core.sv
 ../rtl/perips/gpio/gpio_top.sv
+../rtl/perips/rvic/rvic_reg_pkg.sv
+../rtl/perips/rvic/rvic_reg_top.sv
+../rtl/perips/rvic/rvic_core.sv
+../rtl/perips/rvic/rvic_top.sv
 
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
