@@ -22,6 +22,14 @@ set_property PACKAGE_PIN M6 [get_ports uart_tx_pin]
 set_property IOSTANDARD LVCMOS33 [get_ports uart_rx_pin]
 set_property PACKAGE_PIN N6 [get_ports uart_rx_pin]
 
+# I2C0 SCL引脚
+set_property IOSTANDARD LVCMOS33 [get_ports i2c_scl_pin]
+set_property PACKAGE_PIN R10 [get_ports i2c_scl_pin]
+
+# I2C0 SDA引脚
+set_property IOSTANDARD LVCMOS33 [get_ports i2c_sda_pin]
+set_property PACKAGE_PIN R11 [get_ports i2c_sda_pin]
+
 # GPIO0引脚
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio_pins[0]}]
 set_property PACKAGE_PIN P16 [get_ports {gpio_pins[0]}]
