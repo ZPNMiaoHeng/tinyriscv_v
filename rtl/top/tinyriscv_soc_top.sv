@@ -63,7 +63,7 @@ module tinyriscv_soc_top #(
     localparam int Gpio         = 4;
     localparam int Uart0        = 5;
     localparam int Rvic         = 6;
-    localparam int I2c          = 7;
+    localparam int I2c0         = 7;
 `ifdef VERILATOR
     localparam int SimCtrl      = 8;
 `endif
@@ -287,8 +287,8 @@ module tinyriscv_soc_top #(
     assign i2c_sda_pin = i2c_sda_oe ? i2c_sda_out : 1'bz;
     assign i2c_sda_in = i2c_sda_pin;
 
-    assign slave_addr_mask[I2c] = `I2C0_ADDR_MASK;
-    assign slave_addr_base[I2c] = `I2C0_ADDR_BASE;
+    assign slave_addr_mask[I2c0] = `I2C0_ADDR_MASK;
+    assign slave_addr_base[I2c0] = `I2C0_ADDR_BASE;
     // 7.I2C0模块
     i2c_top i2c0(
         .clk_i      (clk),
@@ -300,18 +300,18 @@ module tinyriscv_soc_top #(
         .sda_oe_o   (i2c_sda_oe),
         .sda_i      (i2c_sda_in),
         .irq_o      (i2c0_irq),
-        .req_i      (slave_req[I2c]),
-        .we_i       (slave_we[I2c]),
-        .be_i       (slave_be[I2c]),
-        .addr_i     (slave_addr[I2c]),
-        .data_i     (slave_wdata[I2c]),
-        .data_o     (slave_rdata[I2c])
+        .req_i      (slave_req[I2c0]),
+        .we_i       (slave_we[I2c0]),
+        .be_i       (slave_be[I2c0]),
+        .addr_i     (slave_addr[I2c0]),
+        .data_i     (slave_wdata[I2c0]),
+        .data_o     (slave_rdata[I2c0])
     );
 
 `ifdef VERILATOR
     assign slave_addr_mask[SimCtrl] = `SIM_CTRL_ADDR_MASK;
     assign slave_addr_base[SimCtrl] = `SIM_CTRL_ADDR_BASE;
-    // 7.仿真控制模块
+    // 8.仿真控制模块
     sim_ctrl u_sim_ctrl(
         .clk_i  (clk),
         .rst_ni (ndmreset_n),
