@@ -40,6 +40,9 @@
 // UART0
 `define UART0_ADDR_MASK     ~32'hffff
 `define UART0_ADDR_BASE     32'h50000000
+// I2C0
+`define I2C0_ADDR_MASK      ~32'hffff
+`define I2C0_ADDR_BASE      32'h60000000
 // Interrupt controller
 `define RVIC_ADDR_MASK      ~32'hffff
 `define RVIC_ADDR_BASE      32'hD0000000

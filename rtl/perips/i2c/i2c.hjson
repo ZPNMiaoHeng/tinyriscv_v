@@ -1,0 +1,86 @@
+// Copyright lowRISC contributors.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+{ name: "i2c",
+  clocking: [{clock: "clk_i", reset: "rst_ni"}],
+  bus_interfaces: [
+    { protocol: "tlul", direction: "device" }
+  ],
+  regwidth: "32",
+  registers: [
+    { name: "CTRL",
+      desc: "I2C control register",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      hwqe: "true",
+      fields: [
+        { bits: "0",
+          name: "START",
+          desc: "I2C start",
+        }
+        { bits: "1",
+          name: "INT_EN",
+          desc: "I2C interrupt enable",
+        }
+        { bits: "2",
+          name: "INT_PENDING",
+          swaccess: "rw1c",
+          desc: "I2C interrupt pending",
+        }
+        { bits: "3",
+          name: "MODE",
+          desc: "I2C mode, 0: master, 1: slave",
+        }
+        { bits: "4",
+          name: "WRITE",
+          desc: "0: write, 1: read",
+        }
+        { bits: "5",
+          name: "ACK",
+          swaccess: "ro",
+          desc: "0: ack, 1: nack",
+        }
+        { bits: "6",
+          name: "ERROR",
+          swaccess: "ro",
+          desc: "0: no error, 1: error",
+        }
+        { bits: "31:16",
+          name: "CLK_DIV",
+          desc: "I2C clock divider count",
+        }
+      ]
+    }
+    { name: "MASTER_DATA",
+      desc: "I2C master transfer data register",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        { bits: "7:0",
+          name: "ADDRESS",
+          desc: "I2C slave address",
+        }
+        { bits: "15:8",
+          name: "REGREG",
+          desc: "I2C write or read reg",
+        }
+        { bits: "23:16",
+          name: "DATA",
+          desc: "I2C write or read data",
+        }
+      ]
+    }
+    { name: "SLAVE_DATA",
+      desc: "I2C slave received data register",
+      swaccess: "ro",
+      hwaccess: "hrw",
+      hwext: "true",
+      hwre: "true",
+      fields: [
+        { bits: "7:0",
+          desc: "I2C slave received data(fifo)",
+        }
+      ]
+    }
+  ]
+}

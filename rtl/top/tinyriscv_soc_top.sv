@@ -31,6 +31,9 @@ module tinyriscv_soc_top #(
     output wire uart_tx_pin,        // UART发送引脚
     input wire uart_rx_pin,         // UART接收引脚
 
+    inout wire i2c_scl_pin,         // I2C SCL引脚
+    inout wire i2c_sda_pin,         // I2C SDA引脚
+
     inout wire[1:0] gpio_pins,      // GPIO引脚，1bit代表一个GPIO
 
     input wire jtag_TCK_pin,        // JTAG TCK引脚
@@ -42,9 +45,9 @@ module tinyriscv_soc_top #(
 
     localparam int MASTERS      = 3; // Number of master ports
 `ifdef VERILATOR
-    localparam int SLAVES       = 8; // Number of slave ports
+    localparam int SLAVES       = 9; // Number of slave ports
 `else
-    localparam int SLAVES       = 7; // Number of slave ports
+    localparam int SLAVES       = 8; // Number of slave ports
 `endif
 
     // masters
@@ -60,8 +63,9 @@ module tinyriscv_soc_top #(
     localparam int Gpio         = 4;
     localparam int Uart0        = 5;
     localparam int Rvic         = 6;
+    localparam int I2c          = 7;
 `ifdef VERILATOR
-    localparam int SimCtrl      = 7;
+    localparam int SimCtrl      = 8;
 `endif
 
 
@@ -110,10 +114,18 @@ module tinyriscv_soc_top #(
     wire uart0_irq;
     wire gpio0_irq;
     wire gpio1_irq;
+    wire i2c0_irq;
 
     wire[GPIO_NUM-1:0] gpio_data_in;
     wire[GPIO_NUM-1:0] gpio_oe;
     wire[GPIO_NUM-1:0] gpio_data_out;
+
+    wire i2c_scl_in;
+    wire i2c_scl_oe;
+    wire i2c_scl_out;
+    wire i2c_sda_in;
+    wire i2c_sda_oe;
+    wire i2c_sda_out;
 
     always @ (*) begin
         irq_src    = 32'h0;
@@ -121,6 +133,7 @@ module tinyriscv_soc_top #(
         irq_src[1] = uart0_irq;
         irq_src[2] = gpio0_irq;
         irq_src[3] = gpio1_irq;
+        irq_src[4] = i2c0_irq;
     end
 
 `ifdef VERILATOR
@@ -267,6 +280,32 @@ module tinyriscv_soc_top #(
         .addr_i     (slave_addr[Rvic]),
         .data_i     (slave_wdata[Rvic]),
         .data_o     (slave_rdata[Rvic])
+    );
+
+    assign i2c_scl_pin = i2c_scl_oe ? i2c_scl_out : 1'bz;
+    assign i2c_scl_in = i2c_scl_pin;
+    assign i2c_sda_pin = i2c_sda_oe ? i2c_sda_out : 1'bz;
+    assign i2c_sda_in = i2c_sda_pin;
+
+    assign slave_addr_mask[I2c] = `I2C0_ADDR_MASK;
+    assign slave_addr_base[I2c] = `I2C0_ADDR_BASE;
+    // 7.I2C0模块
+    i2c_top i2c0(
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .scl_o      (i2c_scl_out),
+        .scl_oe_o   (i2c_scl_oe),
+        .scl_i      (i2c_scl_in),
+        .sda_o      (i2c_sda_out),
+        .sda_oe_o   (i2c_sda_oe),
+        .sda_i      (i2c_sda_in),
+        .irq_o      (i2c0_irq),
+        .req_i      (slave_req[I2c]),
+        .we_i       (slave_we[I2c]),
+        .be_i       (slave_be[I2c]),
+        .addr_i     (slave_addr[I2c]),
+        .data_i     (slave_wdata[I2c]),
+        .data_o     (slave_rdata[I2c])
     );
 
 `ifdef VERILATOR

@@ -53,6 +53,11 @@
 ../rtl/perips/rvic/rvic_reg_top.sv
 ../rtl/perips/rvic/rvic_core.sv
 ../rtl/perips/rvic/rvic_top.sv
+../rtl/perips/i2c/i2c_reg_pkg.sv
+../rtl/perips/i2c/i2c_reg_top.sv
+../rtl/perips/i2c/i2c_core.sv
+../rtl/perips/i2c/i2c_top.sv
+../rtl/perips/i2c/i2c_master.sv
 
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
