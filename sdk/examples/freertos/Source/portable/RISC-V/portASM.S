@@ -80,7 +80,7 @@ specific version of freertos_risc_v_chip_specific_extensions.h.  See the notes
 at the top of this file. */
 #define portCONTEXT_SIZE ( 28 * portWORD_SIZE )
 
-.global timer_irq_handler
+.global timer0_irq_handler
 .global ecall_handler
 .global xPortStartFirstTask
 .global freertos_risc_v_trap_handler
@@ -172,7 +172,7 @@ freertos_risc_v_trap_handler:
 
 .align 3
 .func
-timer_irq_handler:
+timer0_irq_handler:
     addi s1, ra, 0                      /* save return address */
 
     load_x  t0, pxCurrentTCB			/* Load pxCurrentTCB. */

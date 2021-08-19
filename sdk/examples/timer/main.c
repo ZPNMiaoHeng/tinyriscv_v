@@ -55,7 +55,7 @@ int main()
 #endif
 }
 
-void timer_irq_handler()
+void timer0_irq_handler()
 {
     count++;
 
