@@ -17,3 +17,11 @@ void sim_end()
 {
     *(volatile int *)SIM_END_REG = 1;
 }
+
+void sim_dump_enable(uint8_t en)
+{
+    if (en)
+        *(volatile int *)SIM_DUMP_REG = 1;
+    else
+        *(volatile int *)SIM_DUMP_REG = 0;
+}
