@@ -16,10 +16,13 @@
 
 `define REG_CTRL  0
 `define REG_PRINT 4
+`define REG_DUMP  8
 
 module sim_ctrl(
     input  logic       clk_i,
     input  logic       rst_ni,
+
+    output logic       dump_wave_en_o,
 
     input  logic       req_i,
     output logic       gnt_o,
@@ -39,7 +42,7 @@ module sim_ctrl(
 
     always_ff @ (posedge clk_i or negedge rst_ni) begin
         if (!rst_ni) begin
-
+            dump_wave_en_o <= 1'b0;
         end else begin
             if (we_i) begin
                 case (reg_addr)
@@ -55,6 +58,16 @@ module sim_ctrl(
                             $display("%c", wdata_i[7:0]);
                         end
                     end
+
+                    `REG_DUMP: begin
+                        if (be_i[0] & wdata_i[0]) begin
+                            dump_wave_en_o <= 1'b1;
+                        end else if (be_i[0] & (!wdata_i[0])) begin
+                            dump_wave_en_o <= 1'b0;
+                        end
+                    end
+
+                    default: ;
                 endcase
             end
         end

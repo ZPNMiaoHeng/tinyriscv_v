@@ -24,7 +24,8 @@ module tb_top_verilator #(
 
     ) (
        input wire  clk_i,
-       input wire  rst_ni
+       input wire  rst_ni,
+       output wire dump_wave_en_o
     );
 
     wire halted;
@@ -106,6 +107,7 @@ module tb_top_verilator #(
     ) u_tinyriscv_soc_top (
         .clk_50m_i(clk_i),
         .rst_ext_ni(rst_ni),
+        .dump_wave_en_o(dump_wave_en_o),
         .halted_ind_pin(halted)
     );
 

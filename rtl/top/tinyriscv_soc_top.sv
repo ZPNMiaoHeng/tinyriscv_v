@@ -36,6 +36,10 @@ module tinyriscv_soc_top #(
 
     inout wire[1:0] gpio_pins,      // GPIO引脚，1bit代表一个GPIO
 
+`ifdef VERILATOR
+    output wire dump_wave_en_o,     // dump wave使能
+`endif
+
     input wire jtag_TCK_pin,        // JTAG TCK引脚
     input wire jtag_TMS_pin,        // JTAG TMS引脚
     input wire jtag_TDI_pin,        // JTAG TDI引脚
@@ -315,6 +319,7 @@ module tinyriscv_soc_top #(
     sim_ctrl u_sim_ctrl(
         .clk_i  (clk),
         .rst_ni (ndmreset_n),
+        .dump_wave_en_o(dump_wave_en_o),
         .req_i  (),
         .gnt_o  (),
         .addr_i (slave_addr[SimCtrl]),

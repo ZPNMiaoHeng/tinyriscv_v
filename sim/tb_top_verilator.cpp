@@ -42,7 +42,8 @@ int main(int argc, char **argv, char **env)
         top->eval();
 
 #ifdef VCD_TRACE
-        tfp->dump(t);
+        if (top->dump_wave_en_o)
+            tfp->dump(t);
 #endif
 
         t += 5;
