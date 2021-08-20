@@ -43,8 +43,13 @@ void i2c0_stop();
 #define I2C_CTRL_INT_PENDING_BIT 2
 #define I2C_CTRL_MODE_BIT 3
 #define I2C_CTRL_WRITE_BIT 4
-#define I2C_CTRL_ACK_BIT 5
-#define I2C_CTRL_ERROR_BIT 6
+#define I2C_CTRL_ERROR_BIT 5
+#define I2C_CTRL_SLAVE_WR_BIT 6
+#define I2C_CTRL_SLAVE_RDY_BIT 7
+#define I2C_CTRL_SLAVE_ADDR_MASK 0xff
+#define I2C_CTRL_SLAVE_ADDR_OFFSET 8
+#define I2C_CTRL_SLAVE_ADDR_FIELD \
+  ((bitfield_field32_t) { .mask = I2C_CTRL_SLAVE_ADDR_MASK, .index = I2C_CTRL_SLAVE_ADDR_OFFSET })
 #define I2C_CTRL_CLK_DIV_MASK 0xffff
 #define I2C_CTRL_CLK_DIV_OFFSET 16
 #define I2C_CTRL_CLK_DIV_FIELD \
@@ -66,13 +71,17 @@ void i2c0_stop();
 #define I2C_MASTER_DATA_DATA_FIELD \
   ((bitfield_field32_t) { .mask = I2C_MASTER_DATA_DATA_MASK, .index = I2C_MASTER_DATA_DATA_OFFSET })
 
-// I2C slave received data register
-#define I2C_SLAVE_DATA_REG_OFFSET 0x8
-#define I2C_SLAVE_DATA_REG_RESVAL 0x0
-#define I2C_SLAVE_DATA_SLAVE_DATA_MASK 0xff
-#define I2C_SLAVE_DATA_SLAVE_DATA_OFFSET 0
-#define I2C_SLAVE_DATA_SLAVE_DATA_FIELD \
-  ((bitfield_field32_t) { .mask = I2C_SLAVE_DATA_SLAVE_DATA_MASK, .index = I2C_SLAVE_DATA_SLAVE_DATA_OFFSET })
+// I2C slave read or write address register
+#define I2C_SLAVE_ADDR_REG_OFFSET 0x8
+#define I2C_SLAVE_ADDR_REG_RESVAL 0x0
+
+// I2C slave write data register
+#define I2C_SLAVE_WDATA_REG_OFFSET 0xc
+#define I2C_SLAVE_WDATA_REG_RESVAL 0x0
+
+// I2C slave read data register
+#define I2C_SLAVE_RDATA_REG_OFFSET 0x10
+#define I2C_SLAVE_RDATA_REG_RESVAL 0x0
 
 #ifdef __cplusplus
 }  // extern "C"
