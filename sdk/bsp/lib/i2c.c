@@ -62,6 +62,43 @@ uint8_t i2c0_master_get_data()
     return data;
 }
 
+void i2c0_slave_set_address(uint8_t addr)
+{
+    I2C0_REG(I2C_CTRL_REG_OFFSET) &= ~(I2C_CTRL_SLAVE_ADDR_MASK << I2C_CTRL_SLAVE_ADDR_OFFSET);
+    I2C0_REG(I2C_CTRL_REG_OFFSET) |= addr << I2C_CTRL_SLAVE_ADDR_OFFSET;
+}
+
+void i2c0_slave_set_ready(uint8_t yes)
+{
+    if (yes)
+        I2C0_REG(I2C_CTRL_REG_OFFSET) |= 1 << I2C_CTRL_SLAVE_RDY_BIT;
+    else
+        I2C0_REG(I2C_CTRL_REG_OFFSET) &= ~(1 << I2C_CTRL_SLAVE_RDY_BIT);
+}
+
+uint8_t i2c0_slave_op_read()
+{
+    if (I2C0_REG(I2C_CTRL_REG_OFFSET) & (1 << I2C_CTRL_SLAVE_WR_BIT))
+        return 1;
+    else
+        return 0;
+}
+
+uint32_t i2c0_slave_get_op_address()
+{
+    return (I2C0_REG(I2C_SLAVE_ADDR_REG_OFFSET));
+}
+
+uint32_t i2c0_slave_get_op_data()
+{
+    return (I2C0_REG(I2C_SLAVE_WDATA_REG_OFFSET));
+}
+
+void i2c0_slave_set_rsp_data(uint32_t data)
+{
+    I2C0_REG(I2C_SLAVE_RDATA_REG_OFFSET) = data;
+}
+
 void i2c0_start()
 {
     I2C0_REG(I2C_CTRL_REG_OFFSET) |= 1 << I2C_CTRL_START_BIT;

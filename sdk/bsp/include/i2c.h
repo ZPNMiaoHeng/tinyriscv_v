@@ -32,6 +32,12 @@ void i2c0_clear_irq_pending();
 uint8_t i2c0_get_irq_pending();
 void i2c0_master_set_info(uint8_t addr, uint8_t reg, uint8_t data);
 uint8_t i2c0_master_get_data();
+void i2c0_slave_set_address(uint8_t addr);
+void i2c0_slave_set_ready(uint8_t yes);
+uint8_t i2c0_slave_op_read();
+uint32_t i2c0_slave_get_op_address();
+uint32_t i2c0_slave_get_op_data();
+void i2c0_slave_set_rsp_data(uint32_t data);
 void i2c0_start();
 void i2c0_stop();
 
