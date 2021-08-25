@@ -59,8 +59,8 @@ module rvic_core (
 
     for (genvar i = 0; i < 8; i = i + 1) begin
         for (genvar j = 0; j < 4; j = j + 1) begin
-            // 只有当中断使能了，优先级才有效
-            assign each_prio[i*4+j] = priority_array[i][8*j+7:8*j] & {8{irq_enable[i*4+j]}};
+            // 只有当中断使能并且有中断请求，优先级才有效
+            assign each_prio[i*4+j] = priority_array[i][8*j+7:8*j] & {8{irq_enable[i*4+j]}} & {8{src_i[i*4+j] | irq_pending[i*4+j]}};
         end
     end
 
