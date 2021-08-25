@@ -36,14 +36,22 @@
           desc: "0: write, 1: read",
         }
         { bits: "5",
-          name: "ACK",
-          swaccess: "ro",
-          desc: "0: ack, 1: nack",
-        }
-        { bits: "6",
           name: "ERROR",
           swaccess: "ro",
           desc: "0: no error, 1: error",
+        }
+        { bits: "6",
+          name: "SLAVE_WR",
+          swaccess: "ro",
+          desc: "0: write, 1: read",
+        }
+        { bits: "7",
+          name: "SLAVE_RDY",
+          desc: "0: not ready, 1: ready",
+        }
+        { bits: "15:8",
+          name: "SLAVE_ADDR",
+          desc: "I2C slave address",
         }
         { bits: "31:16",
           name: "CLK_DIV",
@@ -70,15 +78,59 @@
         }
       ]
     }
-    { name: "SLAVE_DATA",
-      desc: "I2C slave received data register",
+    { name: "SLAVE_ADDR",
+      desc: "I2C slave read or write address register",
       swaccess: "ro",
       hwaccess: "hrw",
-      hwext: "true",
-      hwre: "true",
       fields: [
         { bits: "7:0",
-          desc: "I2C slave received data(fifo)",
+          name: "ADDR0",
+          desc: "I2C slave read or write address[7:0]",
+        }
+        { bits: "15:8",
+          name: "ADDR1",
+          desc: "I2C slave read or write address[15:8]",
+        }
+        { bits: "23:16",
+          name: "ADDR2",
+          desc: "I2C slave read or write address[23:16]",
+        }
+        { bits: "31:24",
+          name: "ADDR3",
+          desc: "I2C slave read or write address[31:24]",
+        }
+      ]
+    }
+    { name: "SLAVE_WDATA",
+      desc: "I2C slave write data register",
+      swaccess: "ro",
+      hwaccess: "hrw",
+      fields: [
+        { bits: "7:0",
+          name: "WDATA0",
+          desc: "I2C slave write data[7:0]",
+        }
+        { bits: "15:8",
+          name: "WDATA1",
+          desc: "I2C slave write data[15:8]",
+        }
+        { bits: "23:16",
+          name: "WDATA2",
+          desc: "I2C slave write data[23:16]",
+        }
+        { bits: "31:24",
+          name: "WDATA3",
+          desc: "I2C slave write data[31:24]",
+        }
+      ]
+    }
+    { name: "SLAVE_RDATA",
+      desc: "I2C slave read data register",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        { bits: "31:0",
+          desc: "I2C slave read data",
         }
       ]
     }

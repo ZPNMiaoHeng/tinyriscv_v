@@ -23,7 +23,7 @@ module i2c_reg_top (
 
   import i2c_reg_pkg::* ;
 
-  localparam int AW = 4;
+  localparam int AW = 5;
   localparam int DW = 32;
   localparam int DBW = DW/8;    // Byte Width
 
@@ -49,8 +49,12 @@ module i2c_reg_top (
   logic ctrl_mode_wd;
   logic ctrl_write_qs;
   logic ctrl_write_wd;
-  logic ctrl_ack_qs;
   logic ctrl_error_qs;
+  logic ctrl_slave_wr_qs;
+  logic ctrl_slave_rdy_qs;
+  logic ctrl_slave_rdy_wd;
+  logic [7:0] ctrl_slave_addr_qs;
+  logic [7:0] ctrl_slave_addr_wd;
   logic [15:0] ctrl_clk_div_qs;
   logic [15:0] ctrl_clk_div_wd;
   logic master_data_we;
@@ -60,8 +64,17 @@ module i2c_reg_top (
   logic [7:0] master_data_regreg_wd;
   logic [7:0] master_data_data_qs;
   logic [7:0] master_data_data_wd;
-  logic slave_data_re;
-  logic [7:0] slave_data_qs;
+  logic [7:0] slave_addr_addr0_qs;
+  logic [7:0] slave_addr_addr1_qs;
+  logic [7:0] slave_addr_addr2_qs;
+  logic [7:0] slave_addr_addr3_qs;
+  logic [7:0] slave_wdata_wdata0_qs;
+  logic [7:0] slave_wdata_wdata1_qs;
+  logic [7:0] slave_wdata_wdata2_qs;
+  logic [7:0] slave_wdata_wdata3_qs;
+  logic slave_rdata_we;
+  logic [31:0] slave_rdata_qs;
+  logic [31:0] slave_rdata_wd;
 
   // Register instances
   // R[ctrl]: V(False)
@@ -196,33 +209,7 @@ module i2c_reg_top (
   );
 
 
-  //   F[ack]: 5:5
-  prim_subreg #(
-    .DW      (1),
-    .SWACCESS("RO"),
-    .RESVAL  (1'h0)
-  ) u_ctrl_ack (
-    .clk_i   (clk_i),
-    .rst_ni  (rst_ni),
-
-    // from register interface
-    .we     (1'b0),
-    .wd     ('0),
-
-    // from internal hardware
-    .de     (hw2reg.ctrl.ack.de),
-    .d      (hw2reg.ctrl.ack.d),
-
-    // to internal hardware
-    .qe     (reg2hw.ctrl.ack.qe),
-    .q      (reg2hw.ctrl.ack.q),
-
-    // to register interface (read)
-    .qs     (ctrl_ack_qs)
-  );
-
-
-  //   F[error]: 6:6
+  //   F[error]: 5:5
   prim_subreg #(
     .DW      (1),
     .SWACCESS("RO"),
@@ -245,6 +232,84 @@ module i2c_reg_top (
 
     // to register interface (read)
     .qs     (ctrl_error_qs)
+  );
+
+
+  //   F[slave_wr]: 6:6
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RO"),
+    .RESVAL  (1'h0)
+  ) u_ctrl_slave_wr (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.ctrl.slave_wr.de),
+    .d      (hw2reg.ctrl.slave_wr.d),
+
+    // to internal hardware
+    .qe     (reg2hw.ctrl.slave_wr.qe),
+    .q      (reg2hw.ctrl.slave_wr.q),
+
+    // to register interface (read)
+    .qs     (ctrl_slave_wr_qs)
+  );
+
+
+  //   F[slave_rdy]: 7:7
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("RW"),
+    .RESVAL  (1'h0)
+  ) u_ctrl_slave_rdy (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (ctrl_we),
+    .wd     (ctrl_slave_rdy_wd),
+
+    // from internal hardware
+    .de     (hw2reg.ctrl.slave_rdy.de),
+    .d      (hw2reg.ctrl.slave_rdy.d),
+
+    // to internal hardware
+    .qe     (reg2hw.ctrl.slave_rdy.qe),
+    .q      (reg2hw.ctrl.slave_rdy.q),
+
+    // to register interface (read)
+    .qs     (ctrl_slave_rdy_qs)
+  );
+
+
+  //   F[slave_addr]: 15:8
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RW"),
+    .RESVAL  (8'h0)
+  ) u_ctrl_slave_addr (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (ctrl_we),
+    .wd     (ctrl_slave_addr_wd),
+
+    // from internal hardware
+    .de     (hw2reg.ctrl.slave_addr.de),
+    .d      (hw2reg.ctrl.slave_addr.d),
+
+    // to internal hardware
+    .qe     (reg2hw.ctrl.slave_addr.qe),
+    .q      (reg2hw.ctrl.slave_addr.q),
+
+    // to register interface (read)
+    .qs     (ctrl_slave_addr_qs)
   );
 
 
@@ -354,28 +419,253 @@ module i2c_reg_top (
   );
 
 
-  // R[slave_data]: V(True)
+  // R[slave_addr]: V(False)
 
-  prim_subreg_ext #(
-    .DW    (8)
-  ) u_slave_data (
-    .re     (slave_data_re),
+  //   F[addr0]: 7:0
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RO"),
+    .RESVAL  (8'h0)
+  ) u_slave_addr_addr0 (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
     .we     (1'b0),
     .wd     ('0),
-    .d      (hw2reg.slave_data.d),
-    .qre    (reg2hw.slave_data.re),
+
+    // from internal hardware
+    .de     (hw2reg.slave_addr.addr0.de),
+    .d      (hw2reg.slave_addr.addr0.d),
+
+    // to internal hardware
     .qe     (),
-    .q      (reg2hw.slave_data.q),
-    .qs     (slave_data_qs)
+    .q      (reg2hw.slave_addr.addr0.q),
+
+    // to register interface (read)
+    .qs     (slave_addr_addr0_qs)
   );
 
 
-  logic [2:0] addr_hit;
+  //   F[addr1]: 15:8
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RO"),
+    .RESVAL  (8'h0)
+  ) u_slave_addr_addr1 (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.slave_addr.addr1.de),
+    .d      (hw2reg.slave_addr.addr1.d),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.slave_addr.addr1.q),
+
+    // to register interface (read)
+    .qs     (slave_addr_addr1_qs)
+  );
+
+
+  //   F[addr2]: 23:16
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RO"),
+    .RESVAL  (8'h0)
+  ) u_slave_addr_addr2 (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.slave_addr.addr2.de),
+    .d      (hw2reg.slave_addr.addr2.d),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.slave_addr.addr2.q),
+
+    // to register interface (read)
+    .qs     (slave_addr_addr2_qs)
+  );
+
+
+  //   F[addr3]: 31:24
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RO"),
+    .RESVAL  (8'h0)
+  ) u_slave_addr_addr3 (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.slave_addr.addr3.de),
+    .d      (hw2reg.slave_addr.addr3.d),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.slave_addr.addr3.q),
+
+    // to register interface (read)
+    .qs     (slave_addr_addr3_qs)
+  );
+
+
+  // R[slave_wdata]: V(False)
+
+  //   F[wdata0]: 7:0
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RO"),
+    .RESVAL  (8'h0)
+  ) u_slave_wdata_wdata0 (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.slave_wdata.wdata0.de),
+    .d      (hw2reg.slave_wdata.wdata0.d),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.slave_wdata.wdata0.q),
+
+    // to register interface (read)
+    .qs     (slave_wdata_wdata0_qs)
+  );
+
+
+  //   F[wdata1]: 15:8
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RO"),
+    .RESVAL  (8'h0)
+  ) u_slave_wdata_wdata1 (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.slave_wdata.wdata1.de),
+    .d      (hw2reg.slave_wdata.wdata1.d),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.slave_wdata.wdata1.q),
+
+    // to register interface (read)
+    .qs     (slave_wdata_wdata1_qs)
+  );
+
+
+  //   F[wdata2]: 23:16
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RO"),
+    .RESVAL  (8'h0)
+  ) u_slave_wdata_wdata2 (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.slave_wdata.wdata2.de),
+    .d      (hw2reg.slave_wdata.wdata2.d),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.slave_wdata.wdata2.q),
+
+    // to register interface (read)
+    .qs     (slave_wdata_wdata2_qs)
+  );
+
+
+  //   F[wdata3]: 31:24
+  prim_subreg #(
+    .DW      (8),
+    .SWACCESS("RO"),
+    .RESVAL  (8'h0)
+  ) u_slave_wdata_wdata3 (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (1'b0),
+    .wd     ('0),
+
+    // from internal hardware
+    .de     (hw2reg.slave_wdata.wdata3.de),
+    .d      (hw2reg.slave_wdata.wdata3.d),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.slave_wdata.wdata3.q),
+
+    // to register interface (read)
+    .qs     (slave_wdata_wdata3_qs)
+  );
+
+
+  // R[slave_rdata]: V(False)
+
+  prim_subreg #(
+    .DW      (32),
+    .SWACCESS("RW"),
+    .RESVAL  (32'h0)
+  ) u_slave_rdata (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (slave_rdata_we),
+    .wd     (slave_rdata_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.slave_rdata.q),
+
+    // to register interface (read)
+    .qs     (slave_rdata_qs)
+  );
+
+
+  logic [4:0] addr_hit;
   always_comb begin
     addr_hit = '0;
     addr_hit[0] = (reg_addr == I2C_CTRL_OFFSET);
     addr_hit[1] = (reg_addr == I2C_MASTER_DATA_OFFSET);
-    addr_hit[2] = (reg_addr == I2C_SLAVE_DATA_OFFSET);
+    addr_hit[2] = (reg_addr == I2C_SLAVE_ADDR_OFFSET);
+    addr_hit[3] = (reg_addr == I2C_SLAVE_WDATA_OFFSET);
+    addr_hit[4] = (reg_addr == I2C_SLAVE_RDATA_OFFSET);
   end
 
   assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0 ;
@@ -385,7 +675,9 @@ module i2c_reg_top (
     wr_err = (reg_we &
               ((addr_hit[0] & (|(I2C_PERMIT[0] & ~reg_be))) |
                (addr_hit[1] & (|(I2C_PERMIT[1] & ~reg_be))) |
-               (addr_hit[2] & (|(I2C_PERMIT[2] & ~reg_be)))));
+               (addr_hit[2] & (|(I2C_PERMIT[2] & ~reg_be))) |
+               (addr_hit[3] & (|(I2C_PERMIT[3] & ~reg_be))) |
+               (addr_hit[4] & (|(I2C_PERMIT[4] & ~reg_be)))));
   end
 
   assign ctrl_we = addr_hit[0] & reg_we & !reg_error;
@@ -400,6 +692,10 @@ module i2c_reg_top (
 
   assign ctrl_write_wd = reg_wdata[4];
 
+  assign ctrl_slave_rdy_wd = reg_wdata[7];
+
+  assign ctrl_slave_addr_wd = reg_wdata[15:8];
+
   assign ctrl_clk_div_wd = reg_wdata[31:16];
   assign master_data_we = addr_hit[1] & reg_we & !reg_error;
 
@@ -408,7 +704,9 @@ module i2c_reg_top (
   assign master_data_regreg_wd = reg_wdata[15:8];
 
   assign master_data_data_wd = reg_wdata[23:16];
-  assign slave_data_re = addr_hit[2] & reg_re & !reg_error;
+  assign slave_rdata_we = addr_hit[4] & reg_we & !reg_error;
+
+  assign slave_rdata_wd = reg_wdata[31:0];
 
   // Read data return
   always_comb begin
@@ -420,8 +718,10 @@ module i2c_reg_top (
         reg_rdata_next[2] = ctrl_int_pending_qs;
         reg_rdata_next[3] = ctrl_mode_qs;
         reg_rdata_next[4] = ctrl_write_qs;
-        reg_rdata_next[5] = ctrl_ack_qs;
-        reg_rdata_next[6] = ctrl_error_qs;
+        reg_rdata_next[5] = ctrl_error_qs;
+        reg_rdata_next[6] = ctrl_slave_wr_qs;
+        reg_rdata_next[7] = ctrl_slave_rdy_qs;
+        reg_rdata_next[15:8] = ctrl_slave_addr_qs;
         reg_rdata_next[31:16] = ctrl_clk_div_qs;
       end
 
@@ -432,7 +732,21 @@ module i2c_reg_top (
       end
 
       addr_hit[2]: begin
-        reg_rdata_next[7:0] = slave_data_qs;
+        reg_rdata_next[7:0] = slave_addr_addr0_qs;
+        reg_rdata_next[15:8] = slave_addr_addr1_qs;
+        reg_rdata_next[23:16] = slave_addr_addr2_qs;
+        reg_rdata_next[31:24] = slave_addr_addr3_qs;
+      end
+
+      addr_hit[3]: begin
+        reg_rdata_next[7:0] = slave_wdata_wdata0_qs;
+        reg_rdata_next[15:8] = slave_wdata_wdata1_qs;
+        reg_rdata_next[23:16] = slave_wdata_wdata2_qs;
+        reg_rdata_next[31:24] = slave_wdata_wdata3_qs;
+      end
+
+      addr_hit[4]: begin
+        reg_rdata_next[31:0] = slave_rdata_qs;
       end
 
       default: begin

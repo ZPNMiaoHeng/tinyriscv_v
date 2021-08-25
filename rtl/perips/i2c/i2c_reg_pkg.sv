@@ -7,7 +7,7 @@
 package i2c_reg_pkg;
 
   // Address widths within the block
-  parameter int BlockAw = 4;
+  parameter int BlockAw = 5;
 
   ////////////////////////////
   // Typedefs for registers //
@@ -37,11 +37,19 @@ package i2c_reg_pkg;
     struct packed {
       logic        q;
       logic        qe;
-    } ack;
+    } error;
     struct packed {
       logic        q;
       logic        qe;
-    } error;
+    } slave_wr;
+    struct packed {
+      logic        q;
+      logic        qe;
+    } slave_rdy;
+    struct packed {
+      logic [7:0]  q;
+      logic        qe;
+    } slave_addr;
     struct packed {
       logic [15:0] q;
       logic        qe;
@@ -61,9 +69,38 @@ package i2c_reg_pkg;
   } i2c_reg2hw_master_data_reg_t;
 
   typedef struct packed {
-    logic [7:0]  q;
-    logic        re;
-  } i2c_reg2hw_slave_data_reg_t;
+    struct packed {
+      logic [7:0]  q;
+    } addr0;
+    struct packed {
+      logic [7:0]  q;
+    } addr1;
+    struct packed {
+      logic [7:0]  q;
+    } addr2;
+    struct packed {
+      logic [7:0]  q;
+    } addr3;
+  } i2c_reg2hw_slave_addr_reg_t;
+
+  typedef struct packed {
+    struct packed {
+      logic [7:0]  q;
+    } wdata0;
+    struct packed {
+      logic [7:0]  q;
+    } wdata1;
+    struct packed {
+      logic [7:0]  q;
+    } wdata2;
+    struct packed {
+      logic [7:0]  q;
+    } wdata3;
+  } i2c_reg2hw_slave_wdata_reg_t;
+
+  typedef struct packed {
+    logic [31:0] q;
+  } i2c_reg2hw_slave_rdata_reg_t;
 
   typedef struct packed {
     struct packed {
@@ -89,11 +126,19 @@ package i2c_reg_pkg;
     struct packed {
       logic        d;
       logic        de;
-    } ack;
+    } error;
     struct packed {
       logic        d;
       logic        de;
-    } error;
+    } slave_wr;
+    struct packed {
+      logic        d;
+      logic        de;
+    } slave_rdy;
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } slave_addr;
     struct packed {
       logic [15:0] d;
       logic        de;
@@ -116,43 +161,83 @@ package i2c_reg_pkg;
   } i2c_hw2reg_master_data_reg_t;
 
   typedef struct packed {
-    logic [7:0]  d;
-  } i2c_hw2reg_slave_data_reg_t;
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } addr0;
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } addr1;
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } addr2;
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } addr3;
+  } i2c_hw2reg_slave_addr_reg_t;
+
+  typedef struct packed {
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } wdata0;
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } wdata1;
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } wdata2;
+    struct packed {
+      logic [7:0]  d;
+      logic        de;
+    } wdata3;
+  } i2c_hw2reg_slave_wdata_reg_t;
 
   // Register -> HW type
   typedef struct packed {
-    i2c_reg2hw_ctrl_reg_t ctrl; // [63:33]
-    i2c_reg2hw_master_data_reg_t master_data; // [32:9]
-    i2c_reg2hw_slave_data_reg_t slave_data; // [8:0]
+    i2c_reg2hw_ctrl_reg_t ctrl; // [161:120]
+    i2c_reg2hw_master_data_reg_t master_data; // [119:96]
+    i2c_reg2hw_slave_addr_reg_t slave_addr; // [95:64]
+    i2c_reg2hw_slave_wdata_reg_t slave_wdata; // [63:32]
+    i2c_reg2hw_slave_rdata_reg_t slave_rdata; // [31:0]
   } i2c_reg2hw_t;
 
   // HW -> register type
   typedef struct packed {
-    i2c_hw2reg_ctrl_reg_t ctrl; // [65:35]
-    i2c_hw2reg_master_data_reg_t master_data; // [34:8]
-    i2c_hw2reg_slave_data_reg_t slave_data; // [7:0]
+    i2c_hw2reg_ctrl_reg_t ctrl; // [140:99]
+    i2c_hw2reg_master_data_reg_t master_data; // [98:72]
+    i2c_hw2reg_slave_addr_reg_t slave_addr; // [71:36]
+    i2c_hw2reg_slave_wdata_reg_t slave_wdata; // [35:0]
   } i2c_hw2reg_t;
 
   // Register offsets
-  parameter logic [BlockAw-1:0] I2C_CTRL_OFFSET = 4'h0;
-  parameter logic [BlockAw-1:0] I2C_MASTER_DATA_OFFSET = 4'h4;
-  parameter logic [BlockAw-1:0] I2C_SLAVE_DATA_OFFSET = 4'h8;
-
-  // Reset values for hwext registers and their fields
-  parameter logic [7:0] I2C_SLAVE_DATA_RESVAL = 8'h0;
+  parameter logic [BlockAw-1:0] I2C_CTRL_OFFSET = 5'h0;
+  parameter logic [BlockAw-1:0] I2C_MASTER_DATA_OFFSET = 5'h4;
+  parameter logic [BlockAw-1:0] I2C_SLAVE_ADDR_OFFSET = 5'h8;
+  parameter logic [BlockAw-1:0] I2C_SLAVE_WDATA_OFFSET = 5'hc;
+  parameter logic [BlockAw-1:0] I2C_SLAVE_RDATA_OFFSET = 5'h10;
 
   // Register index
   typedef enum int {
     I2C_CTRL,
     I2C_MASTER_DATA,
-    I2C_SLAVE_DATA
+    I2C_SLAVE_ADDR,
+    I2C_SLAVE_WDATA,
+    I2C_SLAVE_RDATA
   } i2c_id_e;
 
   // Register width information to check illegal writes
-  parameter logic [3:0] I2C_PERMIT [3] = '{
+  parameter logic [3:0] I2C_PERMIT [5] = '{
     4'b1111, // index[0] I2C_CTRL
     4'b0111, // index[1] I2C_MASTER_DATA
-    4'b0001  // index[2] I2C_SLAVE_DATA
+    4'b1111, // index[2] I2C_SLAVE_ADDR
+    4'b1111, // index[3] I2C_SLAVE_WDATA
+    4'b1111  // index[4] I2C_SLAVE_RDATA
   };
 
 endpackage

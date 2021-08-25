@@ -41,7 +41,6 @@ module i2c_core (
     i2c_reg_pkg::i2c_hw2reg_t hw2reg;
 
     logic master_mode;
-    logic slave_mode;
     logic op_write;
     logic op_read;
     logic start;
@@ -50,13 +49,36 @@ module i2c_core (
     logic [7:0] master_address;
     logic [7:0] master_register;
     logic [7:0] master_data;
-    logic master_ready, master_ready_q;
+    logic master_ready, master_ready_re;
     logic master_start;
     logic master_error;
     logic [7:0] master_read_data;
+    logic master_scl;
+    logic master_scl_oe;
+    logic master_sda;
+    logic master_sda_oe;
+    logic slave_mode;
+    logic slave_start;
+    logic [7:0] slave_address;
+    logic [7:0] slave_recv_address;
+    logic [7:0] slave_send_data;
+    logic [7:0] slave_recv_data;
+    logic slave_recv_read;
+    logic slave_recv_valid, slave_recv_valid_re;
+    logic slave_op_req, slave_op_req_re;
+    logic slave_scl;
+    logic slave_scl_oe;
+    logic slave_sda;
+    logic slave_sda_oe;
+
+    assign scl_o    = master_scl | slave_scl;
+    assign scl_oe_o = master_scl_oe | slave_scl_oe;
+    assign sda_o    = master_sda | slave_sda;
+    assign sda_oe_o = master_sda_oe | slave_sda_oe;
+
+//////////////////////////////////////////////////////// master //////////////////////////////////////////////////////////
 
     assign master_mode = ~reg2hw.ctrl.mode.q;
-    assign slave_mode  = reg2hw.ctrl.mode.q;
     assign op_write    = ~reg2hw.ctrl.write.q;
     assign op_read     = reg2hw.ctrl.write.q;
     assign start       = reg2hw.ctrl.start.q;
@@ -68,34 +90,151 @@ module i2c_core (
     assign master_data     = reg2hw.master_data.data.q;
 
     // 软件写1启动master传输
-    assign master_start = reg2hw.ctrl.start.qe && reg2hw.ctrl.start.q && master_ready;
+    assign master_start = reg2hw.ctrl.start.qe && reg2hw.ctrl.start.q && master_ready && master_mode;
 
-    // master传输完成后，硬件清start位
+    // master传输完成，硬件清start位
     assign hw2reg.ctrl.start.d = 1'b0;
-    // master传输完成上升沿脉冲
-    assign hw2reg.ctrl.start.de = (~master_ready_q) && master_ready;
+    assign hw2reg.ctrl.start.de = master_ready_re;
 
     // 传输完成产生中断pending
     assign hw2reg.ctrl.int_pending.d = 1'b1;
-    assign hw2reg.ctrl.int_pending.de = int_enable && (~master_ready_q) && master_ready;
+    assign hw2reg.ctrl.int_pending.de = int_enable && (master_ready_re || slave_op_req_re);
 
     // 传输完成并且是读操作，则更新master data
     assign hw2reg.master_data.data.d = master_read_data;
-    assign hw2reg.master_data.data.de = op_read && (~master_ready_q) && master_ready;
+    assign hw2reg.master_data.data.de = op_read && master_ready_re;
 
     // 传输完成更新error
     assign hw2reg.ctrl.error.d = master_error;
-    assign hw2reg.ctrl.error.de = (~master_ready_q) && master_ready;
+    assign hw2reg.ctrl.error.de = master_ready_re;
 
     assign irq_o = reg2hw.ctrl.int_pending.q;
 
-    always_ff @(posedge clk_i or negedge rst_ni) begin
-        if (~rst_ni) begin
-            master_ready_q <= 1'b1;
-        end else begin
-            master_ready_q <= master_ready;
+    edge_detect master_ready_edge_detect (
+        .clk_i  (clk_i),
+        .rst_ni (rst_ni),
+        .sig_i  (master_ready),
+        .sig_o  (),
+        .re_o   (master_ready_re),
+        .fe_o   ()
+    );
+
+//////////////////////////////////////////////////////// slave //////////////////////////////////////////////////////////
+
+    assign slave_start   = reg2hw.ctrl.start.q;
+    assign slave_mode    = reg2hw.ctrl.mode.q;
+    assign slave_address = reg2hw.ctrl.slave_addr.q;
+
+    // 收到请求后清ready状态
+    assign hw2reg.ctrl.slave_rdy.d = 1'b0;
+    assign hw2reg.ctrl.slave_rdy.de = slave_op_req_re;
+
+    always_comb begin
+        slave_send_data = '0;
+        hw2reg.slave_addr.addr0.de = 1'b0;
+        hw2reg.slave_addr.addr0.d = '0;
+        hw2reg.slave_addr.addr1.de = 1'b0;
+        hw2reg.slave_addr.addr1.d = '0;
+        hw2reg.slave_addr.addr2.de = 1'b0;
+        hw2reg.slave_addr.addr2.d = '0;
+        hw2reg.slave_addr.addr3.de = 1'b0;
+        hw2reg.slave_addr.addr3.d = '0;
+        hw2reg.slave_wdata.wdata0.de = 1'b0;
+        hw2reg.slave_wdata.wdata0.d = '0;
+        hw2reg.slave_wdata.wdata1.de = 1'b0;
+        hw2reg.slave_wdata.wdata1.d = '0;
+        hw2reg.slave_wdata.wdata2.de = 1'b0;
+        hw2reg.slave_wdata.wdata2.d = '0;
+        hw2reg.slave_wdata.wdata3.de = 1'b0;
+        hw2reg.slave_wdata.wdata3.d = '0;
+        hw2reg.ctrl.slave_wr.de = 1'b0;
+        hw2reg.ctrl.slave_wr.d = '0;
+
+        case (slave_recv_address)
+            8'h0: begin
+                slave_send_data = {6'h0, reg2hw.ctrl.slave_rdy.q, 1'b0};
+            end
+            8'hc: begin
+                slave_send_data = reg2hw.slave_rdata.q[7:0];
+            end
+            8'hd: begin
+                slave_send_data = reg2hw.slave_rdata.q[15:8];
+            end
+            8'he: begin
+                slave_send_data = reg2hw.slave_rdata.q[23:16];
+            end
+            8'hf: begin
+                slave_send_data = reg2hw.slave_rdata.q[31:24];
+            end
+            default: ;
+        endcase
+
+        // 收到写请求
+        if (slave_recv_valid_re && (!slave_recv_read)) begin
+            case (slave_recv_address)
+                8'h0: begin
+                    hw2reg.ctrl.slave_wr.de = 1'b1;
+                    hw2reg.ctrl.slave_wr.d = slave_recv_data[0];
+                end
+                8'h4: begin
+                    hw2reg.slave_addr.addr0.de = 1'b1;
+                    hw2reg.slave_addr.addr0.d = slave_recv_data;
+                end
+                8'h5: begin
+                    hw2reg.slave_addr.addr1.de = 1'b1;
+                    hw2reg.slave_addr.addr1.d = slave_recv_data;
+                end
+                8'h6: begin
+                    hw2reg.slave_addr.addr2.de = 1'b1;
+                    hw2reg.slave_addr.addr2.d = slave_recv_data;
+                end
+                8'h7: begin
+                    hw2reg.slave_addr.addr3.de = 1'b1;
+                    hw2reg.slave_addr.addr3.d = slave_recv_data;
+                end
+                8'h8: begin
+                    hw2reg.slave_wdata.wdata0.de = 1'b1;
+                    hw2reg.slave_wdata.wdata0.d = slave_recv_data;
+                end
+                8'h9: begin
+                    hw2reg.slave_wdata.wdata1.de = 1'b1;
+                    hw2reg.slave_wdata.wdata1.d = slave_recv_data;
+                end
+                8'ha: begin
+                    hw2reg.slave_wdata.wdata2.de = 1'b1;
+                    hw2reg.slave_wdata.wdata2.d = slave_recv_data;
+                end
+                8'hb: begin
+                    hw2reg.slave_wdata.wdata3.de = 1'b1;
+                    hw2reg.slave_wdata.wdata3.d = slave_recv_data;
+                end
+                default: ;
+            endcase
         end
     end
+
+    // master写0x00地址，发出中断(通知软件)
+    assign slave_op_req = slave_recv_valid_re && (!slave_recv_read) && (slave_recv_address == 8'h0);
+
+    // 软件收到请求上升沿检测
+    edge_detect slave_op_req_edge_detect (
+        .clk_i  (clk_i),
+        .rst_ni (rst_ni),
+        .sig_i  (slave_op_req),
+        .sig_o  (),
+        .re_o   (slave_op_req_re),
+        .fe_o   ()
+    );
+
+    // slave收到请求上升沿检测
+    edge_detect slave_recv_valid_edge_detect (
+        .clk_i  (clk_i),
+        .rst_ni (rst_ni),
+        .sig_i  (slave_recv_valid),
+        .sig_o  (),
+        .re_o   (slave_recv_valid_re),
+        .fe_o   ()
+    );
 
     i2c_master u_i2c_master (
         .clk_i        (clk_i),
@@ -111,11 +250,29 @@ module i2c_core (
         .error_o      (master_error),
         .data_o       (master_read_data),
         .scl_i        (scl_i),
-        .scl_o        (scl_o),
-        .scl_oe_o     (scl_oe_o),
+        .scl_o        (master_scl),
+        .scl_oe_o     (master_scl_oe),
         .sda_i        (sda_i),
-        .sda_o        (sda_o),
-        .sda_oe_o     (sda_oe_o)
+        .sda_o        (master_sda),
+        .sda_oe_o     (master_sda_oe)
+    );
+
+    i2c_slave u_i2c_slave (
+        .clk_i        (clk_i),
+        .rst_ni       (rst_ni),
+        .enable_i     (slave_mode & slave_start),
+        .slave_addr_i (slave_address),
+        .data_i       (slave_send_data),
+        .addr_o       (slave_recv_address),
+        .read_o       (slave_recv_read),
+        .valid_o      (slave_recv_valid),
+        .data_o       (slave_recv_data),
+        .scl_i        (scl_i),
+        .scl_o        (slave_scl),
+        .scl_oe_o     (slave_scl_oe),
+        .sda_i        (sda_i),
+        .sda_o        (slave_sda),
+        .sda_oe_o     (slave_sda_oe)
     );
 
     i2c_reg_top u_i2c_reg_top (
