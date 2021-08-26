@@ -174,7 +174,7 @@ module i2c_slave (
                             data_d = {data_q[6:0], sda};
                         end
                     end else if (scl_fall_edge) begin
-                        if (op_read_q && (scl_raise_edge_cnt_q < 4'd7)) begin
+                        if (op_read_q && (scl_raise_edge_cnt_q < 4'd8)) begin
                             sda_oe_d = 1'b1;
                             data_d = {data_q[6:0], 1'b1};
                             sda_d = data_q[7];
