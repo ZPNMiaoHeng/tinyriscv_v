@@ -41,6 +41,10 @@ module gen_ticks_sync #(
         end
     endgenerate
 
-    assign dout = sync_dat[DP-1];
-  
+    if (DP > 0) begin: dp_gt_0
+        assign dout = sync_dat[DP-1];
+    end else begin: dp_eq_0
+        assign dout = din;
+    end
+
 endmodule
