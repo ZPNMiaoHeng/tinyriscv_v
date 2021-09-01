@@ -15,7 +15,9 @@
  */
 
 // 上升沿、下降沿检测
-module edge_detect (
+module edge_detect #(
+    parameter int DP = 2
+    )(
     input  logic        clk_i,
     input  logic        rst_ni,
     input  logic        sig_i,
@@ -39,7 +41,7 @@ module edge_detect (
     end
 
     gen_ticks_sync #(
-        .DP(2),
+        .DP(DP),
         .DW(1)
     ) u_sync (
         .clk(clk_i),
