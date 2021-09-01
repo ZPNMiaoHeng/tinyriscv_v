@@ -30,6 +30,7 @@ module sim_ctrl(
     input  logic       we_i,
     input  logic[3:0]  be_i,
     input  logic[31:0] wdata_i,
+    output logic       rvalid_o,
     output logic[31:0] rdata_o
     );
 
@@ -43,8 +44,10 @@ module sim_ctrl(
     always_ff @ (posedge clk_i or negedge rst_ni) begin
         if (!rst_ni) begin
             dump_wave_en_o <= 1'b0;
+            rvalid_o <= 1'b0;
         end else begin
-            if (we_i) begin
+            rvalid_o <= req_i;
+            if (req_i & we_i) begin
                 case (reg_addr)
                     `REG_CTRL: begin
                         if (be_i[0] & wdata_i[0]) begin

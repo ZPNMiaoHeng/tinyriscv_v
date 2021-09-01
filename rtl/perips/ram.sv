@@ -18,19 +18,36 @@
 
 
 module ram #(
-    parameter DP = 4096)(
+    parameter DP = 4096
+    )(
+    input  wire        clk_i,
+    input  wire        rst_ni,
 
-    input wire clk,
-    input wire rst_n,
-    input wire[31:0] addr_i,
-    input wire[31:0] data_i,
-    input wire[3:0] sel_i,
-    input wire we_i,
-	output wire[31:0] data_o
-
+    input  wire        req_i,
+    input  wire        we_i,
+    input  wire [ 3:0] be_i,
+    input  wire [31:0] addr_i,
+    input  wire [31:0] data_i,
+    output wire        gnt_o,
+    output wire        rvalid_o,
+	output wire [31:0] data_o
     );
 
-    wire[31:0] addr = {6'h0, addr_i[27:2]};
+    reg rvalid_q;
+    wire[31:0] addr;
+
+    assign addr = {6'h0, addr_i[27:2]};
+    assign gnt_o = req_i;
+
+    always @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+            rvalid_q <= 1'b0;
+        end else begin
+            rvalid_q <= req_i;
+        end
+    end
+
+    assign rvalid_o = rvalid_q;
 
     gen_ram #(
         .DP(DP),
@@ -38,10 +55,10 @@ module ram #(
         .MW(4),
         .AW(32)
     ) u_gen_ram(
-        .clk(clk),
+        .clk(clk_i),
         .addr_i(addr),
         .data_i(data_i),
-        .sel_i(sel_i),
+        .sel_i(be_i),
         .we_i(we_i),
         .data_o(data_o)
     );

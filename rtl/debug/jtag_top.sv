@@ -45,6 +45,8 @@ module jtag_top(
     input  wire [31:0]              slave_addr_i,
     input  wire [3:0]               slave_be_i,
     input  wire [31:0]              slave_wdata_i,
+    output wire                     slave_gnt_o,
+    output wire                     slave_rvalid_o,
     output wire [31:0]              slave_rdata_o
 
     );
@@ -88,6 +90,8 @@ module jtag_top(
         .slave_addr_i   (slave_addr_i),
         .slave_be_i     (slave_be_i),
         .slave_wdata_i  (slave_wdata_i),
+        .slave_gnt_o    (slave_gnt_o),
+        .slave_rvalid_o (slave_rvalid_o),
         .slave_rdata_o  (slave_rdata_o)
     );
 

@@ -185,13 +185,16 @@ module tinyriscv_soc_top #(
     rom #(
         .DP(`ROM_DEPTH)
     ) u_rom (
-        .clk    (clk),
-        .rst_n  (ndmreset_n),
-        .addr_i (slave_addr[Rom]),
-        .data_i (slave_wdata[Rom]),
-        .sel_i  (slave_be[Rom]),
-        .we_i   (slave_we[Rom]),
-        .data_o (slave_rdata[Rom])
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .req_i      (slave_req[Rom]),
+        .addr_i     (slave_addr[Rom]),
+        .data_i     (slave_wdata[Rom]),
+        .be_i       (slave_be[Rom]),
+        .we_i       (slave_we[Rom]),
+        .gnt_o      (slave_gnt[Rom]),
+        .rvalid_o   (slave_rvalid[Rom]),
+        .data_o     (slave_rdata[Rom])
     );
 
     assign slave_addr_mask[Ram] = `RAM_ADDR_MASK;
@@ -200,28 +203,33 @@ module tinyriscv_soc_top #(
     ram #(
         .DP(`RAM_DEPTH)
     ) u_ram (
-        .clk    (clk),
-        .rst_n  (ndmreset_n),
-        .addr_i (slave_addr[Ram]),
-        .data_i (slave_wdata[Ram]),
-        .sel_i  (slave_be[Ram]),
-        .we_i   (slave_we[Ram]),
-        .data_o (slave_rdata[Ram])
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .req_i      (slave_req[Ram]),
+        .addr_i     (slave_addr[Ram]),
+        .data_i     (slave_wdata[Ram]),
+        .be_i       (slave_be[Ram]),
+        .we_i       (slave_we[Ram]),
+        .gnt_o      (slave_gnt[Ram]),
+        .rvalid_o   (slave_rvalid[Ram]),
+        .data_o     (slave_rdata[Ram])
     );
 
     assign slave_addr_mask[Timer0] = `TIMER0_ADDR_MASK;
     assign slave_addr_base[Timer0] = `TIMER0_ADDR_BASE;
     // 3.定时器0模块
     timer_top timer0(
-        .clk_i  (clk),
-        .rst_ni (ndmreset_n),
-        .irq_o  (timer0_irq),
-        .req_i  (slave_req[Timer0]),
-        .we_i   (slave_we[Timer0]),
-        .be_i   (slave_be[Timer0]),
-        .addr_i (slave_addr[Timer0]),
-        .data_i (slave_wdata[Timer0]),
-        .data_o (slave_rdata[Timer0])
+        .clk_i   (clk),
+        .rst_ni  (ndmreset_n),
+        .irq_o   (timer0_irq),
+        .req_i   (slave_req[Timer0]),
+        .we_i    (slave_we[Timer0]),
+        .be_i    (slave_be[Timer0]),
+        .addr_i  (slave_addr[Timer0]),
+        .data_i  (slave_wdata[Timer0]),
+        .gnt_o   (slave_gnt[Timer0]),
+        .rvalid_o(slave_rvalid[Timer0]),
+        .data_o  (slave_rdata[Timer0])
     );
 
     for (genvar i = 0; i < GPIO_NUM; i = i + 1) begin : g_gpio_data
@@ -249,6 +257,8 @@ module tinyriscv_soc_top #(
         .be_i           (slave_be[Gpio]),
         .addr_i         (slave_addr[Gpio]),
         .data_i         (slave_wdata[Gpio]),
+        .gnt_o          (slave_gnt[Gpio]),
+        .rvalid_o       (slave_rvalid[Gpio]),
         .data_o         (slave_rdata[Gpio])
     );
 
@@ -256,17 +266,19 @@ module tinyriscv_soc_top #(
     assign slave_addr_base[Uart0] = `UART0_ADDR_BASE;
     // 5.串口0模块
     uart_top uart0 (
-        .clk_i  (clk),
-        .rst_ni (ndmreset_n),
-        .rx_i   (uart_rx_pin),
-        .tx_o   (uart_tx_pin),
-        .irq_o  (uart0_irq),
-        .req_i  (slave_req[Uart0]),
-        .we_i   (slave_we[Uart0]),
-        .be_i   (slave_be[Uart0]),
-        .addr_i (slave_addr[Uart0]),
-        .data_i (slave_wdata[Uart0]),
-        .data_o (slave_rdata[Uart0])
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .rx_i       (uart_rx_pin),
+        .tx_o       (uart_tx_pin),
+        .irq_o      (uart0_irq),
+        .req_i      (slave_req[Uart0]),
+        .we_i       (slave_we[Uart0]),
+        .be_i       (slave_be[Uart0]),
+        .addr_i     (slave_addr[Uart0]),
+        .data_i     (slave_wdata[Uart0]),
+        .gnt_o      (slave_gnt[Uart0]),
+        .rvalid_o   (slave_rvalid[Uart0]),
+        .data_o     (slave_rdata[Uart0])
     );
 
     assign slave_addr_mask[Rvic] = `RVIC_ADDR_MASK;
@@ -283,6 +295,8 @@ module tinyriscv_soc_top #(
         .be_i       (slave_be[Rvic]),
         .addr_i     (slave_addr[Rvic]),
         .data_i     (slave_wdata[Rvic]),
+        .gnt_o      (slave_gnt[Rvic]),
+        .rvalid_o   (slave_rvalid[Rvic]),
         .data_o     (slave_rdata[Rvic])
     );
 
@@ -309,6 +323,8 @@ module tinyriscv_soc_top #(
         .be_i       (slave_be[I2c0]),
         .addr_i     (slave_addr[I2c0]),
         .data_i     (slave_wdata[I2c0]),
+        .gnt_o      (slave_gnt[I2c0]),
+        .rvalid_o   (slave_rvalid[I2c0]),
         .data_o     (slave_rdata[I2c0])
     );
 
@@ -317,16 +333,17 @@ module tinyriscv_soc_top #(
     assign slave_addr_base[SimCtrl] = `SIM_CTRL_ADDR_BASE;
     // 8.仿真控制模块
     sim_ctrl u_sim_ctrl(
-        .clk_i  (clk),
-        .rst_ni (ndmreset_n),
+        .clk_i         (clk),
+        .rst_ni        (ndmreset_n),
         .dump_wave_en_o(dump_wave_en_o),
-        .req_i  (),
-        .gnt_o  (),
-        .addr_i (slave_addr[SimCtrl]),
-        .we_i   (slave_we[SimCtrl]),
-        .be_i   (slave_be[SimCtrl]),
-        .wdata_i(slave_wdata[SimCtrl]),
-        .rdata_o(slave_rdata[SimCtrl])
+        .req_i         (slave_req[SimCtrl]),
+        .gnt_o         (slave_gnt[SimCtrl]),
+        .addr_i        (slave_addr[SimCtrl]),
+        .we_i          (slave_we[SimCtrl]),
+        .be_i          (slave_be[SimCtrl]),
+        .wdata_i       (slave_wdata[SimCtrl]),
+        .rvalid_o      (slave_rvalid[SimCtrl]),
+        .rdata_o       (slave_rdata[SimCtrl])
     );
 `endif
 
@@ -359,6 +376,8 @@ module tinyriscv_soc_top #(
 `ifdef VERILATOR
     assign clk = clk_50m_i;
 `else
+    // 使用xilinx vivado中的mmcm IP进行分频
+    // 输入为50MHZ，输出为25MHZ
     mmcm_main_clk u_mmcm_main_clk(
       .clk_out1(clk),
       .resetn(rst_ext_ni),
@@ -412,6 +431,8 @@ module tinyriscv_soc_top #(
         .slave_addr_i       (slave_addr[JtagDevice]),
         .slave_be_i         (slave_be[JtagDevice]),
         .slave_wdata_i      (slave_wdata[JtagDevice]),
+        .slave_gnt_o        (slave_gnt[JtagDevice]),
+        .slave_rvalid_o     (slave_rvalid[JtagDevice]),
         .slave_rdata_o      (slave_rdata[JtagDevice])
     );
 

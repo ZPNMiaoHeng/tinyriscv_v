@@ -15,12 +15,12 @@
  */
 
 // obi总线交叉互联矩阵，支持一对多、多对一、多对多
-// master之间采用优先级总裁方式，LSB优先级最高，MSB优先级最低
+// master之间采用优先级总裁方式：LSB优先级最高，MSB优先级最低
 module obi_interconnect #(
-    parameter  int  MASTERS            = 3,  // number of masters
-    parameter  int  SLAVES             = 5,  // number of slaves
-    parameter MASTER_BITS = MASTERS == 1 ? 1 : $clog2(MASTERS),
-    parameter SLAVE_BITS  = SLAVES  == 1 ? 1 : $clog2(SLAVES)
+    parameter  int  MASTERS     = 3,  // number of masters
+    parameter  int  SLAVES      = 5,  // number of slaves
+    parameter       MASTER_BITS = MASTERS == 1 ? 1 : $clog2(MASTERS),  // do not change
+    parameter       SLAVE_BITS  = SLAVES  == 1 ? 1 : $clog2(SLAVES)    // do not change
     )(
     input logic         clk_i,
     input logic         rst_ni,
@@ -93,7 +93,7 @@ module obi_interconnect #(
 
     // slave信号赋值
     generate
-        for (s = 0; s < SLAVES; s = s + 1) begin: slave_signal
+        for (s = 0; s < SLAVES; s = s + 1) begin: slave_signals
             assign slave_req_o[s]   = master_req_i[master_sel_int[s]] & granted_master[s];
             assign slave_we_o[s]    = master_we_i[master_sel_int[s]]  & granted_master[s];
             assign slave_be_o[s]    = master_be_i[master_sel_int[s]];
@@ -102,45 +102,39 @@ module obi_interconnect #(
         end
     endgenerate
 
+    // 真正被slaves选中的master
     logic [MASTERS-1:0]         master_sel_or;
 
     always_comb begin
         master_sel_or = 'b0;
         for (integer i = 0; i < SLAVES; i = i + 1) begin: gen_master_sel_or_vec
-            master_sel_or = master_sel_or | master_sel_vec[i];
+            master_sel_or = master_sel_or | (master_sel_vec[i] & {MASTERS{granted_master[i]}});
         end
     end
 
+    // 保存master选中的slave
     logic [SLAVE_BITS-1:0]     slave_sel_int_q[MASTERS];
 
     generate
-        for (m = 0; m < MASTERS; m = m + 1) begin: master_data_q
+        for (m = 0; m < MASTERS; m = m + 1) begin: gen_save_selected_slaves
             always_ff @ (posedge clk_i or negedge rst_ni) begin
                 if (!rst_ni) begin
                     slave_sel_int_q[m] <= 'b0;
                 end else begin
-                    slave_sel_int_q[m] <= slave_sel_int[m];
+                    if (slave_gnt_i[slave_sel_int[m]] & master_sel_or[m]) begin
+                        slave_sel_int_q[m] <= slave_sel_int[m];
+                    end
                 end
             end
         end
     endgenerate
 
-    logic [MASTERS-1:0]        master_sel_or_q;
-
-    always_ff @ (posedge clk_i or negedge rst_ni) begin
-        if (!rst_ni) begin
-            master_sel_or_q <= 'b0;
-        end else begin
-            master_sel_or_q <= master_sel_or;
-        end
-    end
-
     // master信号赋值
     generate
-        for (m = 0; m < MASTERS; m = m + 1) begin: master_data
-            assign master_gnt_o[m]   = master_sel_or[m];
-            assign master_rdata_o[m] = slave_rdata_i[slave_sel_int_q[m]];
-            assign master_rvalid_o[m] = master_sel_or_q[m];
+        for (m = 0; m < MASTERS; m = m + 1) begin: master_signals
+            assign master_gnt_o[m]    = slave_gnt_i[slave_sel_int[m]] & master_sel_or[m];
+            assign master_rdata_o[m]  = slave_rdata_i[slave_sel_int_q[m]];
+            assign master_rvalid_o[m] = slave_rvalid_i[slave_sel_int_q[m]];
         end
     endgenerate
 

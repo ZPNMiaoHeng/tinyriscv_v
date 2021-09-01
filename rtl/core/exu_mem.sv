@@ -183,7 +183,7 @@ module exu_mem(
         endcase
     end
 
-    assign mem_req_o = req_mem_i;
+    assign mem_req_o = req_mem_i && (state_q == S_IDLE);
     assign mem_addr_o = mem_addr_i;
 
     // 暂停流水线

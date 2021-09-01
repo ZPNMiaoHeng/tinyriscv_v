@@ -58,6 +58,8 @@ module jtag_dm #(
     input  wire [31:0]              slave_addr_i,
     input  wire [3:0]               slave_be_i,
     input  wire [31:0]              slave_wdata_i,
+    output wire                     slave_gnt_o,
+    output wire                     slave_rvalid_o,
     output wire [31:0]              slave_rdata_o
 
     );
@@ -497,6 +499,8 @@ module jtag_dm #(
         .addr_i(slave_addr_i),
         .be_i(slave_be_i),
         .wdata_i(slave_wdata_i),
+        .gnt_o(slave_gnt_o),
+        .rvalid_o(slave_rvalid_o),
         .rdata_o(slave_rdata_o)
     );
 

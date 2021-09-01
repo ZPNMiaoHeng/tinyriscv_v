@@ -43,6 +43,8 @@ module jtag_mem(
     input  wire [31:0]                   addr_i,
     input  wire [3:0]                    be_i,
     input  wire [31:0]                   wdata_i,
+    output wire                          gnt_o,
+    output wire                          rvalid_o,
     output wire [31:0]                   rdata_o
 
     );
@@ -180,6 +182,7 @@ module jtag_mem(
     reg data_valid;
     reg cmdbusy;
     reg halted_aligned;
+    reg rvalid_q;
     wire fwd_rom_d;
     wire[31:0] rom_rdata;
     reg[31:0] data_bits;
@@ -204,7 +207,8 @@ module jtag_mem(
 
     assign halted_o = halted_q;
     assign resumeack_o = resuming_q;
-
+    assign gnt_o = req_i;
+    assign rvalid_o = rvalid_q;
 
     always @ (*) begin
         state_d = state_q;
@@ -292,7 +296,7 @@ module jtag_mem(
         end
 
         // write
-        if (we_i) begin
+        if (req_i & we_i) begin
             case (addr_i[DbgAddressBits-1:0])
                 HaltedAddr: begin
                     halted_d = 1'b1;
@@ -328,7 +332,7 @@ module jtag_mem(
                 default:;
             endcase
         // read
-        end else begin
+        end else if (req_i & (!we_i)) begin
             case (addr_i[DbgAddressBits-1:0])
                 WhereToAddr: begin
                     if (cmdbusy & (cmd_type == CmdAccessRegister)) begin
@@ -472,12 +476,11 @@ module jtag_mem(
 
     wire[31:0] rom_addr;
     assign rom_addr = addr_i;
-
     assign fwd_rom_d = addr_i[DbgAddressBits-1:0] >= `HaltAddress;
 
     debug_rom u_debug_rom (
         .clk_i   ( clk       ),
-        .req_i   ( 1'b1      ),
+        .req_i   ( req_i     ),
         .addr_i  ( rom_addr  ),
         .rdata_o ( rom_rdata )
     );
@@ -488,11 +491,13 @@ module jtag_mem(
             fwd_rom_q <= 1'b0;
             halted_q <= 1'b0;
             resuming_q <= 1'b0;
+            rvalid_q <= 1'b0;
         end else begin
             rdata_q <= rdata_d;
             fwd_rom_q <= fwd_rom_d;
             halted_q <= halted_d;
             resuming_q <= resuming_d;
+            rvalid_q <= req_i;
         end
     end
 

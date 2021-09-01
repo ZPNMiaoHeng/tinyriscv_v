@@ -28,6 +28,8 @@ module uart_top (
     input  logic [ 3:0] be_i,
     input  logic [31:0] addr_i,
     input  logic [31:0] data_i,
+    output logic        gnt_o,
+    output logic        rvalid_o,
     output logic [31:0] data_o
     );
 
@@ -36,12 +38,24 @@ module uart_top (
     logic [31:0] addr;
     logic [31:0] reg_rdata;
 
+    assign gnt_o = req_i;
+
     // 读信号
     assign re = req_i & (!we_i);
     // 写信号
     assign we = req_i & we_i;
     // 去掉基地址
     assign addr = {16'h0, addr_i[15:0]};
+
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+            rvalid_o <= '0;
+            data_o <= '0;
+        end else begin
+            rvalid_o <= req_i;
+            data_o <= reg_rdata;
+        end
+    end
 
     uart_core u_uart_core (
         .clk_i      (clk_i),
@@ -56,9 +70,5 @@ module uart_top (
         .reg_addr_i (addr),
         .reg_rdata_o(reg_rdata)
     );
-
-    always_ff @(posedge clk_i) begin
-        data_o <= reg_rdata;
-    end
 
 endmodule
