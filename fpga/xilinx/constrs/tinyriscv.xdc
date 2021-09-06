@@ -30,6 +30,30 @@ set_property PACKAGE_PIN R10 [get_ports i2c_scl_pin]
 set_property IOSTANDARD LVCMOS33 [get_ports i2c_sda_pin]
 set_property PACKAGE_PIN R11 [get_ports i2c_sda_pin]
 
+# SPI DQ3引脚
+set_property IOSTANDARD LVCMOS33 [get_ports spi_dq3_pin]
+set_property PACKAGE_PIN P3 [get_ports spi_dq3_pin]
+
+# SPI DQ2引脚
+set_property IOSTANDARD LVCMOS33 [get_ports spi_dq2_pin]
+set_property PACKAGE_PIN P4 [get_ports spi_dq2_pin]
+
+# SPI DQ1引脚
+set_property IOSTANDARD LVCMOS33 [get_ports spi_dq1_pin]
+set_property PACKAGE_PIN P1 [get_ports spi_dq1_pin]
+
+# SPI DQ0引脚
+set_property IOSTANDARD LVCMOS33 [get_ports spi_dq0_pin]
+set_property PACKAGE_PIN N1 [get_ports spi_dq0_pin]
+
+# SPI SS引脚
+set_property IOSTANDARD LVCMOS33 [get_ports spi_ss_pin]
+set_property PACKAGE_PIN M5 [get_ports spi_ss_pin]
+
+# SPI CLK引脚
+set_property IOSTANDARD LVCMOS33 [get_ports spi_clk_pin]
+set_property PACKAGE_PIN N4 [get_ports spi_clk_pin]
+
 # GPIO0引脚
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio_pins[0]}]
 set_property PACKAGE_PIN P16 [get_ports {gpio_pins[0]}]

@@ -34,6 +34,13 @@ module tinyriscv_soc_top #(
     inout wire i2c_scl_pin,         // I2C SCL引脚
     inout wire i2c_sda_pin,         // I2C SDA引脚
 
+    inout wire spi_clk_pin,         // SPI CLK引脚
+    inout wire spi_ss_pin,          // SPI SS引脚
+    inout wire spi_dq0_pin,         // SPI DQ0(MOSI)引脚
+    inout wire spi_dq1_pin,         // SPI DQ1(MISO)引脚
+    inout wire spi_dq2_pin,         // SPI DQ2引脚
+    inout wire spi_dq3_pin,         // SPI DQ3引脚
+
     inout wire[1:0] gpio_pins,      // GPIO引脚，1bit代表一个GPIO
 
 `ifdef VERILATOR
@@ -49,9 +56,9 @@ module tinyriscv_soc_top #(
 
     localparam int MASTERS      = 3; // Number of master ports
 `ifdef VERILATOR
-    localparam int SLAVES       = 9; // Number of slave ports
+    localparam int SLAVES       = 10; // Number of slave ports
 `else
-    localparam int SLAVES       = 8; // Number of slave ports
+    localparam int SLAVES       = 9; // Number of slave ports
 `endif
 
     // masters
@@ -68,8 +75,9 @@ module tinyriscv_soc_top #(
     localparam int Uart0        = 5;
     localparam int Rvic         = 6;
     localparam int I2c0         = 7;
+    localparam int Spi0         = 8;
 `ifdef VERILATOR
-    localparam int SimCtrl      = 8;
+    localparam int SimCtrl      = 9;
 `endif
 
 
@@ -119,6 +127,7 @@ module tinyriscv_soc_top #(
     wire gpio0_irq;
     wire gpio1_irq;
     wire i2c0_irq;
+    wire spi0_irq;
 
     wire[GPIO_NUM-1:0] gpio_data_in;
     wire[GPIO_NUM-1:0] gpio_oe;
@@ -131,6 +140,25 @@ module tinyriscv_soc_top #(
     wire i2c_sda_oe;
     wire i2c_sda_out;
 
+    wire spi_clk_in;
+    wire spi_clk_oe;
+    wire spi_clk_out;
+    wire spi_ss_in;
+    wire spi_ss_oe;
+    wire spi_ss_out;
+    wire spi_dq0_in;
+    wire spi_dq0_oe;
+    wire spi_dq0_out;
+    wire spi_dq1_in;
+    wire spi_dq1_oe;
+    wire spi_dq1_out;
+    wire spi_dq2_in;
+    wire spi_dq2_oe;
+    wire spi_dq2_out;
+    wire spi_dq3_in;
+    wire spi_dq3_oe;
+    wire spi_dq3_out;
+
     always @ (*) begin
         irq_src    = 32'h0;
         irq_src[0] = timer0_irq;
@@ -138,6 +166,7 @@ module tinyriscv_soc_top #(
         irq_src[2] = gpio0_irq;
         irq_src[3] = gpio1_irq;
         irq_src[4] = i2c0_irq;
+        irq_src[5] = spi0_irq;
     end
 
 `ifdef VERILATOR
@@ -328,10 +357,58 @@ module tinyriscv_soc_top #(
         .data_o     (slave_rdata[I2c0])
     );
 
+    assign spi_clk_pin = spi_clk_oe ? spi_clk_out : 1'bz;
+    assign spi_clk_in = spi_clk_pin;
+    assign spi_ss_pin = spi_ss_oe ? spi_ss_out : 1'bz;
+    assign spi_ss_in = spi_ss_pin;
+    assign spi_dq0_pin = spi_dq0_oe ? spi_dq0_out : 1'bz;
+    assign spi_dq0_in = spi_dq0_pin;
+    assign spi_dq1_pin = spi_dq1_oe ? spi_dq1_out : 1'bz;
+    assign spi_dq1_in = spi_dq1_pin;
+    assign spi_dq2_pin = spi_dq2_oe ? spi_dq2_out : 1'bz;
+    assign spi_dq2_in = spi_dq2_pin;
+    assign spi_dq3_pin = spi_dq3_oe ? spi_dq3_out : 1'bz;
+    assign spi_dq3_in = spi_dq3_pin;
+
+    assign slave_addr_mask[Spi0] = `SPI0_ADDR_MASK;
+    assign slave_addr_base[Spi0] = `SPI0_ADDR_BASE;
+    // 8.SPI0模块
+    spi_top spi0(
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .spi_clk_i  (spi_clk_in),
+        .spi_clk_o  (spi_clk_out),
+        .spi_clk_oe_o(spi_clk_oe),
+        .spi_ss_i   (spi_ss_in),
+        .spi_ss_o   (spi_ss_out),
+        .spi_ss_oe_o(spi_ss_oe),
+        .spi_dq0_i  (spi_dq0_in),
+        .spi_dq0_o  (spi_dq0_out),
+        .spi_dq0_oe_o(spi_dq0_oe),
+        .spi_dq1_i  (spi_dq1_in),
+        .spi_dq1_o  (spi_dq1_out),
+        .spi_dq1_oe_o(spi_dq1_oe),
+        .spi_dq2_i  (spi_dq2_in),
+        .spi_dq2_o  (spi_dq2_out),
+        .spi_dq2_oe_o(spi_dq2_oe),
+        .spi_dq3_i  (spi_dq3_in),
+        .spi_dq3_o  (spi_dq3_out),
+        .spi_dq3_oe_o(spi_dq3_oe),
+        .irq_o      (spi0_irq),
+        .req_i      (slave_req[Spi0]),
+        .we_i       (slave_we[Spi0]),
+        .be_i       (slave_be[Spi0]),
+        .addr_i     (slave_addr[Spi0]),
+        .data_i     (slave_wdata[Spi0]),
+        .gnt_o      (slave_gnt[Spi0]),
+        .rvalid_o   (slave_rvalid[Spi0]),
+        .data_o     (slave_rdata[Spi0])
+    );
+
 `ifdef VERILATOR
     assign slave_addr_mask[SimCtrl] = `SIM_CTRL_ADDR_MASK;
     assign slave_addr_base[SimCtrl] = `SIM_CTRL_ADDR_BASE;
-    // 8.仿真控制模块
+    // 9.仿真控制模块
     sim_ctrl u_sim_ctrl(
         .clk_i         (clk),
         .rst_ni        (ndmreset_n),
