@@ -5,6 +5,7 @@
 #include "../../bsp/include/xprintf.h"
 #include "../../bsp/include/utils.h"
 #include "../../bsp/include/rvic.h"
+#include "../../bsp/include/pinmux.h"
 
 
 #define SLAVE_ADDR   (0xA0)
@@ -38,6 +39,10 @@ int main()
     uint8_t data, i;
 
     uart0_init(uart0_putc);
+    pinmux_set_io0_func(IO0_UART0_TX);
+    pinmux_set_io3_func(IO3_UART0_RX);
+    pinmux_set_io6_func(IO6_I2C0_SCL);
+    pinmux_set_io8_func(IO8_I2C0_SDA);
 
     i2c0_set_clk(0x7D);     // 200KHZ
     i2c0_set_mode(I2C_MODE_MASTER);

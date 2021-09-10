@@ -21,6 +21,18 @@ vector_table:
     .word gpio0_irq_handler
     .word gpio1_irq_handler
     .word i2c0_irq_handler
+    .word spi0_irq_handler
+    .word gpio2_4_irq_handler
+    .word gpio5_7_irq_handler
+    .word gpio8_irq_handler
+    .word gpio9_irq_handler
+    .word gpio10_12_irq_handler
+    .word gpio13_15_irq_handler
+    .word uart1_irq_handler
+    .word uart2_irq_handler
+    .word i2c1_irq_handler
+    .word timer1_irq_handler
+    .word timer2_irq_handler
     /* add your ISR here */
 
 .weak illegal_instruction_handler
@@ -35,6 +47,18 @@ vector_table:
 .weak gpio0_irq_handler
 .weak gpio1_irq_handler
 .weak i2c0_irq_handler
+.weak spi0_irq_handler
+.weak gpio2_4_irq_handler
+.weak gpio5_7_irq_handler
+.weak gpio8_irq_handler
+.weak gpio9_irq_handler
+.weak gpio10_12_irq_handler
+.weak gpio13_15_irq_handler
+.weak uart1_irq_handler
+.weak uart2_irq_handler
+.weak i2c1_irq_handler
+.weak timer1_irq_handler
+.weak timer2_irq_handler
 
 handle_exception_unknown:
     j handle_exception_unknown
@@ -77,6 +101,42 @@ gpio1_irq_handler:
 
 i2c0_irq_handler:
     j i2c0_irq_handler
+
+spi0_irq_handler:
+    j spi0_irq_handler
+
+gpio2_4_irq_handler:
+    j gpio2_4_irq_handler
+
+gpio5_7_irq_handler:
+    j gpio5_7_irq_handler
+
+gpio8_irq_handler:
+    j gpio8_irq_handler
+
+gpio9_irq_handler:
+    j gpio9_irq_handler
+
+gpio10_12_irq_handler:
+    j gpio10_12_irq_handler
+
+gpio13_15_irq_handler:
+    j gpio13_15_irq_handler
+
+uart1_irq_handler:
+    j uart1_irq_handler
+
+uart2_irq_handler:
+    j uart2_irq_handler
+
+i2c1_irq_handler:
+    j i2c1_irq_handler
+
+timer1_irq_handler:
+    j timer1_irq_handler
+
+timer2_irq_handler:
+    j timer2_irq_handler
 
 /* 异常和中断总入口 */
 trap_entry:

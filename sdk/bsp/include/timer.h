@@ -16,8 +16,14 @@ extern "C" {
 // Register width
 #define TIMER_PARAM_REG_WIDTH 32
 
-#define TIMER0_BASE_ADDR      (0x40000000)
+#define TIMER0_BASE_ADDR      (0x04000000)
 #define TIMER0_REG(offset)    (*((volatile uint32_t *)(TIMER0_BASE_ADDR + offset)))
+
+#define TIMER1_BASE_ADDR      (0x0C000000)
+#define TIMER1_REG(offset)    (*((volatile uint32_t *)(TIMER1_BASE_ADDR + offset)))
+
+#define TIMER2_BASE_ADDR      (0x0D000000)
+#define TIMER2_REG(offset)    (*((volatile uint32_t *)(TIMER2_BASE_ADDR + offset)))
 
 // Timer control register
 #define TIMER_CTRL_REG_OFFSET 0x0

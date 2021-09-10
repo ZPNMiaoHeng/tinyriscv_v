@@ -7,8 +7,14 @@ extern "C" {
 // Register width
 #define UART_PARAM_REG_WIDTH 32
 
-#define UART0_BASE_ADDR      (0x50000000)
+#define UART0_BASE_ADDR      (0x05000000)
 #define UART0_REG(offset)    (*((volatile uint32_t *)(UART0_BASE_ADDR + offset)))
+
+#define UART1_BASE_ADDR      (0x09000000)
+#define UART1_REG(offset)    (*((volatile uint32_t *)(UART1_BASE_ADDR + offset)))
+
+#define UART2_BASE_ADDR      (0x0A000000)
+#define UART2_REG(offset)    (*((volatile uint32_t *)(UART2_BASE_ADDR + offset)))
 
 // UART control register
 #define UART_CTRL_REG_OFFSET 0x0

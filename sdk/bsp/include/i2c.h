@@ -16,8 +16,11 @@ extern "C" {
 // Register width
 #define I2C_PARAM_REG_WIDTH 32
 
-#define I2C0_BASE_ADDR      (0x60000000)
+#define I2C0_BASE_ADDR      (0x06000000)
 #define I2C0_REG(offset)    (*((volatile uint32_t *)(I2C0_BASE_ADDR + offset)))
+
+#define I2C1_BASE_ADDR      (0x0B000000)
+#define I2C1_REG(offset)    (*((volatile uint32_t *)(I2C1_BASE_ADDR + offset)))
 
 typedef enum {
     I2C_MODE_MASTER = 0,
