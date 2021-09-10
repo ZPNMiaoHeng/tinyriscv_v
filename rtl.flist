@@ -65,6 +65,10 @@
 ../rtl/perips/spi/spi_top.sv
 ../rtl/perips/spi/spi_master.sv
 ../rtl/perips/spi/spi_transmit_byte.sv
+../rtl/perips/pinmux/pinmux_reg_pkg.sv
+../rtl/perips/pinmux/pinmux_reg_top.sv
+../rtl/perips/pinmux/pinmux_core.sv
+../rtl/perips/pinmux/pinmux_top.sv
 
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
