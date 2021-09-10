@@ -15,52 +15,63 @@ set_property IOSTANDARD LVCMOS33 [get_ports halted_ind_pin]
 set_property PACKAGE_PIN P15 [get_ports halted_ind_pin]
 
 # 串口发送引脚
-set_property IOSTANDARD LVCMOS33 [get_ports uart_tx_pin]
-set_property PACKAGE_PIN M6 [get_ports uart_tx_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[0]}]
+set_property PACKAGE_PIN M6 [get_ports {io_pins[0]}]
 
 # 串口接收引脚
-set_property IOSTANDARD LVCMOS33 [get_ports uart_rx_pin]
-set_property PACKAGE_PIN N6 [get_ports uart_rx_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[3]}]
+set_property PACKAGE_PIN N6 [get_ports {io_pins[3]}]
 
 # I2C0 SCL引脚
-set_property IOSTANDARD LVCMOS33 [get_ports i2c_scl_pin]
-set_property PACKAGE_PIN R10 [get_ports i2c_scl_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[6]}]
+set_property PACKAGE_PIN R10 [get_ports {io_pins[6]}]
 
 # I2C0 SDA引脚
-set_property IOSTANDARD LVCMOS33 [get_ports i2c_sda_pin]
-set_property PACKAGE_PIN R11 [get_ports i2c_sda_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[8]}]
+set_property PACKAGE_PIN R11 [get_ports {io_pins[8]}]
 
 # SPI DQ3引脚
-set_property IOSTANDARD LVCMOS33 [get_ports spi_dq3_pin]
-set_property PACKAGE_PIN P3 [get_ports spi_dq3_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[15]}]
+set_property PACKAGE_PIN P3 [get_ports {io_pins[15]}]
 
 # SPI DQ2引脚
-set_property IOSTANDARD LVCMOS33 [get_ports spi_dq2_pin]
-set_property PACKAGE_PIN P4 [get_ports spi_dq2_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[14]}]
+set_property PACKAGE_PIN P4 [get_ports {io_pins[14]}]
 
 # SPI DQ1引脚
-set_property IOSTANDARD LVCMOS33 [get_ports spi_dq1_pin]
-set_property PACKAGE_PIN P1 [get_ports spi_dq1_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[13]}]
+set_property PACKAGE_PIN P1 [get_ports {io_pins[13]}]
 
 # SPI DQ0引脚
-set_property IOSTANDARD LVCMOS33 [get_ports spi_dq0_pin]
-set_property PACKAGE_PIN N1 [get_ports spi_dq0_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[12]}]
+set_property PACKAGE_PIN N1 [get_ports {io_pins[12]}]
 
 # SPI SS引脚
-set_property IOSTANDARD LVCMOS33 [get_ports spi_ss_pin]
-set_property PACKAGE_PIN M5 [get_ports spi_ss_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[11]}]
+set_property PACKAGE_PIN M5 [get_ports {io_pins[11]}]
 
 # SPI CLK引脚
-set_property IOSTANDARD LVCMOS33 [get_ports spi_clk_pin]
-set_property PACKAGE_PIN N4 [get_ports spi_clk_pin]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[10]}]
+set_property PACKAGE_PIN N4 [get_ports {io_pins[10]}]
 
 # GPIO0引脚
-set_property IOSTANDARD LVCMOS33 [get_ports {gpio_pins[0]}]
-set_property PACKAGE_PIN P16 [get_ports {gpio_pins[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[7]}]
+set_property PACKAGE_PIN P16 [get_ports {io_pins[7]}]
 
 # GPIO1引脚
-set_property IOSTANDARD LVCMOS33 [get_ports {gpio_pins[1]}]
-set_property PACKAGE_PIN T15 [get_ports {gpio_pins[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[9]}]
+set_property PACKAGE_PIN T15 [get_ports {io_pins[9]}]
+
+
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[2]}]
+set_property PACKAGE_PIN P5 [get_ports {io_pins[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[1]}]
+set_property PACKAGE_PIN L5 [get_ports {io_pins[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[4]}]
+set_property PACKAGE_PIN M2 [get_ports {io_pins[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[5]}]
+set_property PACKAGE_PIN N12 [get_ports {io_pins[5]}]
+
 
 # JTAG TCK引脚
 set_property IOSTANDARD LVCMOS33 [get_ports jtag_TCK_pin]
