@@ -14,7 +14,7 @@
  limitations under the License.                                          
  */
 
-// 目前最多支持8个GPIO
+// 目前最多支持16个GPIO
 module gpio_core #(
     parameter int GPIO_NUM = 2
     )(
@@ -28,6 +28,10 @@ module gpio_core #(
     output logic                irq_gpio1_o,
     output logic                irq_gpio2_4_o,
     output logic                irq_gpio5_7_o,
+    output logic                irq_gpio8_o,
+    output logic                irq_gpio9_o,
+    output logic                irq_gpio10_12_o,
+    output logic                irq_gpio13_15_o,
 
     input  logic                reg_we_i,
     input  logic                reg_re_i,
@@ -37,10 +41,12 @@ module gpio_core #(
     output logic [31:0]         reg_rdata_o
     );
 
+    localparam logic [1:0] INTR_MODE_NONE        = 2'd0;
     localparam logic [1:0] INTR_MODE_RAISE_EDGE  = 2'd1;
     localparam logic [1:0] INTR_MODE_FALL_EDGE   = 2'd2;
     localparam logic [1:0] INTR_MODE_DOUBLE_EDGE = 2'd3;
 
+    localparam logic [1:0] GPIO_MODE_NONE   = 2'd0;
     localparam logic [1:0] GPIO_MODE_INPUT  = 2'd1;
     localparam logic [1:0] GPIO_MODE_OUTPUT = 2'd2;
 
@@ -65,7 +71,7 @@ module gpio_core #(
 
     // 输出使能
     for (genvar i = 0; i < GPIO_NUM; i = i + 1) begin : g_gpio_oe
-        assign gpio_oe[i] = reg2hw.mode.q[i*2+1:i*2] == GPIO_MODE_OUTPUT;
+        assign gpio_oe[i] = reg2hw.io_mode.q[i*2+1:i*2] == GPIO_MODE_OUTPUT;
     end
 
     assign gpio_oe_o = gpio_oe;
@@ -79,7 +85,7 @@ module gpio_core #(
 
     // 输入使能
     for (genvar i = 0; i < GPIO_NUM; i = i + 1) begin : g_gpio_ie
-        assign gpio_ie[i] = reg2hw.mode.q[i*2+1:i*2] == GPIO_MODE_INPUT;
+        assign gpio_ie[i] = reg2hw.io_mode.q[i*2+1:i*2] == GPIO_MODE_INPUT;
     end
 
     // 硬件写data数据
@@ -91,30 +97,42 @@ module gpio_core #(
 
     // 中断有效
     for (genvar i = 0; i < GPIO_NUM; i = i + 1) begin : g_gpio_intr_trigge
-        assign gpio_intr_trigge[i] = ((reg2hw.intr.gpio_int[i*2+1:i*2] == INTR_MODE_RAISE_EDGE)  & gpio_raise_detect[i]) |
-                                     ((reg2hw.intr.gpio_int[i*2+1:i*2] == INTR_MODE_FALL_EDGE)   & gpio_fall_detect[i]) |
-                                     ((reg2hw.intr.gpio_int[i*2+1:i*2] == INTR_MODE_DOUBLE_EDGE) & (gpio_raise_detect[i] | gpio_fall_detect[i]));
+        assign gpio_intr_trigge[i] = ((reg2hw.int_mode.q[i*2+1:i*2] == INTR_MODE_RAISE_EDGE)  & gpio_raise_detect[i]) |
+                                     ((reg2hw.int_mode.q[i*2+1:i*2] == INTR_MODE_FALL_EDGE)   & gpio_fall_detect[i]) |
+                                     ((reg2hw.int_mode.q[i*2+1:i*2] == INTR_MODE_DOUBLE_EDGE) & (gpio_raise_detect[i] | gpio_fall_detect[i]));
     end
 
     // 硬件写中断pending数据
     for (genvar i = 0; i < GPIO_NUM; i = i + 1) begin : g_gpio_intr_pending
-        assign hw2reg.intr.gpio_pending.d[i] = gpio_intr_trigge[i] ? 1'b1 : reg2hw.intr.gpio_pending.q[i];
+        assign hw2reg.int_pending.d[i] = gpio_intr_trigge[i] ? 1'b1 : reg2hw.int_pending.q[i];
     end
     // 硬件写中断pending使能
-    assign hw2reg.intr.gpio_pending.de = |gpio_intr_trigge;
+    assign hw2reg.int_pending.de = |gpio_intr_trigge;
 
     // 中断输出信号
     if (GPIO_NUM >= 1) begin : g_num_ge_1
-        assign irq_gpio0_o   = reg2hw.intr.gpio_pending.q[0];
+        assign irq_gpio0_o   = reg2hw.int_pending.q[0];
     end
     if (GPIO_NUM >= 2) begin : g_num_ge_2
-        assign irq_gpio1_o   = reg2hw.intr.gpio_pending.q[1];
+        assign irq_gpio1_o   = reg2hw.int_pending.q[1];
     end
     if (GPIO_NUM >= 5) begin : g_num_ge_5
-        assign irq_gpio2_4_o = reg2hw.intr.gpio_pending.q[2] | reg2hw.intr.gpio_pending.q[3] | reg2hw.intr.gpio_pending.q[4];
+        assign irq_gpio2_4_o = reg2hw.int_pending.q[2] | reg2hw.int_pending.q[3] | reg2hw.int_pending.q[4];
     end
     if (GPIO_NUM >= 8) begin : g_num_ge_8
-        assign irq_gpio5_7_o = reg2hw.intr.gpio_pending.q[5] | reg2hw.intr.gpio_pending.q[6] | reg2hw.intr.gpio_pending.q[7];
+        assign irq_gpio5_7_o = reg2hw.int_pending.q[5] | reg2hw.int_pending.q[6] | reg2hw.int_pending.q[7];
+    end
+    if (GPIO_NUM >= 9) begin : g_num_ge_9
+        assign irq_gpio8_o = reg2hw.int_pending.q[8];
+    end
+    if (GPIO_NUM >= 10) begin : g_num_ge_10
+        assign irq_gpio9_o = reg2hw.int_pending.q[9];
+    end
+    if (GPIO_NUM >= 13) begin : g_num_ge_13
+        assign irq_gpio10_12_o = reg2hw.int_pending.q[10] | reg2hw.int_pending.q[11] | reg2hw.int_pending.q[12];
+    end
+    if (GPIO_NUM >= 16) begin : g_num_ge_16
+        assign irq_gpio13_15_o = reg2hw.int_pending.q[13] | reg2hw.int_pending.q[14] | reg2hw.int_pending.q[15];
     end
 
     // 沿检测

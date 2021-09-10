@@ -23,7 +23,7 @@ module gpio_reg_top (
 
   import gpio_reg_pkg::* ;
 
-  localparam int AW = 4;
+  localparam int AW = 5;
   localparam int DW = 32;
   localparam int DBW = DW/8;    // Byte Width
 
@@ -38,35 +38,36 @@ module gpio_reg_top (
   // Define SW related signals
   // Format: <reg>_<field>_{wd|we|qs}
   //        or <reg>_{wd|we|qs} if field == 1 or 0
-  logic mode_we;
-  logic [15:0] mode_qs;
-  logic [15:0] mode_wd;
-  logic intr_we;
-  logic [15:0] intr_gpio_int_qs;
-  logic [15:0] intr_gpio_int_wd;
-  logic [7:0] intr_gpio_pending_qs;
-  logic [7:0] intr_gpio_pending_wd;
+  logic io_mode_we;
+  logic [31:0] io_mode_qs;
+  logic [31:0] io_mode_wd;
+  logic int_mode_we;
+  logic [31:0] int_mode_qs;
+  logic [31:0] int_mode_wd;
+  logic int_pending_we;
+  logic [15:0] int_pending_qs;
+  logic [15:0] int_pending_wd;
   logic data_we;
-  logic [7:0] data_qs;
-  logic [7:0] data_wd;
+  logic [15:0] data_qs;
+  logic [15:0] data_wd;
   logic filter_we;
-  logic [7:0] filter_qs;
-  logic [7:0] filter_wd;
+  logic [15:0] filter_qs;
+  logic [15:0] filter_wd;
 
   // Register instances
-  // R[mode]: V(False)
+  // R[io_mode]: V(False)
 
   prim_subreg #(
-    .DW      (16),
+    .DW      (32),
     .SWACCESS("RW"),
-    .RESVAL  (16'h0)
-  ) u_mode (
+    .RESVAL  (32'h0)
+  ) u_io_mode (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
 
     // from register interface
-    .we     (mode_we),
-    .wd     (mode_wd),
+    .we     (io_mode_we),
+    .wd     (io_mode_wd),
 
     // from internal hardware
     .de     (1'b0),
@@ -74,73 +75,73 @@ module gpio_reg_top (
 
     // to internal hardware
     .qe     (),
-    .q      (reg2hw.mode.q),
+    .q      (reg2hw.io_mode.q),
 
     // to register interface (read)
-    .qs     (mode_qs)
+    .qs     (io_mode_qs)
   );
 
 
-  // R[intr]: V(False)
+  // R[int_mode]: V(False)
 
-  //   F[gpio_int]: 15:0
+  prim_subreg #(
+    .DW      (32),
+    .SWACCESS("RW"),
+    .RESVAL  (32'h0)
+  ) u_int_mode (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (int_mode_we),
+    .wd     (int_mode_wd),
+
+    // from internal hardware
+    .de     (1'b0),
+    .d      ('0),
+
+    // to internal hardware
+    .qe     (),
+    .q      (reg2hw.int_mode.q),
+
+    // to register interface (read)
+    .qs     (int_mode_qs)
+  );
+
+
+  // R[int_pending]: V(False)
+
   prim_subreg #(
     .DW      (16),
-    .SWACCESS("RW"),
-    .RESVAL  (16'h0)
-  ) u_intr_gpio_int (
-    .clk_i   (clk_i),
-    .rst_ni  (rst_ni),
-
-    // from register interface
-    .we     (intr_we),
-    .wd     (intr_gpio_int_wd),
-
-    // from internal hardware
-    .de     (hw2reg.intr.gpio_int.de),
-    .d      (hw2reg.intr.gpio_int.d),
-
-    // to internal hardware
-    .qe     (),
-    .q      (reg2hw.intr.gpio_int.q),
-
-    // to register interface (read)
-    .qs     (intr_gpio_int_qs)
-  );
-
-
-  //   F[gpio_pending]: 23:16
-  prim_subreg #(
-    .DW      (8),
     .SWACCESS("W1C"),
-    .RESVAL  (8'h0)
-  ) u_intr_gpio_pending (
+    .RESVAL  (16'h0)
+  ) u_int_pending (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
 
     // from register interface
-    .we     (intr_we),
-    .wd     (intr_gpio_pending_wd),
+    .we     (int_pending_we),
+    .wd     (int_pending_wd),
 
     // from internal hardware
-    .de     (hw2reg.intr.gpio_pending.de),
-    .d      (hw2reg.intr.gpio_pending.d),
+    .de     (hw2reg.int_pending.de),
+    .d      (hw2reg.int_pending.d),
 
     // to internal hardware
     .qe     (),
-    .q      (reg2hw.intr.gpio_pending.q),
+    .q      (reg2hw.int_pending.q),
 
     // to register interface (read)
-    .qs     (intr_gpio_pending_qs)
+    .qs     (int_pending_qs)
   );
 
 
   // R[data]: V(False)
 
   prim_subreg #(
-    .DW      (8),
+    .DW      (16),
     .SWACCESS("RW"),
-    .RESVAL  (8'h0)
+    .RESVAL  (16'h0)
   ) u_data (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -165,9 +166,9 @@ module gpio_reg_top (
   // R[filter]: V(False)
 
   prim_subreg #(
-    .DW      (8),
+    .DW      (16),
     .SWACCESS("RW"),
-    .RESVAL  (8'h0)
+    .RESVAL  (16'h0)
   ) u_filter (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -189,13 +190,14 @@ module gpio_reg_top (
   );
 
 
-  logic [3:0] addr_hit;
+  logic [4:0] addr_hit;
   always_comb begin
     addr_hit = '0;
-    addr_hit[0] = (reg_addr == GPIO_MODE_OFFSET);
-    addr_hit[1] = (reg_addr == GPIO_INTR_OFFSET);
-    addr_hit[2] = (reg_addr == GPIO_DATA_OFFSET);
-    addr_hit[3] = (reg_addr == GPIO_FILTER_OFFSET);
+    addr_hit[0] = (reg_addr == GPIO_IO_MODE_OFFSET);
+    addr_hit[1] = (reg_addr == GPIO_INT_MODE_OFFSET);
+    addr_hit[2] = (reg_addr == GPIO_INT_PENDING_OFFSET);
+    addr_hit[3] = (reg_addr == GPIO_DATA_OFFSET);
+    addr_hit[4] = (reg_addr == GPIO_FILTER_OFFSET);
   end
 
   assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0 ;
@@ -206,43 +208,48 @@ module gpio_reg_top (
               ((addr_hit[0] & (|(GPIO_PERMIT[0] & ~reg_be))) |
                (addr_hit[1] & (|(GPIO_PERMIT[1] & ~reg_be))) |
                (addr_hit[2] & (|(GPIO_PERMIT[2] & ~reg_be))) |
-               (addr_hit[3] & (|(GPIO_PERMIT[3] & ~reg_be)))));
+               (addr_hit[3] & (|(GPIO_PERMIT[3] & ~reg_be))) |
+               (addr_hit[4] & (|(GPIO_PERMIT[4] & ~reg_be)))));
   end
 
-  assign mode_we = addr_hit[0] & reg_we & !reg_error;
+  assign io_mode_we = addr_hit[0] & reg_we & !reg_error;
 
-  assign mode_wd = reg_wdata[15:0];
-  assign intr_we = addr_hit[1] & reg_we & !reg_error;
+  assign io_mode_wd = reg_wdata[31:0];
+  assign int_mode_we = addr_hit[1] & reg_we & !reg_error;
 
-  assign intr_gpio_int_wd = reg_wdata[15:0];
+  assign int_mode_wd = reg_wdata[31:0];
+  assign int_pending_we = addr_hit[2] & reg_we & !reg_error;
 
-  assign intr_gpio_pending_wd = reg_wdata[23:16];
-  assign data_we = addr_hit[2] & reg_we & !reg_error;
+  assign int_pending_wd = reg_wdata[15:0];
+  assign data_we = addr_hit[3] & reg_we & !reg_error;
 
-  assign data_wd = reg_wdata[7:0];
-  assign filter_we = addr_hit[3] & reg_we & !reg_error;
+  assign data_wd = reg_wdata[15:0];
+  assign filter_we = addr_hit[4] & reg_we & !reg_error;
 
-  assign filter_wd = reg_wdata[7:0];
+  assign filter_wd = reg_wdata[15:0];
 
   // Read data return
   always_comb begin
     reg_rdata_next = '0;
     unique case (1'b1)
       addr_hit[0]: begin
-        reg_rdata_next[15:0] = mode_qs;
+        reg_rdata_next[31:0] = io_mode_qs;
       end
 
       addr_hit[1]: begin
-        reg_rdata_next[15:0] = intr_gpio_int_qs;
-        reg_rdata_next[23:16] = intr_gpio_pending_qs;
+        reg_rdata_next[31:0] = int_mode_qs;
       end
 
       addr_hit[2]: begin
-        reg_rdata_next[7:0] = data_qs;
+        reg_rdata_next[15:0] = int_pending_qs;
       end
 
       addr_hit[3]: begin
-        reg_rdata_next[7:0] = filter_qs;
+        reg_rdata_next[15:0] = data_qs;
+      end
+
+      addr_hit[4]: begin
+        reg_rdata_next[15:0] = filter_qs;
       end
 
       default: begin

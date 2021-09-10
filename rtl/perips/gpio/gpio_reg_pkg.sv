@@ -7,83 +7,80 @@
 package gpio_reg_pkg;
 
   // Address widths within the block
-  parameter int BlockAw = 4;
+  parameter int BlockAw = 5;
 
   ////////////////////////////
   // Typedefs for registers //
   ////////////////////////////
 
   typedef struct packed {
+    logic [31:0] q;
+  } gpio_reg2hw_io_mode_reg_t;
+
+  typedef struct packed {
+    logic [31:0] q;
+  } gpio_reg2hw_int_mode_reg_t;
+
+  typedef struct packed {
     logic [15:0] q;
-  } gpio_reg2hw_mode_reg_t;
+  } gpio_reg2hw_int_pending_reg_t;
 
   typedef struct packed {
-    struct packed {
-      logic [15:0] q;
-    } gpio_int;
-    struct packed {
-      logic [7:0]  q;
-    } gpio_pending;
-  } gpio_reg2hw_intr_reg_t;
-
-  typedef struct packed {
-    logic [7:0]  q;
+    logic [15:0] q;
   } gpio_reg2hw_data_reg_t;
 
   typedef struct packed {
-    logic [7:0]  q;
+    logic [15:0] q;
   } gpio_reg2hw_filter_reg_t;
 
   typedef struct packed {
-    struct packed {
-      logic [15:0] d;
-      logic        de;
-    } gpio_int;
-    struct packed {
-      logic [7:0]  d;
-      logic        de;
-    } gpio_pending;
-  } gpio_hw2reg_intr_reg_t;
+    logic [15:0] d;
+    logic        de;
+  } gpio_hw2reg_int_pending_reg_t;
 
   typedef struct packed {
-    logic [7:0]  d;
+    logic [15:0] d;
     logic        de;
   } gpio_hw2reg_data_reg_t;
 
   // Register -> HW type
   typedef struct packed {
-    gpio_reg2hw_mode_reg_t mode; // [55:40]
-    gpio_reg2hw_intr_reg_t intr; // [39:16]
-    gpio_reg2hw_data_reg_t data; // [15:8]
-    gpio_reg2hw_filter_reg_t filter; // [7:0]
+    gpio_reg2hw_io_mode_reg_t io_mode; // [111:80]
+    gpio_reg2hw_int_mode_reg_t int_mode; // [79:48]
+    gpio_reg2hw_int_pending_reg_t int_pending; // [47:32]
+    gpio_reg2hw_data_reg_t data; // [31:16]
+    gpio_reg2hw_filter_reg_t filter; // [15:0]
   } gpio_reg2hw_t;
 
   // HW -> register type
   typedef struct packed {
-    gpio_hw2reg_intr_reg_t intr; // [34:9]
-    gpio_hw2reg_data_reg_t data; // [8:0]
+    gpio_hw2reg_int_pending_reg_t int_pending; // [33:17]
+    gpio_hw2reg_data_reg_t data; // [16:0]
   } gpio_hw2reg_t;
 
   // Register offsets
-  parameter logic [BlockAw-1:0] GPIO_MODE_OFFSET = 4'h0;
-  parameter logic [BlockAw-1:0] GPIO_INTR_OFFSET = 4'h4;
-  parameter logic [BlockAw-1:0] GPIO_DATA_OFFSET = 4'h8;
-  parameter logic [BlockAw-1:0] GPIO_FILTER_OFFSET = 4'hc;
+  parameter logic [BlockAw-1:0] GPIO_IO_MODE_OFFSET = 5'h0;
+  parameter logic [BlockAw-1:0] GPIO_INT_MODE_OFFSET = 5'h4;
+  parameter logic [BlockAw-1:0] GPIO_INT_PENDING_OFFSET = 5'h8;
+  parameter logic [BlockAw-1:0] GPIO_DATA_OFFSET = 5'hc;
+  parameter logic [BlockAw-1:0] GPIO_FILTER_OFFSET = 5'h10;
 
   // Register index
   typedef enum int {
-    GPIO_MODE,
-    GPIO_INTR,
+    GPIO_IO_MODE,
+    GPIO_INT_MODE,
+    GPIO_INT_PENDING,
     GPIO_DATA,
     GPIO_FILTER
   } gpio_id_e;
 
   // Register width information to check illegal writes
-  parameter logic [3:0] GPIO_PERMIT [4] = '{
-    4'b0011, // index[0] GPIO_MODE
-    4'b0111, // index[1] GPIO_INTR
-    4'b0001, // index[2] GPIO_DATA
-    4'b0001  // index[3] GPIO_FILTER
+  parameter logic [3:0] GPIO_PERMIT [5] = '{
+    4'b1111, // index[0] GPIO_IO_MODE
+    4'b1111, // index[1] GPIO_INT_MODE
+    4'b0011, // index[2] GPIO_INT_PENDING
+    4'b0011, // index[3] GPIO_DATA
+    4'b0011  // index[4] GPIO_FILTER
   };
 
 endpackage

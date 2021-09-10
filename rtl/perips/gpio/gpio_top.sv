@@ -27,6 +27,10 @@ module gpio_top #(
     output logic                irq_gpio1_o,
     output logic                irq_gpio2_4_o,
     output logic                irq_gpio5_7_o,
+    output logic                irq_gpio8_o,
+    output logic                irq_gpio9_o,
+    output logic                irq_gpio10_12_o,
+    output logic                irq_gpio13_15_o,
 
     // OBI总线接口信号
     input  logic                req_i,
@@ -75,6 +79,10 @@ module gpio_top #(
         .irq_gpio1_o(irq_gpio1_o),
         .irq_gpio2_4_o(irq_gpio2_4_o),
         .irq_gpio5_7_o(irq_gpio5_7_o),
+        .irq_gpio8_o(irq_gpio8_o),
+        .irq_gpio9_o(irq_gpio9_o),
+        .irq_gpio10_12_o(irq_gpio10_12_o),
+        .irq_gpio13_15_o(irq_gpio13_15_o),
         .reg_we_i   (we),
         .reg_re_i   (re),
         .reg_wdata_i(data_i),

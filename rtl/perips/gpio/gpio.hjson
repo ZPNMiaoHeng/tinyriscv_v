@@ -8,28 +8,33 @@
   ],
   regwidth: "32",
   registers: [
-    { name: "MODE",
-      desc: "gpio mode register",
+    { name: "IO_MODE",
+      desc: "gpio input/output mode register",
       swaccess: "rw",
       hwaccess: "hro",
       fields: [
-        { bits: "15:0",
-          name: "GPIO",
+        { bits: "31:0",
           desc: "gpio input or output mode, 2 bits for each gpio",
         }
       ]
     }
-    { name: "INTR",
-      desc: "gpio interrupt register",
+    { name: "INT_MODE",
+      desc: "gpio interrupt mode register",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        { bits: "31:0",
+          desc: "gpio interrupt mode, 2 bits for each gpio",
+        }
+      ]
+    }
+    { name: "INT_PENDING",
+      desc: "gpio interrupt pending register",
       swaccess: "rw",
       hwaccess: "hrw",
       fields: [
         { bits: "15:0",
-          name: "GPIO_INT",
-          desc: "gpio interrupt mode, 2 bits for each gpio",
-        }
-        { bits: "23:16",
-          name: "GPIO_PENDING",
+          name: "GPIO_INT_PENDING",
           swaccess: "rw1c",
           desc: "gpio interrupt pending, 1 bits for each gpio",
         }
@@ -40,8 +45,7 @@
       swaccess: "rw",
       hwaccess: "hrw",
       fields: [
-        { bits: "7:0",
-          name: "GPIO",
+        { bits: "15:0",
           desc: "gpio input or output data, 1 bits for each gpio",
         }
       ]
@@ -51,8 +55,7 @@
       swaccess: "rw",
       hwaccess: "hro",
       fields: [
-        { bits: "7:0",
-          name: "GPIO",
+        { bits: "15:0",
           desc: "gpio input filter enable, 1 bits for each gpio",
         }
       ]
