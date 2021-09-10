@@ -33,19 +33,37 @@
 `define RAM_ADDR_BASE       32'h20000000
 // GPIO
 `define GPIO_ADDR_MASK      ~32'hffff
-`define GPIO_ADDR_BASE      32'h30000000
+`define GPIO_ADDR_BASE      32'h03000000
 // Timer0
 `define TIMER0_ADDR_MASK    ~32'hffff
-`define TIMER0_ADDR_BASE    32'h40000000
+`define TIMER0_ADDR_BASE    32'h04000000
 // UART0
 `define UART0_ADDR_MASK     ~32'hffff
-`define UART0_ADDR_BASE     32'h50000000
+`define UART0_ADDR_BASE     32'h05000000
 // I2C0
 `define I2C0_ADDR_MASK      ~32'hffff
-`define I2C0_ADDR_BASE      32'h60000000
+`define I2C0_ADDR_BASE      32'h06000000
 // SPI0
 `define SPI0_ADDR_MASK      ~32'hffff
-`define SPI0_ADDR_BASE      32'h70000000
+`define SPI0_ADDR_BASE      32'h07000000
+// PINMUX
+`define PINMUX_ADDR_MASK    ~32'hffff
+`define PINMUX_ADDR_BASE    32'h08000000
+// UART1
+`define UART1_ADDR_MASK     ~32'hffff
+`define UART1_ADDR_BASE     32'h09000000
+// UART2
+`define UART2_ADDR_MASK     ~32'hffff
+`define UART2_ADDR_BASE     32'h0A000000
+// Timer1
+`define TIMER1_ADDR_MASK    ~32'hffff
+`define TIMER1_ADDR_BASE    32'h0C000000
+// Timer2
+`define TIMER2_ADDR_MASK    ~32'hffff
+`define TIMER2_ADDR_BASE    32'h0D000000
+// I2C1
+`define I2C1_ADDR_MASK      ~32'hffff
+`define I2C1_ADDR_BASE      32'h0B000000
 // Interrupt controller
 `define RVIC_ADDR_MASK      ~32'hffff
 `define RVIC_ADDR_BASE      32'hD0000000

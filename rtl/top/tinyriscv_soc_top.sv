@@ -20,45 +20,33 @@
 // tinyriscv soc顶层模块
 module tinyriscv_soc_top #(
     parameter bit          TRACE_ENABLE         = 1'b0,
-    parameter int          GPIO_NUM             = 2
+    parameter int          GPIO_NUM             = 16,
+    parameter int          I2C_NUM              = 2,
+    parameter int          UART_NUM             = 3,
+    parameter int          SPI_NUM              = 1
     )(
+    input  wire clk_50m_i,               // 时钟引脚
+    input  wire rst_ext_ni,              // 复位引脚，低电平有效
 
-    input wire clk_50m_i,           // 时钟引脚
-    input wire rst_ext_ni,          // 复位引脚，低电平有效
+    output wire halted_ind_pin,          // jtag是否已经halt住CPU，高电平有效
 
-    output wire halted_ind_pin,     // jtag是否已经halt住CPU，高电平有效
-
-    output wire uart_tx_pin,        // UART发送引脚
-    input wire uart_rx_pin,         // UART接收引脚
-
-    inout wire i2c_scl_pin,         // I2C SCL引脚
-    inout wire i2c_sda_pin,         // I2C SDA引脚
-
-    inout wire spi_clk_pin,         // SPI CLK引脚
-    inout wire spi_ss_pin,          // SPI SS引脚
-    inout wire spi_dq0_pin,         // SPI DQ0(MOSI)引脚
-    inout wire spi_dq1_pin,         // SPI DQ1(MISO)引脚
-    inout wire spi_dq2_pin,         // SPI DQ2引脚
-    inout wire spi_dq3_pin,         // SPI DQ3引脚
-
-    inout wire[1:0] gpio_pins,      // GPIO引脚，1bit代表一个GPIO
+    inout  wire[GPIO_NUM-1:0] io_pins,   // IO引脚，1bit代表一个IO
 
 `ifdef VERILATOR
-    output wire dump_wave_en_o,     // dump wave使能
+    output wire dump_wave_en_o,          // dump wave使能
 `endif
 
-    input wire jtag_TCK_pin,        // JTAG TCK引脚
-    input wire jtag_TMS_pin,        // JTAG TMS引脚
-    input wire jtag_TDI_pin,        // JTAG TDI引脚
-    output wire jtag_TDO_pin        // JTAG TDO引脚
-
+    input  wire jtag_TCK_pin,            // JTAG TCK引脚
+    input  wire jtag_TMS_pin,            // JTAG TMS引脚
+    input  wire jtag_TDI_pin,            // JTAG TDI引脚
+    output wire jtag_TDO_pin             // JTAG TDO引脚
     );
 
-    localparam int MASTERS      = 3; // Number of master ports
+    localparam int MASTERS      = 3;  // Number of master ports
 `ifdef VERILATOR
-    localparam int SLAVES       = 10; // Number of slave ports
+    localparam int SLAVES       = 16; // Number of slave ports
 `else
-    localparam int SLAVES       = 9; // Number of slave ports
+    localparam int SLAVES       = 15; // Number of slave ports
 `endif
 
     // masters
@@ -76,10 +64,15 @@ module tinyriscv_soc_top #(
     localparam int Rvic         = 6;
     localparam int I2c0         = 7;
     localparam int Spi0         = 8;
+    localparam int Pinmux       = 9;
+    localparam int Uart1        = 10;
+    localparam int Uart2        = 11;
+    localparam int I2c1         = 12;
+    localparam int Timer1       = 13;
+    localparam int Timer2       = 14;
 `ifdef VERILATOR
-    localparam int SimCtrl      = 9;
+    localparam int SimCtrl      = 15;
 `endif
-
 
     wire           master_req       [MASTERS];
     wire           master_gnt       [MASTERS];
@@ -123,50 +116,71 @@ module tinyriscv_soc_top #(
     wire[7:0] int_id;
 
     wire timer0_irq;
+    wire timer1_irq;
+    wire timer2_irq;
     wire uart0_irq;
+    wire uart1_irq;
+    wire uart2_irq;
     wire gpio0_irq;
     wire gpio1_irq;
     wire i2c0_irq;
+    wire i2c1_irq;
     wire spi0_irq;
+    wire gpio2_4_irq;
+    wire gpio5_7_irq;
+    wire gpio8_irq;
+    wire gpio9_irq;
+    wire gpio10_12_irq;
+    wire gpio13_15_irq;
 
     wire[GPIO_NUM-1:0] gpio_data_in;
     wire[GPIO_NUM-1:0] gpio_oe;
     wire[GPIO_NUM-1:0] gpio_data_out;
 
-    wire i2c_scl_in;
-    wire i2c_scl_oe;
-    wire i2c_scl_out;
-    wire i2c_sda_in;
-    wire i2c_sda_oe;
-    wire i2c_sda_out;
+    wire[GPIO_NUM-1:0] io_data_in;
+    wire[GPIO_NUM-1:0] io_oe;
+    wire[GPIO_NUM-1:0] io_data_out;
 
-    wire spi_clk_in;
-    wire spi_clk_oe;
-    wire spi_clk_out;
-    wire spi_ss_in;
-    wire spi_ss_oe;
-    wire spi_ss_out;
-    wire spi_dq0_in;
-    wire spi_dq0_oe;
-    wire spi_dq0_out;
-    wire spi_dq1_in;
-    wire spi_dq1_oe;
-    wire spi_dq1_out;
-    wire spi_dq2_in;
-    wire spi_dq2_oe;
-    wire spi_dq2_out;
-    wire spi_dq3_in;
-    wire spi_dq3_oe;
-    wire spi_dq3_out;
+    wire[I2C_NUM-1:0] i2c_scl_in;
+    wire[I2C_NUM-1:0] i2c_scl_oe;
+    wire[I2C_NUM-1:0] i2c_scl_out;
+    wire[I2C_NUM-1:0] i2c_sda_in;
+    wire[I2C_NUM-1:0] i2c_sda_oe;
+    wire[I2C_NUM-1:0] i2c_sda_out;
 
+    wire[UART_NUM-1:0] uart_tx;
+    wire[UART_NUM-1:0] uart_rx;
+
+    wire[SPI_NUM-1:0] spi_clk_in;
+    wire[SPI_NUM-1:0] spi_clk_oe;
+    wire[SPI_NUM-1:0] spi_clk_out;
+    wire[SPI_NUM-1:0] spi_ss_in;
+    wire[SPI_NUM-1:0] spi_ss_oe;
+    wire[SPI_NUM-1:0] spi_ss_out;
+    wire[3:0]         spi_dq_in[SPI_NUM-1:0];
+    wire[3:0]         spi_dq_oe[SPI_NUM-1:0];
+    wire[3:0]         spi_dq_out[SPI_NUM-1:0];
+
+    // 中断源
     always @ (*) begin
-        irq_src    = 32'h0;
-        irq_src[0] = timer0_irq;
-        irq_src[1] = uart0_irq;
-        irq_src[2] = gpio0_irq;
-        irq_src[3] = gpio1_irq;
-        irq_src[4] = i2c0_irq;
-        irq_src[5] = spi0_irq;
+        irq_src     = 32'h0;
+        irq_src[ 0] = timer0_irq;
+        irq_src[ 1] = uart0_irq;
+        irq_src[ 2] = gpio0_irq;
+        irq_src[ 3] = gpio1_irq;
+        irq_src[ 4] = i2c0_irq;
+        irq_src[ 5] = spi0_irq;
+        irq_src[ 6] = gpio2_4_irq;
+        irq_src[ 7] = gpio5_7_irq;
+        irq_src[ 8] = gpio8_irq;
+        irq_src[ 9] = gpio9_irq;
+        irq_src[10] = gpio10_12_irq;
+        irq_src[11] = gpio13_15_irq;
+        irq_src[12] = uart1_irq;
+        irq_src[13] = uart2_irq;
+        irq_src[14] = i2c1_irq;
+        irq_src[15] = timer1_irq;
+        irq_src[16] = timer2_irq;
     end
 
 `ifdef VERILATOR
@@ -261,14 +275,43 @@ module tinyriscv_soc_top #(
         .data_o  (slave_rdata[Timer0])
     );
 
-    for (genvar i = 0; i < GPIO_NUM; i = i + 1) begin : g_gpio_data
-        assign gpio_pins[i] = gpio_oe[i] ? gpio_data_out[i] : 1'bz;
-        assign gpio_data_in[i] = gpio_pins[i];
-    end
+    assign slave_addr_mask[Timer1] = `TIMER1_ADDR_MASK;
+    assign slave_addr_base[Timer1] = `TIMER1_ADDR_BASE;
+    // 4.定时器1模块
+    timer_top timer1(
+        .clk_i   (clk),
+        .rst_ni  (ndmreset_n),
+        .irq_o   (timer1_irq),
+        .req_i   (slave_req[Timer1]),
+        .we_i    (slave_we[Timer1]),
+        .be_i    (slave_be[Timer1]),
+        .addr_i  (slave_addr[Timer1]),
+        .data_i  (slave_wdata[Timer1]),
+        .gnt_o   (slave_gnt[Timer1]),
+        .rvalid_o(slave_rvalid[Timer1]),
+        .data_o  (slave_rdata[Timer1])
+    );
+
+    assign slave_addr_mask[Timer2] = `TIMER2_ADDR_MASK;
+    assign slave_addr_base[Timer2] = `TIMER2_ADDR_BASE;
+    // 5.定时器2模块
+    timer_top timer2(
+        .clk_i   (clk),
+        .rst_ni  (ndmreset_n),
+        .irq_o   (timer2_irq),
+        .req_i   (slave_req[Timer2]),
+        .we_i    (slave_we[Timer2]),
+        .be_i    (slave_be[Timer2]),
+        .addr_i  (slave_addr[Timer2]),
+        .data_i  (slave_wdata[Timer2]),
+        .gnt_o   (slave_gnt[Timer2]),
+        .rvalid_o(slave_rvalid[Timer2]),
+        .data_o  (slave_rdata[Timer2])
+    );
 
     assign slave_addr_mask[Gpio] = `GPIO_ADDR_MASK;
     assign slave_addr_base[Gpio] = `GPIO_ADDR_BASE;
-    // 4.GPIO模块
+    // 6.GPIO模块
     gpio_top #(
         .GPIO_NUM(GPIO_NUM)
     ) u_gpio (
@@ -279,8 +322,12 @@ module tinyriscv_soc_top #(
         .gpio_data_i    (gpio_data_in),
         .irq_gpio0_o    (gpio0_irq),
         .irq_gpio1_o    (gpio1_irq),
-        .irq_gpio2_4_o  (),
-        .irq_gpio5_7_o  (),
+        .irq_gpio2_4_o  (gpio2_4_irq),
+        .irq_gpio5_7_o  (gpio5_7_irq),
+        .irq_gpio8_o    (gpio8_irq),
+        .irq_gpio9_o    (gpio9_irq),
+        .irq_gpio10_12_o(gpio10_12_irq),
+        .irq_gpio13_15_o(gpio13_15_irq),
         .req_i          (slave_req[Gpio]),
         .we_i           (slave_we[Gpio]),
         .be_i           (slave_be[Gpio]),
@@ -293,12 +340,12 @@ module tinyriscv_soc_top #(
 
     assign slave_addr_mask[Uart0] = `UART0_ADDR_MASK;
     assign slave_addr_base[Uart0] = `UART0_ADDR_BASE;
-    // 5.串口0模块
+    // 7.串口0模块
     uart_top uart0 (
         .clk_i      (clk),
         .rst_ni     (ndmreset_n),
-        .rx_i       (uart_rx_pin),
-        .tx_o       (uart_tx_pin),
+        .rx_i       (uart_rx[0]),
+        .tx_o       (uart_tx[0]),
         .irq_o      (uart0_irq),
         .req_i      (slave_req[Uart0]),
         .we_i       (slave_we[Uart0]),
@@ -310,9 +357,47 @@ module tinyriscv_soc_top #(
         .data_o     (slave_rdata[Uart0])
     );
 
+    assign slave_addr_mask[Uart1] = `UART1_ADDR_MASK;
+    assign slave_addr_base[Uart1] = `UART1_ADDR_BASE;
+    // 8.串口1模块
+    uart_top uart1 (
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .rx_i       (uart_rx[1]),
+        .tx_o       (uart_tx[1]),
+        .irq_o      (uart1_irq),
+        .req_i      (slave_req[Uart1]),
+        .we_i       (slave_we[Uart1]),
+        .be_i       (slave_be[Uart1]),
+        .addr_i     (slave_addr[Uart1]),
+        .data_i     (slave_wdata[Uart1]),
+        .gnt_o      (slave_gnt[Uart1]),
+        .rvalid_o   (slave_rvalid[Uart1]),
+        .data_o     (slave_rdata[Uart1])
+    );
+
+    assign slave_addr_mask[Uart2] = `UART2_ADDR_MASK;
+    assign slave_addr_base[Uart2] = `UART2_ADDR_BASE;
+    // 9.串口2模块
+    uart_top uart2 (
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .rx_i       (uart_rx[2]),
+        .tx_o       (uart_tx[2]),
+        .irq_o      (uart2_irq),
+        .req_i      (slave_req[Uart2]),
+        .we_i       (slave_we[Uart2]),
+        .be_i       (slave_be[Uart2]),
+        .addr_i     (slave_addr[Uart2]),
+        .data_i     (slave_wdata[Uart2]),
+        .gnt_o      (slave_gnt[Uart2]),
+        .rvalid_o   (slave_rvalid[Uart2]),
+        .data_o     (slave_rdata[Uart2])
+    );
+
     assign slave_addr_mask[Rvic] = `RVIC_ADDR_MASK;
     assign slave_addr_base[Rvic] = `RVIC_ADDR_BASE;
-    // 6.中断控制器模块
+    // 10.中断控制器模块
     rvic_top u_rvic(
         .clk_i      (clk),
         .rst_ni     (ndmreset_n),
@@ -329,23 +414,18 @@ module tinyriscv_soc_top #(
         .data_o     (slave_rdata[Rvic])
     );
 
-    assign i2c_scl_pin = i2c_scl_oe ? i2c_scl_out : 1'bz;
-    assign i2c_scl_in = i2c_scl_pin;
-    assign i2c_sda_pin = i2c_sda_oe ? i2c_sda_out : 1'bz;
-    assign i2c_sda_in = i2c_sda_pin;
-
     assign slave_addr_mask[I2c0] = `I2C0_ADDR_MASK;
     assign slave_addr_base[I2c0] = `I2C0_ADDR_BASE;
-    // 7.I2C0模块
+    // 11.I2C0模块
     i2c_top i2c0(
         .clk_i      (clk),
         .rst_ni     (ndmreset_n),
-        .scl_o      (i2c_scl_out),
-        .scl_oe_o   (i2c_scl_oe),
-        .scl_i      (i2c_scl_in),
-        .sda_o      (i2c_sda_out),
-        .sda_oe_o   (i2c_sda_oe),
-        .sda_i      (i2c_sda_in),
+        .scl_o      (i2c_scl_out[0]),
+        .scl_oe_o   (i2c_scl_oe[0]),
+        .scl_i      (i2c_scl_in[0]),
+        .sda_o      (i2c_sda_out[0]),
+        .sda_oe_o   (i2c_sda_oe[0]),
+        .sda_i      (i2c_sda_in[0]),
         .irq_o      (i2c0_irq),
         .req_i      (slave_req[I2c0]),
         .we_i       (slave_we[I2c0]),
@@ -357,43 +437,53 @@ module tinyriscv_soc_top #(
         .data_o     (slave_rdata[I2c0])
     );
 
-    assign spi_clk_pin = spi_clk_oe ? spi_clk_out : 1'bz;
-    assign spi_clk_in = spi_clk_pin;
-    assign spi_ss_pin = spi_ss_oe ? spi_ss_out : 1'bz;
-    assign spi_ss_in = spi_ss_pin;
-    assign spi_dq0_pin = spi_dq0_oe ? spi_dq0_out : 1'bz;
-    assign spi_dq0_in = spi_dq0_pin;
-    assign spi_dq1_pin = spi_dq1_oe ? spi_dq1_out : 1'bz;
-    assign spi_dq1_in = spi_dq1_pin;
-    assign spi_dq2_pin = spi_dq2_oe ? spi_dq2_out : 1'bz;
-    assign spi_dq2_in = spi_dq2_pin;
-    assign spi_dq3_pin = spi_dq3_oe ? spi_dq3_out : 1'bz;
-    assign spi_dq3_in = spi_dq3_pin;
+    assign slave_addr_mask[I2c1] = `I2C1_ADDR_MASK;
+    assign slave_addr_base[I2c1] = `I2C1_ADDR_BASE;
+    // 12.I2C0模块
+    i2c_top i2c1(
+        .clk_i      (clk),
+        .rst_ni     (ndmreset_n),
+        .scl_o      (i2c_scl_out[1]),
+        .scl_oe_o   (i2c_scl_oe[1]),
+        .scl_i      (i2c_scl_in[1]),
+        .sda_o      (i2c_sda_out[1]),
+        .sda_oe_o   (i2c_sda_oe[1]),
+        .sda_i      (i2c_sda_in[1]),
+        .irq_o      (i2c1_irq),
+        .req_i      (slave_req[I2c1]),
+        .we_i       (slave_we[I2c1]),
+        .be_i       (slave_be[I2c1]),
+        .addr_i     (slave_addr[I2c1]),
+        .data_i     (slave_wdata[I2c1]),
+        .gnt_o      (slave_gnt[I2c1]),
+        .rvalid_o   (slave_rvalid[I2c1]),
+        .data_o     (slave_rdata[I2c1])
+    );
 
     assign slave_addr_mask[Spi0] = `SPI0_ADDR_MASK;
     assign slave_addr_base[Spi0] = `SPI0_ADDR_BASE;
-    // 8.SPI0模块
+    // 13.SPI0模块
     spi_top spi0(
         .clk_i      (clk),
         .rst_ni     (ndmreset_n),
-        .spi_clk_i  (spi_clk_in),
-        .spi_clk_o  (spi_clk_out),
-        .spi_clk_oe_o(spi_clk_oe),
-        .spi_ss_i   (spi_ss_in),
-        .spi_ss_o   (spi_ss_out),
-        .spi_ss_oe_o(spi_ss_oe),
-        .spi_dq0_i  (spi_dq0_in),
-        .spi_dq0_o  (spi_dq0_out),
-        .spi_dq0_oe_o(spi_dq0_oe),
-        .spi_dq1_i  (spi_dq1_in),
-        .spi_dq1_o  (spi_dq1_out),
-        .spi_dq1_oe_o(spi_dq1_oe),
-        .spi_dq2_i  (spi_dq2_in),
-        .spi_dq2_o  (spi_dq2_out),
-        .spi_dq2_oe_o(spi_dq2_oe),
-        .spi_dq3_i  (spi_dq3_in),
-        .spi_dq3_o  (spi_dq3_out),
-        .spi_dq3_oe_o(spi_dq3_oe),
+        .spi_clk_i  (spi_clk_in[0]),
+        .spi_clk_o  (spi_clk_out[0]),
+        .spi_clk_oe_o(spi_clk_oe[0]),
+        .spi_ss_i   (spi_ss_in[0]),
+        .spi_ss_o   (spi_ss_out[0]),
+        .spi_ss_oe_o(spi_ss_oe[0]),
+        .spi_dq0_i  (spi_dq_in[0][0]),
+        .spi_dq0_o  (spi_dq_out[0][0]),
+        .spi_dq0_oe_o(spi_dq_oe[0][0]),
+        .spi_dq1_i  (spi_dq_in[0][1]),
+        .spi_dq1_o  (spi_dq_out[0][1]),
+        .spi_dq1_oe_o(spi_dq_oe[0][1]),
+        .spi_dq2_i  (spi_dq_in[0][2]),
+        .spi_dq2_o  (spi_dq_out[0][2]),
+        .spi_dq2_oe_o(spi_dq_oe[0][2]),
+        .spi_dq3_i  (spi_dq_in[0][3]),
+        .spi_dq3_o  (spi_dq_out[0][3]),
+        .spi_dq3_oe_o(spi_dq_oe[0][3]),
         .irq_o      (spi0_irq),
         .req_i      (slave_req[Spi0]),
         .we_i       (slave_we[Spi0]),
@@ -405,10 +495,63 @@ module tinyriscv_soc_top #(
         .data_o     (slave_rdata[Spi0])
     );
 
+    for (genvar i = 0; i < GPIO_NUM; i = i + 1) begin : g_io_data
+        assign io_pins[i] = io_oe[i] ? io_data_out[i] : 1'bz;
+        assign io_data_in[i] = io_pins[i];
+    end
+
+    assign slave_addr_mask[Pinmux] = `PINMUX_ADDR_MASK;
+    assign slave_addr_base[Pinmux] = `PINMUX_ADDR_BASE;
+    // 14.PINMUX模块
+    pinmux_top #(
+        .GPIO_NUM(GPIO_NUM),
+        .I2C_NUM(I2C_NUM),
+        .UART_NUM(UART_NUM),
+        .SPI_NUM(SPI_NUM)
+    ) u_pinmux (
+        .clk_i          (clk),
+        .rst_ni         (ndmreset_n),
+        .gpio_oe_i      (gpio_oe),
+        .gpio_val_i     (gpio_data_out),
+        .gpio_val_o     (gpio_data_in),
+        .i2c_sda_oe_i   (i2c_sda_oe),
+        .i2c_sda_val_i  (i2c_sda_out),
+        .i2c_sda_val_o  (i2c_sda_in),
+        .i2c_scl_oe_i   (i2c_scl_oe),
+        .i2c_scl_val_i  (i2c_scl_out),
+        .i2c_scl_val_o  (i2c_scl_in),
+        .uart_tx_oe_i   ({UART_NUM{1'b1}}),
+        .uart_tx_val_i  (uart_tx),
+        .uart_tx_val_o  (),
+        .uart_rx_oe_i   ({UART_NUM{1'b0}}),
+        .uart_rx_val_i  (),
+        .uart_rx_val_o  (uart_rx),
+        .spi_clk_oe_i   (spi_clk_oe),
+        .spi_clk_val_i  (spi_clk_out),
+        .spi_clk_val_o  (spi_clk_in),
+        .spi_ss_oe_i    (spi_ss_oe),
+        .spi_ss_val_i   (spi_ss_out),
+        .spi_ss_val_o   (spi_ss_in),
+        .spi_dq_oe_i    (spi_dq_oe),
+        .spi_dq_val_i   (spi_dq_out),
+        .spi_dq_val_o   (spi_dq_in),
+        .io_val_i       (io_data_in),
+        .io_val_o       (io_data_out),
+        .io_oe_o        (io_oe),
+        .req_i          (slave_req[Pinmux]),
+        .we_i           (slave_we[Pinmux]),
+        .be_i           (slave_be[Pinmux]),
+        .addr_i         (slave_addr[Pinmux]),
+        .data_i         (slave_wdata[Pinmux]),
+        .gnt_o          (slave_gnt[Pinmux]),
+        .rvalid_o       (slave_rvalid[Pinmux]),
+        .data_o         (slave_rdata[Pinmux])
+    );
+
 `ifdef VERILATOR
     assign slave_addr_mask[SimCtrl] = `SIM_CTRL_ADDR_MASK;
     assign slave_addr_base[SimCtrl] = `SIM_CTRL_ADDR_BASE;
-    // 9.仿真控制模块
+    // 15.仿真控制模块
     sim_ctrl u_sim_ctrl(
         .clk_i         (clk),
         .rst_ni        (ndmreset_n),
@@ -475,7 +618,7 @@ module tinyriscv_soc_top #(
     // JTAG module
     jtag_top #(
 
-    ) u_jtag_top (
+    ) u_jtag (
         .clk_i              (clk),
         .rst_ni             (rst_ext_ni),
         .debug_req_o        (debug_req),
