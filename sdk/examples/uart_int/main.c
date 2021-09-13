@@ -4,6 +4,7 @@
 #include "../../bsp/include/xprintf.h"
 #include "../../bsp/include/rvic.h"
 #include "../../bsp/include/utils.h"
+#include "../../bsp/include/pinmux.h"
 
 
 #define UART_TXB	(80)
@@ -34,6 +35,9 @@ static void uart_putc(uint8_t c)
 
 int main()
 {
+    pinmux_set_io0_func(IO0_UART0_TX);
+    pinmux_set_io3_func(IO3_UART0_RX);
+
     uart0_init(uart_putc);
     rvic_irq_enable(1);
     rvic_set_irq_prio_level(1, 1);

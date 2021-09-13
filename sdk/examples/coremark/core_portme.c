@@ -4,6 +4,7 @@
 #include "../../bsp/include/utils.h"
 #include "../../bsp/include/uart.h"
 #include "../../bsp/include/xprintf.h"
+#include "../../bsp/include/pinmux.h"
 
 #if VALIDATION_RUN
 	volatile ee_s32 seed1_volatile=0x3415;
@@ -54,5 +55,7 @@ secs_ret time_in_secs(CORE_TICKS ticks)
 
 void portable_init(core_portable *p, int *argc, char *argv[])
 {
+    pinmux_set_io0_func(IO0_UART0_TX);
+    pinmux_set_io3_func(IO3_UART0_RX);
     uart0_init(uart0_putc);
 }

@@ -107,7 +107,7 @@ int main( void )
 
 static void prvSetupHardware( void )
 {
-    gpio_set_mode(GPIO0, GPIO_MODE_OUTPUT);  // set gpio0 output mode
+    gpio_set_mode(GPIO7, GPIO_MODE_OUTPUT);  // set gpio7 output mode
 }
 /*-----------------------------------------------------------*/
 
@@ -180,7 +180,7 @@ const uint32_t ulNullLoopDelay = 0x1ffffUL;
 		{
 			__asm volatile( "nop" );
 		}
-		gpio_set_output_toggle(GPIO0); // toggle led
+		gpio_set_output_toggle(GPIO7); // toggle led
 	}
 }
 /*-----------------------------------------------------------*/
@@ -192,7 +192,7 @@ void vToggleLED( void )
     set_test_pass();
     while (1);
 #else
-    gpio_set_output_toggle(GPIO0); // toggle led
+    gpio_set_output_toggle(GPIO7); // toggle led
 #endif
 }
 
