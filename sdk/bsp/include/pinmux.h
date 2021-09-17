@@ -29,12 +29,14 @@ typedef enum {
     IO1_GPIO1 = 0x0,
     IO1_UART1_TX,
     IO1_UART1_RX,
+    IO1_SPI_DQ0,
 } pinmux_io1_e;
 
 typedef enum {
     IO2_GPIO2 = 0x0,
     IO2_UART2_TX,
     IO2_UART2_RX,
+    IO2_SPI_DQ1,
 } pinmux_io2_e;
 
 typedef enum {
@@ -47,18 +49,21 @@ typedef enum {
     IO4_GPIO4 = 0x0,
     IO4_UART1_TX,
     IO4_UART1_RX,
+    IO4_SPI_DQ2,
 } pinmux_io4_e;
 
 typedef enum {
     IO5_GPIO5 = 0x0,
     IO5_UART2_TX,
     IO5_UART2_RX,
+    IO5_SPI_DQ3,
 } pinmux_io5_e;
 
 typedef enum {
     IO6_GPIO6 = 0x0,
     IO6_I2C0_SCL,
     IO6_I2C0_SDA,
+    IO6_SPI_CLK,
 } pinmux_io6_e;
 
 typedef enum {
@@ -71,6 +76,7 @@ typedef enum {
     IO8_GPIO8 = 0x0,
     IO8_I2C0_SCL,
     IO8_I2C0_SDA,
+    IO8_SPI_SS,
 } pinmux_io8_e;
 
 typedef enum {

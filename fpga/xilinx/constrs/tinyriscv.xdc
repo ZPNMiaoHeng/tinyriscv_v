@@ -64,13 +64,13 @@ set_property PACKAGE_PIN T15 [get_ports {io_pins[9]}]
 
 
 set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[2]}]
-set_property PACKAGE_PIN P5 [get_ports {io_pins[2]}]
+set_property PACKAGE_PIN T13 [get_ports {io_pins[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[1]}]
-set_property PACKAGE_PIN L5 [get_ports {io_pins[1]}]
+set_property PACKAGE_PIN R13 [get_ports {io_pins[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[4]}]
-set_property PACKAGE_PIN M2 [get_ports {io_pins[4]}]
+set_property PACKAGE_PIN R7 [get_ports {io_pins[4]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {io_pins[5]}]
-set_property PACKAGE_PIN N12 [get_ports {io_pins[5]}]
+set_property PACKAGE_PIN R6 [get_ports {io_pins[5]}]
 
 
 # JTAG TCK引脚

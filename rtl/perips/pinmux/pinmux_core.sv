@@ -153,10 +153,10 @@ module pinmux_core #(
                 io_val_o[1]      = uart_rx_val_i[1];
                 io_oe_o[1]       = uart_rx_oe_i[1];
             end
-            // GPIO1
+            // SPI_DQ0
             2'b11: begin
-                io_val_o[1]      = gpio_val_i[1];
-                io_oe_o[1]       = gpio_oe_i[1];
+                io_val_o[1]      = spi_dq_val_i[0][0];
+                io_oe_o[1]       = spi_dq_oe_i[0][0];
             end
             default: ;
         endcase
@@ -183,10 +183,10 @@ module pinmux_core #(
                 io_val_o[2]      = uart_rx_val_i[2];
                 io_oe_o[2]       = uart_rx_oe_i[2];
             end
-            // GPIO2
+            // SPI_DQ1
             2'b11: begin
-                io_val_o[2]      = gpio_val_i[2];
-                io_oe_o[2]       = gpio_oe_i[2];
+                io_val_o[2]      = spi_dq_val_i[0][1];
+                io_oe_o[2]       = spi_dq_oe_i[0][1];
             end
             default: ;
         endcase
@@ -243,10 +243,10 @@ module pinmux_core #(
                 io_val_o[4]      = uart_rx_val_i[1];
                 io_oe_o[4]       = uart_rx_oe_i[1];
             end
-            // GPIO4
+            // SPI_DQ2
             2'b11: begin
-                io_val_o[4]      = gpio_val_i[4];
-                io_oe_o[4]       = gpio_oe_i[4];
+                io_val_o[4]      = spi_dq_val_i[0][2];
+                io_oe_o[4]       = spi_dq_oe_i[0][2];
             end
             default: ;
         endcase
@@ -273,10 +273,10 @@ module pinmux_core #(
                 io_val_o[5]      = uart_rx_val_i[2];
                 io_oe_o[5]       = uart_rx_oe_i[2];
             end
-            // GPIO5
+            // SPI_DQ3
             2'b11: begin
-                io_val_o[5]      = gpio_val_i[5];
-                io_oe_o[5]       = gpio_oe_i[5];
+                io_val_o[5]      = spi_dq_val_i[0][3];
+                io_oe_o[5]       = spi_dq_oe_i[0][3];
             end
             default: ;
         endcase
@@ -303,10 +303,10 @@ module pinmux_core #(
                 io_val_o[6]      = i2c_sda_val_i[0];
                 io_oe_o[6]       = i2c_sda_oe_i[0];
             end
-            // GPIO6
+            // SPI_CLK
             2'b11: begin
-                io_val_o[6]      = gpio_val_i[6];
-                io_oe_o[6]       = gpio_oe_i[6];
+                io_val_o[6]      = spi_clk_val_i[0];
+                io_oe_o[6]       = spi_clk_oe_i[0];
             end
             default: ;
         endcase
@@ -363,10 +363,10 @@ module pinmux_core #(
                 io_val_o[8]      = i2c_sda_val_i[0];
                 io_oe_o[8]       = i2c_sda_oe_i[0];
             end
-            // GPIO8
+            // SPI_SS
             2'b11: begin
-                io_val_o[8]      = gpio_val_i[8];
-                io_oe_o[8]       = gpio_oe_i[8];
+                io_val_o[8]      = spi_ss_val_i[0];
+                io_oe_o[8]       = spi_ss_oe_i[0];
             end
             default: ;
         endcase
@@ -591,12 +591,24 @@ module pinmux_core #(
                               (io9_mux == 2'b10) ? io_val_i[9] :
                               1'b0;
 
-    assign spi_clk_val_o[0]   = (io10_mux == 2'b01) ? io_val_i[10] : 1'b0;
-    assign spi_ss_val_o[0]    = (io11_mux == 2'b01) ? io_val_i[11] : 1'b0;
-    assign spi_dq_val_o[0][0] = (io12_mux == 2'b01) ? io_val_i[12] : 1'b0;
-    assign spi_dq_val_o[0][1] = (io13_mux == 2'b01) ? io_val_i[13] : 1'b0;
-    assign spi_dq_val_o[0][2] = (io14_mux == 2'b01) ? io_val_i[14] : 1'b0;
-    assign spi_dq_val_o[0][3] = (io15_mux == 2'b01) ? io_val_i[15] : 1'b0;
+    assign spi_clk_val_o[0]   = (io10_mux == 2'b01) ? io_val_i[10] :
+                                (io6_mux == 2'b11)  ? io_val_i[6] :
+                                1'b0;
+    assign spi_ss_val_o[0]    = (io11_mux == 2'b01) ? io_val_i[11] :
+                                (io8_mux == 2'b11)  ? io_val_i[8] :
+                                1'b0;
+    assign spi_dq_val_o[0][0] = (io12_mux == 2'b01) ? io_val_i[12] :
+                                (io1_mux == 2'b11)  ? io_val_i[1] :
+                                1'b0;
+    assign spi_dq_val_o[0][1] = (io13_mux == 2'b01) ? io_val_i[13] :
+                                (io2_mux == 2'b11)  ? io_val_i[2] :
+                                1'b0;
+    assign spi_dq_val_o[0][2] = (io14_mux == 2'b01) ? io_val_i[14] :
+                                (io4_mux == 2'b11)  ? io_val_i[4] :
+                                1'b0;
+    assign spi_dq_val_o[0][3] = (io15_mux == 2'b01) ? io_val_i[15] :
+                                (io5_mux == 2'b11)  ? io_val_i[5] :
+                                1'b0;
 
     pinmux_reg_top u_pinmux_reg_top (
         .clk_i      (clk_i),
