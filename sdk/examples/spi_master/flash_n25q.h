@@ -33,7 +33,7 @@
 #define CMD_READ_NONVOL_CONF_REG            (0xB5)
 
 
-#define DUMMY_CNT_4_4_4                     (0x7)
+#define DUMMY_CNT                           (0xa)
 
 
 typedef struct {
@@ -58,7 +58,7 @@ uint8_t flash_n25q_read_enhanced_volatile_conf_reg();
 void flash_n25q_write_enhanced_volatile_conf_reg(uint8_t data);
 void flash_n25q_enable_quad_mode(uint8_t en);
 void flash_n25q_set_dummy_clock_cycles(uint8_t num);
-void flash_n25q_quad_fast_read(uint32_t addr, uint8_t data[], uint32_t len);
+void flash_n25q_quad_output_fast_read(uint32_t addr, uint8_t data[], uint32_t len);
 uint8_t flash_n25q_read_nonvolatile_conf_reg();
 
 #endif

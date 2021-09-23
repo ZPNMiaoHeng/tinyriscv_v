@@ -61,6 +61,8 @@ int main()
     for (i = 0; i < BUFFER_SIZE; i++)
         xprintf("0x%x\n", read_data[i]);
 
+
+    flash_n25q_set_dummy_clock_cycles(DUMMY_CNT);
     // 使能N25Q QSPI模式
     flash_n25q_enable_quad_mode(1);
     // 使能SPI控制器QSPI模式
@@ -70,19 +72,12 @@ int main()
     xprintf("manf id = 0x%2x\n", id.manf_id);
     xprintf("mem type = 0x%2x\n", id.mem_type);
     xprintf("mem cap = 0x%2x\n", id.mem_cap);
-    // 失能N25Q QSPI模式
-    flash_n25q_enable_quad_mode(0);
-
-/*
-    flash_n25q_set_dummy_clock_cycles(DUMMY_CNT_4_4_4 << 1);
-    flash_n25q_enable_quad_mode(1);
-    spi0_set_spi_mode(SPI_MODE_QUAD);
-    flash_n25q_quad_fast_read(N25Q_PAGE_TO_ADDR(1), read_data, BUFFER_SIZE);
+    flash_n25q_quad_output_fast_read(N25Q_PAGE_TO_ADDR(1), read_data, BUFFER_SIZE);
     xprintf("fast read data: \n");
     for (i = 0; i < BUFFER_SIZE; i++)
         xprintf("0x%x\n", read_data[i]);
-
+    // 失能N25Q QSPI模式
     flash_n25q_enable_quad_mode(0);
-*/
+
     while (1);
 }

@@ -28,7 +28,7 @@ void flash_n25q_init(uint16_t clk_div)
 }
 
 // 写使能
-// 擦除或者编程操作之前必须先发送写使能命令
+// 擦除或者编程或者写寄存器之前必须先发送写使能命令
 void flash_n25q_write_enable(uint8_t en)
 {
     uint8_t cmd;
@@ -215,18 +215,22 @@ void flash_n25q_set_dummy_clock_cycles(uint8_t num)
 {
     uint8_t data;
 
+    flash_n25q_write_enable(1);
+
     data = flash_n25q_read_reg(CMD_READ_VOL_CONF_REG);
     data &= ~(0xf << 4);
     data |= num << 4;
     flash_n25q_write_reg(CMD_WRITE_VOL_CONF_REG, data);
+
+    flash_n25q_write_enable(0);
 }
 
-void flash_n25q_quad_fast_read(uint32_t addr, uint8_t data[], uint32_t len)
+void flash_n25q_quad_output_fast_read(uint32_t addr, uint8_t data[], uint32_t len)
 {
     uint8_t tran_addr[3];
     uint8_t cmd, i;
 
-    cmd = CMD_4_4_4_FAST_READ;
+    cmd = CMD_QUAD_OUTPUT_FAST_READ;
 
     tran_addr[0] = (addr >> 16) & 0xff;
     tran_addr[1] = (addr >> 8)  & 0xff;
@@ -235,7 +239,7 @@ void flash_n25q_quad_fast_read(uint32_t addr, uint8_t data[], uint32_t len)
     spi0_set_ss_level(0);
     spi0_master_write_bytes(&cmd, 1);
     spi0_master_write_bytes(tran_addr, 3);
-    for (i = 0; i < DUMMY_CNT_4_4_4; i++)
+    for (i = 0; i < (DUMMY_CNT >> 1); i++)
         spi0_master_read_bytes(data, 1);
     spi0_reset_rxfifo();
     spi0_master_read_bytes(data, len);
