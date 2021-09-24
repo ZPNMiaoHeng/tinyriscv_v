@@ -13,7 +13,6 @@
 #define CMD_READ 					        (0x03)
 #define CMD_FAST_READ                       (0x0b)
 #define CMD_QUAD_OUTPUT_FAST_READ           (0x6b)
-#define CMD_4_4_4_FAST_READ                 (0xeb)
 #define CMD_WRITE_DISABLE 			        (0x04)
 #define CMD_READ_STATUS_REG 		        (0x05)
 #define CMD_WRITE_ENABLE 			        (0x06)
@@ -32,7 +31,6 @@
 #define CMD_WRITE_VOL_CONF_REG              (0x81)
 #define CMD_READ_NONVOL_CONF_REG            (0xB5)
 
-
 #define DUMMY_CNT                           (0xa)
 
 
@@ -44,13 +42,12 @@ typedef struct {
 
 void flash_n25q_init(uint16_t clk_div);
 n25q_id_t flash_n25q_read_id();
-n25q_id_t flash_n25q_multi_io_read_id();
 void flash_n25q_write_enable(uint8_t en);
 uint8_t flash_n25q_read_reg(uint8_t cmd);
 void flash_n25q_write_reg(uint8_t cmd, uint8_t data);
 uint8_t flash_n25q_read_status_reg();
 uint8_t flash_n25q_is_busy();
-void flash_n25q_read_data(uint8_t data[], uint32_t len, uint32_t addr);
+void flash_n25q_read(uint8_t data[], uint32_t len, uint32_t addr);
 void flash_n25q_subsector_erase(uint32_t subsector);
 void flash_n25q_sector_erase(uint32_t sector);
 void flash_n25q_page_program(uint8_t data[], uint32_t len, uint32_t page);
@@ -58,7 +55,6 @@ uint8_t flash_n25q_read_enhanced_volatile_conf_reg();
 void flash_n25q_write_enhanced_volatile_conf_reg(uint8_t data);
 void flash_n25q_enable_quad_mode(uint8_t en);
 void flash_n25q_set_dummy_clock_cycles(uint8_t num);
-void flash_n25q_quad_output_fast_read(uint32_t addr, uint8_t data[], uint32_t len);
 uint8_t flash_n25q_read_nonvolatile_conf_reg();
 
 #endif

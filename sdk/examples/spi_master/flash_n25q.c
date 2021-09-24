@@ -13,6 +13,8 @@
  * 5.擦除的最小单位是子扇区，编程(写)的最小单位是页，读的最小单位是字节
  */
 
+static uint8_t current_spi_mode;
+
 
 void flash_n25q_init(uint16_t clk_div)
 {
@@ -25,6 +27,8 @@ void flash_n25q_init(uint16_t clk_div)
     spi0_set_ss_level(1);
     spi0_set_ss_ctrl_by_sw(1);
     spi0_set_enable(1);
+
+    current_spi_mode = SPI_MODE_STANDARD;
 }
 
 // 写使能
@@ -86,12 +90,16 @@ uint8_t flash_n25q_is_busy()
 
 // 读数据
 // addr: 0, 1, 2, ...
-void flash_n25q_read_data(uint8_t data[], uint32_t len, uint32_t addr)
+void flash_n25q_read(uint8_t data[], uint32_t len, uint32_t addr)
 {
-    uint8_t cmd;
+    uint8_t cmd, i;
     uint8_t tran_addr[3];
 
-    cmd = CMD_READ;
+    if (current_spi_mode == SPI_MODE_STANDARD)
+        cmd = CMD_READ;
+    else
+        cmd = CMD_FAST_READ;
+
     tran_addr[0] = (addr >> 16) & 0xff;
     tran_addr[1] = (addr >> 8)  & 0xff;
     tran_addr[2] = (addr >> 0)  & 0xff;
@@ -99,6 +107,11 @@ void flash_n25q_read_data(uint8_t data[], uint32_t len, uint32_t addr)
     spi0_set_ss_level(0);
     spi0_master_write_bytes(&cmd, 1);
     spi0_master_write_bytes(tran_addr, 3);
+    if (current_spi_mode != SPI_MODE_STANDARD) {
+        for (i = 0; i < (DUMMY_CNT >> 1); i++)
+            spi0_master_read_bytes(data, 1);
+        spi0_reset_rxfifo();
+    }
     spi0_master_read_bytes(data, len);
     spi0_set_ss_level(1);
 }
@@ -208,6 +221,11 @@ void flash_n25q_enable_quad_mode(uint8_t en)
     flash_n25q_write_enhanced_volatile_conf_reg(data);
 
     flash_n25q_write_enable(0);
+
+    if (en)
+        current_spi_mode = SPI_MODE_QUAD;
+    else
+        current_spi_mode = SPI_MODE_STANDARD;
 }
 
 // 设置n25q dummy cycles
@@ -225,56 +243,17 @@ void flash_n25q_set_dummy_clock_cycles(uint8_t num)
     flash_n25q_write_enable(0);
 }
 
-void flash_n25q_quad_output_fast_read(uint32_t addr, uint8_t data[], uint32_t len)
-{
-    uint8_t tran_addr[3];
-    uint8_t cmd, i;
-
-    cmd = CMD_QUAD_OUTPUT_FAST_READ;
-
-    tran_addr[0] = (addr >> 16) & 0xff;
-    tran_addr[1] = (addr >> 8)  & 0xff;
-    tran_addr[2] = (addr >> 0)  & 0xff;
-
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_master_write_bytes(tran_addr, 3);
-    for (i = 0; i < (DUMMY_CNT >> 1); i++)
-        spi0_master_read_bytes(data, 1);
-    spi0_reset_rxfifo();
-    spi0_master_read_bytes(data, len);
-    spi0_set_ss_level(1);
-}
-
-// 标准SPI模式读flash ID
+// 读flash ID
 n25q_id_t flash_n25q_read_id()
 {
     n25q_id_t id;
     uint8_t cmd;
     uint8_t data[3];
 
-    cmd = CMD_READ_ID;
-
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_master_read_bytes(data, 3);
-    spi0_set_ss_level(1);
-
-    id.manf_id = data[0];
-    id.mem_type = data[1];
-    id.mem_cap = data[2];
-
-    return id;
-}
-
-// DUAL/QUAD SPI模式读flash ID
-n25q_id_t flash_n25q_multi_io_read_id()
-{
-    n25q_id_t id;
-    uint8_t cmd;
-    uint8_t data[3];
-
-    cmd = CMD_MULTI_IO_READ_ID;
+    if (current_spi_mode == SPI_MODE_STANDARD)
+        cmd = CMD_READ_ID;
+    else
+        cmd = CMD_MULTI_IO_READ_ID;
 
     spi0_set_ss_level(0);
     spi0_master_write_bytes(&cmd, 1);
