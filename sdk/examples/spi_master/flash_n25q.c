@@ -18,15 +18,15 @@ static uint8_t current_spi_mode;
 
 void flash_n25q_init(uint16_t clk_div)
 {
-    spi0_set_clk_div(clk_div);
-    spi0_set_role_mode(SPI_ROLE_MODE_MASTER);
-    spi0_set_spi_mode(SPI_MODE_STANDARD);
-    spi0_set_cp_mode(SPI_CPOL_0_CPHA_0);
-    spi0_set_msb_first();
-    spi0_master_set_ss_delay(1);
-    spi0_set_ss_level(1);
-    spi0_set_ss_ctrl_by_sw(1);
-    spi0_set_enable(1);
+    spi_set_clk_div(SPI0, clk_div);
+    spi_set_role_mode(SPI0, SPI_ROLE_MODE_MASTER);
+    spi_set_spi_mode(SPI0, SPI_MODE_STANDARD);
+    spi_set_cp_mode(SPI0, SPI_CPOL_0_CPHA_0);
+    spi_set_msb_first(SPI0);
+    spi_master_set_ss_delay(SPI0, 1);
+    spi_set_ss_level(SPI0, 1);
+    spi_set_ss_ctrl_by_sw(SPI0, 1);
+    spi_set_enable(SPI0, 1);
 
     current_spi_mode = SPI_MODE_STANDARD;
 }
@@ -42,9 +42,9 @@ void flash_n25q_write_enable(uint8_t en)
     else
         cmd = CMD_WRITE_DISABLE;
 
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_set_ss_level(1);
+    spi_set_ss_level(SPI0, 0);
+    spi_master_write_bytes(SPI0, &cmd, 1);
+    spi_set_ss_level(SPI0, 1);
 }
 
 // 读寄存器
@@ -52,10 +52,10 @@ uint8_t flash_n25q_read_reg(uint8_t cmd)
 {
     uint8_t data;
 
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_master_read_bytes(&data, 1);
-    spi0_set_ss_level(1);
+    spi_set_ss_level(SPI0, 0);
+    spi_master_write_bytes(SPI0, &cmd, 1);
+    spi_master_read_bytes(SPI0, &data, 1);
+    spi_set_ss_level(SPI0, 1);
 
     return data;
 }
@@ -63,10 +63,10 @@ uint8_t flash_n25q_read_reg(uint8_t cmd)
 // 写寄存器
 void flash_n25q_write_reg(uint8_t cmd, uint8_t data)
 {
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_master_write_bytes(&data, 1);
-    spi0_set_ss_level(1);
+    spi_set_ss_level(SPI0, 0);
+    spi_master_write_bytes(SPI0, &cmd, 1);
+    spi_master_write_bytes(SPI0, &data, 1);
+    spi_set_ss_level(SPI0, 1);
 }
 
 // 读状态寄存器
@@ -104,16 +104,16 @@ void flash_n25q_read(uint8_t data[], uint32_t len, uint32_t addr)
     tran_addr[1] = (addr >> 8)  & 0xff;
     tran_addr[2] = (addr >> 0)  & 0xff;
 
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_master_write_bytes(tran_addr, 3);
+    spi_set_ss_level(SPI0, 0);
+    spi_master_write_bytes(SPI0, &cmd, 1);
+    spi_master_write_bytes(SPI0, tran_addr, 3);
     if (current_spi_mode != SPI_MODE_STANDARD) {
         for (i = 0; i < (DUMMY_CNT >> 1); i++)
-            spi0_master_read_bytes(data, 1);
-        spi0_reset_rxfifo();
+            spi_master_read_bytes(SPI0, data, 1);
+        spi_reset_rxfifo(SPI0);
     }
-    spi0_master_read_bytes(data, len);
-    spi0_set_ss_level(1);
+    spi_master_read_bytes(SPI0, data, len);
+    spi_set_ss_level(SPI0, 1);
 }
 
 static void sector_erase(uint8_t cmd, uint32_t addr)
@@ -126,10 +126,10 @@ static void sector_erase(uint8_t cmd, uint32_t addr)
     tran_addr[1] = (addr >> 8)  & 0xff;
     tran_addr[2] = (addr >> 0)  & 0xff;
 
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_master_write_bytes(tran_addr, 3);
-    spi0_set_ss_level(1);
+    spi_set_ss_level(SPI0, 0);
+    spi_master_write_bytes(SPI0, &cmd, 1);
+    spi_master_write_bytes(SPI0, tran_addr, 3);
+    spi_set_ss_level(SPI0, 1);
 
     while (flash_n25q_is_busy());
 
@@ -167,11 +167,11 @@ void flash_n25q_page_program(uint8_t data[], uint32_t len, uint32_t page)
 
     cmd = CMD_PAGE_PROGRAM;
 
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_master_write_bytes(tran_addr, 3);
-    spi0_master_write_bytes(data, len);
-    spi0_set_ss_level(1);
+    spi_set_ss_level(SPI0, 0);
+    spi_master_write_bytes(SPI0, &cmd, 1);
+    spi_master_write_bytes(SPI0, tran_addr, 3);
+    spi_master_write_bytes(SPI0, data, len);
+    spi_set_ss_level(SPI0, 1);
 
     while (flash_n25q_is_busy());
 
@@ -255,10 +255,10 @@ n25q_id_t flash_n25q_read_id()
     else
         cmd = CMD_MULTI_IO_READ_ID;
 
-    spi0_set_ss_level(0);
-    spi0_master_write_bytes(&cmd, 1);
-    spi0_master_read_bytes(data, 3);
-    spi0_set_ss_level(1);
+    spi_set_ss_level(SPI0, 0);
+    spi_master_write_bytes(SPI0, &cmd, 1);
+    spi_master_read_bytes(SPI0, data, 3);
+    spi_set_ss_level(SPI0, 1);
 
     id.manf_id = data[0];
     id.mem_type = data[1];

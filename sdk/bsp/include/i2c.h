@@ -16,33 +16,35 @@ extern "C" {
 // Register width
 #define I2C_PARAM_REG_WIDTH 32
 
-#define I2C0_BASE_ADDR      (0x06000000)
-#define I2C0_REG(offset)    (*((volatile uint32_t *)(I2C0_BASE_ADDR + offset)))
+#define I2C0_BASE_ADDR              (0x06000000)
+#define I2C1_BASE_ADDR              (0x0B000000)
 
-#define I2C1_BASE_ADDR      (0x0B000000)
-#define I2C1_REG(offset)    (*((volatile uint32_t *)(I2C1_BASE_ADDR + offset)))
+#define I2C0                        (I2C0_BASE_ADDR)
+#define I2C1                        (I2C1_BASE_ADDR)
+
+#define I2C_REG(base, offset)       (*((volatile uint32_t *)(base + offset)))
 
 typedef enum {
     I2C_MODE_MASTER = 0,
     I2C_MODE_SLAVE
 } i2c_mode_e;
 
-void i2c0_set_clk(uint16_t clk_div);
-void i2c0_set_mode(i2c_mode_e mode);
-void i2c0_master_set_write(uint8_t yes);
-void i2c0_set_interrupt_enable(uint8_t en);
-void i2c0_clear_irq_pending();
-uint8_t i2c0_get_irq_pending();
-void i2c0_master_set_info(uint8_t addr, uint8_t reg, uint8_t data);
-uint8_t i2c0_master_get_data();
-void i2c0_slave_set_address(uint8_t addr);
-void i2c0_slave_set_ready(uint8_t yes);
-uint8_t i2c0_slave_op_read();
-uint32_t i2c0_slave_get_op_address();
-uint32_t i2c0_slave_get_op_data();
-void i2c0_slave_set_rsp_data(uint32_t data);
-void i2c0_start();
-void i2c0_stop();
+void i2c_set_clk(uint32_t base, uint16_t clk_div);
+void i2c_set_mode(uint32_t base, i2c_mode_e mode);
+void i2c_master_set_write(uint32_t base, uint8_t yes);
+void i2c_set_interrupt_enable(uint32_t base, uint8_t en);
+void i2c_clear_irq_pending(uint32_t base);
+uint8_t i2c_get_irq_pending(uint32_t base);
+void i2c_master_set_info(uint32_t base, uint8_t addr, uint8_t reg, uint8_t data);
+uint8_t i2c_master_get_data(uint32_t base);
+void i2c_slave_set_address(uint32_t base, uint8_t addr);
+void i2c_slave_set_ready(uint32_t base, uint8_t yes);
+uint8_t i2c_slave_op_read(uint32_t base);
+uint32_t i2c_slave_get_op_address(uint32_t base);
+uint32_t i2c_slave_get_op_data(uint32_t base);
+void i2c_slave_set_rsp_data(uint32_t base, uint32_t data);
+void i2c_start(uint32_t base);
+void i2c_stop(uint32_t base);
 
 // I2C control register
 #define I2C_CTRL_REG_OFFSET 0x0

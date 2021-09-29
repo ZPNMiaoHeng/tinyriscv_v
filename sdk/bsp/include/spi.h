@@ -16,11 +16,14 @@ extern "C" {
 // Register width
 #define SPI_PARAM_REG_WIDTH 32
 
-#define SPI0_BASE_ADDR      (0x07000000)
-#define SPI0_REG(offset)    (*((volatile uint32_t *)(SPI0_BASE_ADDR + offset)))
+#define SPI0_BASE_ADDR              (0x07000000)
 
-#define SPI0_TX_FIFO_LEN    (8)
-#define SPI0_RX_FIFO_LEN    SPI0_TX_FIFO_LEN
+#define SPI0                        (SPI0_BASE_ADDR)
+
+#define SPI_REG(base, offset)       (*((volatile uint32_t *)(base + offset)))
+
+#define SPI_TX_FIFO_LEN    (8)
+#define SPI_RX_FIFO_LEN    SPI_TX_FIFO_LEN
 
 typedef enum {
     SPI_ROLE_MODE_MASTER = 0,
@@ -40,31 +43,31 @@ typedef enum {
     SPI_MODE_QUAD
 } spi_spi_mode_e;
 
-void spi0_set_clk_div(uint16_t div);
-void spi0_set_role_mode(spi_role_mode_e mode);
-void spi0_set_spi_mode(spi_spi_mode_e mode);
-void spi0_set_cp_mode(spi_cp_mode_e mode);
-void spi0_set_enable(uint8_t en);
-void spi0_set_interrupt_enable(uint8_t en);
-void spi0_set_msb_first();
-void spi0_set_lsb_first();
-void spi0_set_txdata(uint8_t data);
-uint8_t spi0_get_rxdata();
-uint8_t spi0_reset_rxfifo();
-uint8_t spi0_tx_fifo_full();
-uint8_t spi0_tx_fifo_empty();
-uint8_t spi0_rx_fifo_full();
-uint8_t spi0_rx_fifo_empty();
-void spi0_set_ss_ctrl_by_sw(uint8_t yes);
-void spi0_set_ss_level(uint8_t level);
-uint8_t spi0_get_interrupt_pending();
-void spi0_clear_interrupt_pending();
-void spi0_master_set_read();
-void spi0_master_set_write();
-void spi0_master_set_ss_delay(uint8_t clk_num);
-uint8_t spi0_master_transmiting();
-void spi0_master_write_bytes(uint8_t write_data[], uint32_t count);
-void spi0_master_read_bytes(uint8_t read_data[], uint32_t count);
+void spi_set_clk_div(uint32_t base, uint16_t div);
+void spi_set_role_mode(uint32_t base, spi_role_mode_e mode);
+void spi_set_spi_mode(uint32_t base, spi_spi_mode_e mode);
+void spi_set_cp_mode(uint32_t base, spi_cp_mode_e mode);
+void spi_set_enable(uint32_t base, uint8_t en);
+void spi_set_interrupt_enable(uint32_t base, uint8_t en);
+void spi_set_msb_first(uint32_t base);
+void spi_set_lsb_first(uint32_t base);
+void spi_set_txdata(uint32_t base, uint8_t data);
+uint8_t spi_get_rxdata(uint32_t base);
+uint8_t spi_reset_rxfifo(uint32_t base);
+uint8_t spi_tx_fifo_full(uint32_t base);
+uint8_t spi_tx_fifo_empty(uint32_t base);
+uint8_t spi_rx_fifo_full(uint32_t base);
+uint8_t spi_rx_fifo_empty(uint32_t base);
+void spi_set_ss_ctrl_by_sw(uint32_t base, uint8_t yes);
+void spi_set_ss_level(uint32_t base, uint8_t level);
+uint8_t spi_get_interrupt_pending(uint32_t base);
+void spi_clear_interrupt_pending(uint32_t base);
+void spi_master_set_read(uint32_t base);
+void spi_master_set_write(uint32_t base);
+void spi_master_set_ss_delay(uint32_t base, uint8_t clk_num);
+uint8_t spi_master_transmiting(uint32_t base);
+void spi_master_write_bytes(uint32_t base, uint8_t write_data[], uint32_t count);
+void spi_master_read_bytes(uint32_t base, uint8_t read_data[], uint32_t count);
 
 // SPI control 0 register
 #define SPI_CTRL0_REG_OFFSET 0x0

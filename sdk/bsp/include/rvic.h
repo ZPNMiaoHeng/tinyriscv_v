@@ -62,6 +62,24 @@ typedef enum {
     RVIC_INT_ID_31,
 } rvic_int_id_e;
 
+#define RVIC_TIMER0_INT_ID      RVIC_INT_ID_0
+#define RVIC_UART0_INT_ID       RVIC_INT_ID_1
+#define RVIC_GPIO0_INT_ID       RVIC_INT_ID_2
+#define RVIC_GPIO1_INT_ID       RVIC_INT_ID_3
+#define RVIC_I2C0_INT_ID        RVIC_INT_ID_4
+#define RVIC_SPI0_INT_ID        RVIC_INT_ID_5
+#define RVIC_GPIO2_4_INT_ID     RVIC_INT_ID_6
+#define RVIC_GPIO5_7_INT_ID     RVIC_INT_ID_7
+#define RVIC_GPIO8_INT_ID       RVIC_INT_ID_8
+#define RVIC_GPIO9_INT_ID       RVIC_INT_ID_9
+#define RVIC_GPIO10_12_INT_ID   RVIC_INT_ID_10
+#define RVIC_GPIO13_15_INT_ID   RVIC_INT_ID_11
+#define RVIC_UART1_INT_ID       RVIC_INT_ID_12
+#define RVIC_UART2_INT_ID       RVIC_INT_ID_13
+#define RVIC_I2C1_INT_ID        RVIC_INT_ID_14
+#define RVIC_TIMER1_INT_ID      RVIC_INT_ID_15
+#define RVIC_TIMER2_INT_ID      RVIC_INT_ID_16
+
 void rvic_irq_enable(rvic_int_id_e id);
 void rvic_irq_disable(rvic_int_id_e id);
 void rvic_clear_irq_pending(rvic_int_id_e id);

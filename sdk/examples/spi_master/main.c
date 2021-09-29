@@ -15,7 +15,7 @@
 uint8_t program_data[BUFFER_SIZE];
 uint8_t read_data[BUFFER_SIZE];
 
-
+// 标准三线SPI测试
 static void standard_spi_test()
 {
     uint16_t i;
@@ -23,6 +23,7 @@ static void standard_spi_test()
 
     xprintf("Standard SPI test started...\n");
 
+    // 读flash ID
     id = flash_n25q_read_id();
     xprintf("manf id = 0x%2x\n", id.manf_id);
     xprintf("mem type = 0x%2x\n", id.mem_type);
@@ -50,6 +51,7 @@ static void standard_spi_test()
     xprintf("Standard SPI test end...\n");
 }
 
+// QSPI测试
 static void quad_spi_test()
 {
     uint16_t i;
@@ -61,8 +63,9 @@ static void quad_spi_test()
     // 使能N25Q QSPI模式
     flash_n25q_enable_quad_mode(1);
     // 使能SPI控制器QSPI模式
-    spi0_set_spi_mode(SPI_MODE_QUAD);
+    spi_set_spi_mode(SPI0, SPI_MODE_QUAD);
 
+    // 读flash ID
     id = flash_n25q_read_id();
     xprintf("manf id = 0x%2x\n", id.manf_id);
     xprintf("mem type = 0x%2x\n", id.mem_type);
@@ -89,7 +92,7 @@ static void quad_spi_test()
 
     // 失能N25Q QSPI模式
     flash_n25q_enable_quad_mode(0);
-    spi0_set_spi_mode(SPI_MODE_STANDARD);
+    spi_set_spi_mode(SPI0, SPI_MODE_STANDARD);
 
     xprintf("Quad SPI test end...\n");
 }
@@ -107,7 +110,7 @@ int main()
     pinmux_set_io14_func(IO14_SPI_DQ2);
     pinmux_set_io15_func(IO15_SPI_DQ3);
 
-    uart0_init(uart0_putc);
+    uart_init(UART0, uart0_putc);
     flash_n25q_init(5);
 
     standard_spi_test();

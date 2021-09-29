@@ -11,7 +11,7 @@ int main()
 #ifdef SIMULATION
     sim_ctrl_init();
 #else
-    uart0_init(uart0_putc);
+    uart_init(UART0, uart0_putc);
     pinmux_set_io0_func(IO0_UART0_TX);
     pinmux_set_io3_func(IO3_UART0_RX);
 #endif

@@ -134,24 +134,24 @@ volatile uint32_t ulHartId;
 #endif
 
 #ifdef SIMULATION
-    timer0_set_div(50);
-    timer0_set_value(100);    // 100us period
+    timer_set_clk_div(TIMER0, 50);
+    timer_set_value(TIMER0, 100);    // 100us period
 #else
-    timer0_set_div(configCPU_CLOCK_HZ/1000000);
-    timer0_set_value(1000000/configTICK_RATE_HZ);    // 10ms period
+    timer_set_clk_div(TIMER0, configCPU_CLOCK_HZ/1000000);
+    timer_set_value(TIMER0, 1000000/configTICK_RATE_HZ);    // 10ms period
 #endif
-    timer0_set_int_enable(1);
-    timer0_set_mode_auto_reload();
-    rvic_set_irq_prio_level(0, 1);
-    rvic_irq_enable(0);
-    timer0_start(1);     // start timer
+    timer_set_int_enable(TIMER0, 1);
+    timer_set_mode_auto_reload(TIMER0);
+    rvic_set_irq_prio_level(RVIC_TIMER0_INT_ID, 1);
+    rvic_irq_enable(RVIC_TIMER0_INT_ID);
+    timer_start(TIMER0, 1);     // start timer
 }
 /*-----------------------------------------------------------*/
 
 void xPortClearTimerIntPending()
 {
-    timer0_clear_int_pending();
-    rvic_clear_irq_pending(0);
+    timer_clear_int_pending(TIMER0);
+    rvic_clear_irq_pending(RVIC_TIMER0_INT_ID);
 }
 
 BaseType_t xPortStartScheduler( void )

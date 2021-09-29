@@ -16,14 +16,25 @@ extern "C" {
 // Register width
 #define TIMER_PARAM_REG_WIDTH 32
 
-#define TIMER0_BASE_ADDR      (0x04000000)
-#define TIMER0_REG(offset)    (*((volatile uint32_t *)(TIMER0_BASE_ADDR + offset)))
+#define TIMER0_BASE_ADDR            (0x04000000)
+#define TIMER1_BASE_ADDR            (0x0C000000)
+#define TIMER2_BASE_ADDR            (0x0D000000)
 
-#define TIMER1_BASE_ADDR      (0x0C000000)
-#define TIMER1_REG(offset)    (*((volatile uint32_t *)(TIMER1_BASE_ADDR + offset)))
+#define TIMER0                      (TIMER0_BASE_ADDR)
+#define TIMER1                      (TIMER1_BASE_ADDR)
+#define TIMER2                      (TIMER2_BASE_ADDR)
 
-#define TIMER2_BASE_ADDR      (0x0D000000)
-#define TIMER2_REG(offset)    (*((volatile uint32_t *)(TIMER2_BASE_ADDR + offset)))
+#define TIMER_REG(base, offset)     (*((volatile uint32_t *)(base + offset)))
+
+void timer_start(uint32_t base, uint8_t en);
+void timer_set_value(uint32_t base, uint32_t val);
+void timer_set_int_enable(uint32_t base, uint8_t en);
+void timer_clear_int_pending(uint32_t base);
+uint8_t timer_get_int_pending(uint32_t base);
+uint32_t timer_get_current_count(uint32_t base);
+void timer_set_mode_auto_reload(uint32_t base);
+void timer_set_mode_ontshot(uint32_t base);
+void timer_set_clk_div(uint32_t base, uint32_t div);
 
 // Timer control register
 #define TIMER_CTRL_REG_OFFSET 0x0
@@ -44,16 +55,6 @@ extern "C" {
 // Timer current count register
 #define TIMER_COUNT_REG_OFFSET 0x8
 #define TIMER_COUNT_REG_RESVAL 0x0
-
-void timer0_start(uint8_t en);
-void timer0_set_value(uint32_t val);
-void timer0_set_int_enable(uint8_t en);
-void timer0_clear_int_pending();
-uint8_t timer0_get_int_pending();
-uint32_t timer0_get_current_count();
-void timer0_set_mode_auto_reload();
-void timer0_set_mode_ontshot();
-void timer0_set_div(uint32_t div);
 
 #ifdef __cplusplus
 }  // extern "C"

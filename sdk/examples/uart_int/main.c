@@ -29,52 +29,59 @@ static void uart_putc(uint8_t c)
     global_irq_disable();
 	fifo.tct++;
     // 使能TX FIFO空中断
-    UART0_REG(UART_CTRL_REG_OFFSET) |= 1 << UART_CTRL_TX_FIFO_EMPTY_INT_EN_BIT;
+    uart_tx_fifo_empty_int_enable(UART0, 1);
     global_irq_enable();
 }
 
 int main()
 {
+    // UART0引脚配置
     pinmux_set_io0_func(IO0_UART0_TX);
     pinmux_set_io3_func(IO3_UART0_RX);
-
-    uart0_init(uart_putc);
-    rvic_irq_enable(1);
-    rvic_set_irq_prio_level(1, 1);
+    // UART0初始化
+    uart_init(UART0, uart_putc);
+    // 使能RVIC中断
+    rvic_irq_enable(RVIC_UART0_INT_ID);
+    // 设置UART0中断优先级为1
+    rvic_set_irq_prio_level(RVIC_UART0_INT_ID, 1);
     // 使能RX FIFO非空中断
-    UART0_REG(UART_CTRL_REG_OFFSET) |= 1 << UART_CTRL_RX_FIFO_NOT_EMPTY_INT_EN_BIT;
+    uart_rx_fifo_not_empty_int_enable(UART0, 1);
+    // 使能全局中断
     global_irq_enable();
+
     fifo.tri = 0; fifo.twi = 0; fifo.tct = 0;
 
     xprintf("uart interrupt test\n");
     while (1);
 }
 
+// UART0中断处理函数
 void uart0_irq_handler()
 {
     uint16_t i, count, index;
     uint8_t data;
 
     // 如果RX FIFO非空
-    while (!(UART0_REG(UART_STATUS_REG_OFFSET) & (1 << UART_STATUS_RXEMPTY_BIT))) {
-        data = UART0_REG(UART_RXDATA_REG_OFFSET);
-        UART0_REG(UART_TXDATA_REG_OFFSET) = data;
+    while (!uart_rx_fifo_empty(UART0)) {
+        data = uart_get_rx_fifo_data(UART0);
+        uart_set_tx_fifo_data(UART0, data);
     }
     // 如果TX FIFO为空
-    if ((UART0_REG(UART_STATUS_REG_OFFSET) & (1 << UART_STATUS_TXEMPTY_BIT)) &&
-        (fifo.tct > 0)) {
-
+    if (uart_tx_fifo_empty(UART0) && (fifo.tct > 0)) {
         count = fifo.tct;
-        if (count > 8)
-            count = 8;
+        if (count > UART_TX_FIFO_LEN)
+            count = UART_TX_FIFO_LEN;
         for (index = 0; index < count; index++) {
             fifo.tct--;
             i = fifo.tri;
-            UART0_REG(UART_TXDATA_REG_OFFSET) = fifo.tbuf[i];
+            // 发送数据
+            uart_set_tx_fifo_data(UART0, fifo.tbuf[i]);
             fifo.tri = ++i % UART_TXB;
         }
+        // 如果发完数据，则关闭TX FIFO空中断
         if (fifo.tct == 0)
-            UART0_REG(UART_CTRL_REG_OFFSET) &= ~(1 << UART_CTRL_TX_FIFO_EMPTY_INT_EN_BIT);
+            uart_tx_fifo_empty_int_enable(UART0, 0);
     }
-    rvic_clear_irq_pending(1);
+
+    rvic_clear_irq_pending(RVIC_UART0_INT_ID);
 }

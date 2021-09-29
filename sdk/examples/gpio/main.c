@@ -18,19 +18,20 @@ int main()
     // gpio9双沿中断模式
     gpio_set_interrupt_mode(GPIO9, GPIO_INTR_DOUBLE_EDGE);
     // 使能RVIC中断
-    rvic_irq_enable(RVIC_INT_ID_9);
+    rvic_irq_enable(RVIC_GPIO9_INT_ID);
     // gpio9中断优先级为1
-    rvic_set_irq_prio_level(RVIC_INT_ID_9, 1);
+    rvic_set_irq_prio_level(RVIC_GPIO9_INT_ID, 1);
     // 使能全局中断
     global_irq_enable();
 
     while (1);
 }
 
+// GPIO9中断处理函数
 void gpio9_irq_handler()
 {
     gpio_clear_intr_pending(GPIO9);
-    rvic_clear_irq_pending(RVIC_INT_ID_9);
+    rvic_clear_irq_pending(RVIC_GPIO9_INT_ID);
 
     // 如果GPIO9输入高
     if (gpio_get_input_data(GPIO9))
