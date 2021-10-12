@@ -11,10 +11,10 @@ regtool.py -r -t . xxx.hjson
 ## 2.生成C语言头文件
 
 ```
-regtool.py -D -o . xxx.hjson
+regtool.py -D -o xxx.h xxx.hjson
 ```
 
-其中.表示在当前目录生成。
+表示在当前目录生成xxx.h头文件。
 
 
 
