@@ -87,12 +87,12 @@ void spi_set_lsb_first(uint32_t base)
 
 void spi_set_txdata(uint32_t base, uint8_t data)
 {
-    SPI_REG(base, SPI_TXDATA_REG_OFFSET) |= data;
+    SPI_REG(base, SPI_TXDATA_REG_OFFSET) = data;
 }
 
 uint8_t spi_get_rxdata(uint32_t base)
 {
-    return (SPI_REG(base, SPI_RXDATA_REG_OFFSET));
+    return (SPI_REG(base, SPI_RXDATA_REG_OFFSET) & 0xff);
 }
 
 uint8_t spi_reset_rxfifo(uint32_t base)
