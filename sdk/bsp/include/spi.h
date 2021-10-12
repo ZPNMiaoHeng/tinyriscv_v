@@ -92,6 +92,8 @@ void spi_master_read_bytes(uint32_t base, uint8_t read_data[], uint32_t count);
 #define SPI_CTRL0_SS_DELAY_OFFSET 12
 #define SPI_CTRL0_SS_DELAY_FIELD \
   ((bitfield_field32_t) { .mask = SPI_CTRL0_SS_DELAY_MASK, .index = SPI_CTRL0_SS_DELAY_OFFSET })
+#define SPI_CTRL0_TX_FIFO_RESET_BIT 16
+#define SPI_CTRL0_RX_FIFO_RESET_BIT 17
 #define SPI_CTRL0_CLK_DIV_MASK 0x7
 #define SPI_CTRL0_CLK_DIV_OFFSET 29
 #define SPI_CTRL0_CLK_DIV_FIELD \
@@ -109,18 +111,10 @@ void spi_master_read_bytes(uint32_t base, uint8_t read_data[], uint32_t count);
 // SPI TX data register
 #define SPI_TXDATA_REG_OFFSET 0x8
 #define SPI_TXDATA_REG_RESVAL 0x0
-#define SPI_TXDATA_TXDATA_MASK 0xff
-#define SPI_TXDATA_TXDATA_OFFSET 0
-#define SPI_TXDATA_TXDATA_FIELD \
-  ((bitfield_field32_t) { .mask = SPI_TXDATA_TXDATA_MASK, .index = SPI_TXDATA_TXDATA_OFFSET })
 
 // SPI RX data register
 #define SPI_RXDATA_REG_OFFSET 0xc
 #define SPI_RXDATA_REG_RESVAL 0x0
-#define SPI_RXDATA_RXDATA_MASK 0xff
-#define SPI_RXDATA_RXDATA_OFFSET 0
-#define SPI_RXDATA_RXDATA_FIELD \
-  ((bitfield_field32_t) { .mask = SPI_RXDATA_RXDATA_MASK, .index = SPI_RXDATA_RXDATA_OFFSET })
 
 #ifdef __cplusplus
 }  // extern "C"
