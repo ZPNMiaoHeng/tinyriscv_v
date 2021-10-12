@@ -84,12 +84,14 @@ module spi_core #(
     logic tx_fifo_push;
     logic [7:0] tx_fifo_data_out;
     logic tx_fifo_pop;
+    logic tx_fifo_flush;
     logic rx_fifo_full;
     logic rx_fifo_empty;
     logic [7:0] rx_fifo_data_in;
     logic rx_fifo_push;
     logic [7:0] rx_fifo_data_out;
     logic rx_fifo_pop;
+    logic rx_fifo_flush;
 
     assign master_enable        = ~reg2hw.ctrl0.role_mode.q;
     assign master_start         = reg2hw.ctrl0.enable.q && (!tx_fifo_empty);
@@ -103,13 +105,15 @@ module spi_core #(
     assign master_ss_level      = reg2hw.ctrl0.ss_level.q;
 
     assign tx_fifo_push     = reg2hw.txdata.qe;
-    assign tx_fifo_data_in  = reg2hw.txdata.q;
+    assign tx_fifo_data_in  = reg2hw.txdata.q[7:0];
     assign tx_fifo_pop      = master_data_valid_re | master_ready_fe;
+    assign tx_fifo_flush    = reg2hw.ctrl0.tx_fifo_reset.q && reg2hw.ctrl0.tx_fifo_reset.qe;
     // 读操作才把接收到的数据压入RX FIFO
     assign rx_fifo_push     = master_data_valid_re & master_read;
     assign rx_fifo_data_in  = master_data_out;
     assign rx_fifo_pop      = reg2hw.rxdata.re;
-    assign hw2reg.rxdata.d  = rx_fifo_data_out;
+    assign hw2reg.rxdata.d  = {24'h0, rx_fifo_data_out};
+    assign rx_fifo_flush    = reg2hw.ctrl0.rx_fifo_reset.q && reg2hw.ctrl0.rx_fifo_reset.qe;
 
     assign hw2reg.status.tx_fifo_full.d  = tx_fifo_full;
     assign hw2reg.status.tx_fifo_empty.d = tx_fifo_empty;
@@ -164,7 +168,7 @@ module spi_core #(
     ) u_tx_fifo (
         .clk_i      (clk_i),
         .rst_ni     (rst_ni),
-        .flush_i    (1'b0),
+        .flush_i    (tx_fifo_flush),
         .testmode_i (1'b0),
         .full_o     (tx_fifo_full),
         .empty_o    (tx_fifo_empty),
@@ -182,7 +186,7 @@ module spi_core #(
     ) u_rx_fifo (
         .clk_i      (clk_i),
         .rst_ni     (rst_ni),
-        .flush_i    (1'b0),
+        .flush_i    (rx_fifo_flush),
         .testmode_i (1'b0),
         .full_o     (rx_fifo_full),
         .empty_o    (rx_fifo_empty),

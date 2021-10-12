@@ -59,6 +59,14 @@ package spi_reg_pkg;
       logic        qe;
     } ss_delay;
     struct packed {
+      logic        q;
+      logic        qe;
+    } tx_fifo_reset;
+    struct packed {
+      logic        q;
+      logic        qe;
+    } rx_fifo_reset;
+    struct packed {
       logic [2:0]  q;
       logic        qe;
     } clk_div;
@@ -83,12 +91,12 @@ package spi_reg_pkg;
   } spi_reg2hw_status_reg_t;
 
   typedef struct packed {
-    logic [7:0]  q;
+    logic [31:0] q;
     logic        qe;
   } spi_reg2hw_txdata_reg_t;
 
   typedef struct packed {
-    logic [7:0]  q;
+    logic [31:0] q;
     logic        re;
   } spi_reg2hw_rxdata_reg_t;
 
@@ -138,6 +146,14 @@ package spi_reg_pkg;
       logic        de;
     } ss_delay;
     struct packed {
+      logic        d;
+      logic        de;
+    } tx_fifo_reset;
+    struct packed {
+      logic        d;
+      logic        de;
+    } rx_fifo_reset;
+    struct packed {
       logic [2:0]  d;
       logic        de;
     } clk_div;
@@ -162,22 +178,22 @@ package spi_reg_pkg;
   } spi_hw2reg_status_reg_t;
 
   typedef struct packed {
-    logic [7:0]  d;
+    logic [31:0] d;
   } spi_hw2reg_rxdata_reg_t;
 
   // Register -> HW type
   typedef struct packed {
-    spi_reg2hw_ctrl0_reg_t ctrl0; // [53:23]
-    spi_reg2hw_status_reg_t status; // [22:18]
-    spi_reg2hw_txdata_reg_t txdata; // [17:9]
-    spi_reg2hw_rxdata_reg_t rxdata; // [8:0]
+    spi_reg2hw_ctrl0_reg_t ctrl0; // [105:71]
+    spi_reg2hw_status_reg_t status; // [70:66]
+    spi_reg2hw_txdata_reg_t txdata; // [65:33]
+    spi_reg2hw_rxdata_reg_t rxdata; // [32:0]
   } spi_reg2hw_t;
 
   // HW -> register type
   typedef struct packed {
-    spi_hw2reg_ctrl0_reg_t ctrl0; // [43:13]
-    spi_hw2reg_status_reg_t status; // [12:8]
-    spi_hw2reg_rxdata_reg_t rxdata; // [7:0]
+    spi_hw2reg_ctrl0_reg_t ctrl0; // [71:37]
+    spi_hw2reg_status_reg_t status; // [36:32]
+    spi_hw2reg_rxdata_reg_t rxdata; // [31:0]
   } spi_hw2reg_t;
 
   // Register offsets
@@ -188,7 +204,7 @@ package spi_reg_pkg;
 
   // Reset values for hwext registers and their fields
   parameter logic [4:0] SPI_STATUS_RESVAL = 5'h0;
-  parameter logic [7:0] SPI_RXDATA_RESVAL = 8'h0;
+  parameter logic [31:0] SPI_RXDATA_RESVAL = 32'h0;
 
   // Register index
   typedef enum int {
@@ -202,8 +218,8 @@ package spi_reg_pkg;
   parameter logic [3:0] SPI_PERMIT [4] = '{
     4'b1111, // index[0] SPI_CTRL0
     4'b0001, // index[1] SPI_STATUS
-    4'b0001, // index[2] SPI_TXDATA
-    4'b0001  // index[3] SPI_RXDATA
+    4'b1111, // index[2] SPI_TXDATA
+    4'b1111  // index[3] SPI_RXDATA
   };
 
 endpackage

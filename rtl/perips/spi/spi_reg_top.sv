@@ -61,6 +61,10 @@ module spi_reg_top (
   logic ctrl0_ss_level_wd;
   logic [3:0] ctrl0_ss_delay_qs;
   logic [3:0] ctrl0_ss_delay_wd;
+  logic ctrl0_tx_fifo_reset_qs;
+  logic ctrl0_tx_fifo_reset_wd;
+  logic ctrl0_rx_fifo_reset_qs;
+  logic ctrl0_rx_fifo_reset_wd;
   logic [2:0] ctrl0_clk_div_qs;
   logic [2:0] ctrl0_clk_div_wd;
   logic status_re;
@@ -70,9 +74,9 @@ module spi_reg_top (
   logic status_rx_fifo_empty_qs;
   logic status_busy_qs;
   logic txdata_we;
-  logic [7:0] txdata_wd;
+  logic [31:0] txdata_wd;
   logic rxdata_re;
-  logic [7:0] rxdata_qs;
+  logic [31:0] rxdata_qs;
 
   // Register instances
   // R[ctrl0]: V(False)
@@ -363,6 +367,58 @@ module spi_reg_top (
   );
 
 
+  //   F[tx_fifo_reset]: 16:16
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("W1C"),
+    .RESVAL  (1'h0)
+  ) u_ctrl0_tx_fifo_reset (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (ctrl0_we),
+    .wd     (ctrl0_tx_fifo_reset_wd),
+
+    // from internal hardware
+    .de     (hw2reg.ctrl0.tx_fifo_reset.de),
+    .d      (hw2reg.ctrl0.tx_fifo_reset.d),
+
+    // to internal hardware
+    .qe     (reg2hw.ctrl0.tx_fifo_reset.qe),
+    .q      (reg2hw.ctrl0.tx_fifo_reset.q),
+
+    // to register interface (read)
+    .qs     (ctrl0_tx_fifo_reset_qs)
+  );
+
+
+  //   F[rx_fifo_reset]: 17:17
+  prim_subreg #(
+    .DW      (1),
+    .SWACCESS("W1C"),
+    .RESVAL  (1'h0)
+  ) u_ctrl0_rx_fifo_reset (
+    .clk_i   (clk_i),
+    .rst_ni  (rst_ni),
+
+    // from register interface
+    .we     (ctrl0_we),
+    .wd     (ctrl0_rx_fifo_reset_wd),
+
+    // from internal hardware
+    .de     (hw2reg.ctrl0.rx_fifo_reset.de),
+    .d      (hw2reg.ctrl0.rx_fifo_reset.d),
+
+    // to internal hardware
+    .qe     (reg2hw.ctrl0.rx_fifo_reset.qe),
+    .q      (reg2hw.ctrl0.rx_fifo_reset.q),
+
+    // to register interface (read)
+    .qs     (ctrl0_rx_fifo_reset_qs)
+  );
+
+
   //   F[clk_div]: 31:29
   prim_subreg #(
     .DW      (3),
@@ -469,9 +525,9 @@ module spi_reg_top (
   // R[txdata]: V(False)
 
   prim_subreg #(
-    .DW      (8),
+    .DW      (32),
     .SWACCESS("WO"),
-    .RESVAL  (8'h0)
+    .RESVAL  (32'h0)
   ) u_txdata (
     .clk_i   (clk_i),
     .rst_ni  (rst_ni),
@@ -496,7 +552,7 @@ module spi_reg_top (
   // R[rxdata]: V(True)
 
   prim_subreg_ext #(
-    .DW    (8)
+    .DW    (32)
   ) u_rxdata (
     .re     (rxdata_re),
     .we     (1'b0),
@@ -553,11 +609,15 @@ module spi_reg_top (
 
   assign ctrl0_ss_delay_wd = reg_wdata[15:12];
 
+  assign ctrl0_tx_fifo_reset_wd = reg_wdata[16];
+
+  assign ctrl0_rx_fifo_reset_wd = reg_wdata[17];
+
   assign ctrl0_clk_div_wd = reg_wdata[31:29];
   assign status_re = addr_hit[1] & reg_re & !reg_error;
   assign txdata_we = addr_hit[2] & reg_we & !reg_error;
 
-  assign txdata_wd = reg_wdata[7:0];
+  assign txdata_wd = reg_wdata[31:0];
   assign rxdata_re = addr_hit[3] & reg_re & !reg_error;
 
   // Read data return
@@ -576,6 +636,8 @@ module spi_reg_top (
         reg_rdata_next[10] = ctrl0_ss_sw_ctrl_qs;
         reg_rdata_next[11] = ctrl0_ss_level_qs;
         reg_rdata_next[15:12] = ctrl0_ss_delay_qs;
+        reg_rdata_next[16] = ctrl0_tx_fifo_reset_qs;
+        reg_rdata_next[17] = ctrl0_rx_fifo_reset_qs;
         reg_rdata_next[31:29] = ctrl0_clk_div_qs;
       end
 
@@ -588,11 +650,11 @@ module spi_reg_top (
       end
 
       addr_hit[2]: begin
-        reg_rdata_next[7:0] = '0;
+        reg_rdata_next[31:0] = '0;
       end
 
       addr_hit[3]: begin
-        reg_rdata_next[7:0] = rxdata_qs;
+        reg_rdata_next[31:0] = rxdata_qs;
       end
 
       default: begin

@@ -59,6 +59,16 @@
           name: "SS_DELAY",
           desc: "SPI ss signal active or inactive how many spi clk",
         }
+        { bits: "16",
+          name: "TX_FIFO_RESET",
+          swaccess: "rw1c",
+          desc: "reset tx fifo",
+        }
+        { bits: "17",
+          name: "RX_FIFO_RESET",
+          swaccess: "rw1c",
+          desc: "reset rx fifo",
+        }
         { bits: "31:29",
           name: "CLK_DIV",
           desc: "SPI clock divider count",
@@ -99,7 +109,7 @@
       hwaccess: "hro",
       hwqe: "true",
       fields: [
-        { bits: "7:0" }
+        { bits: "31:0" }
       ]
     }
     { name: "RXDATA",
@@ -109,7 +119,7 @@
       hwext: "true",
       hwre: "true",
       fields: [
-        { bits: "7:0" }
+        { bits: "31:0" }
       ]
     }
   ]
