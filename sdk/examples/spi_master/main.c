@@ -7,7 +7,7 @@
 #include "../../bsp/include/rvic.h"
 #include "../../bsp/include/pinmux.h"
 #include "../../bsp/include/sim_ctrl.h"
-#include "flash_n25q.h"
+#include "../../bsp/include/flash_n25q.h"
 
 
 #define BUFFER_SIZE   (64)
@@ -24,7 +24,7 @@ static void standard_spi_test()
     xprintf("Standard SPI test started...\n");
 
     // 读flash ID
-    id = flash_n25q_read_id();
+    id = flash_n25q_read_id(CMD_READ_ID);
     xprintf("manf id = 0x%2x\n", id.manf_id);
     xprintf("mem type = 0x%2x\n", id.mem_type);
     xprintf("mem cap = 0x%2x\n", id.mem_cap);
@@ -64,9 +64,10 @@ static void quad_spi_test()
     flash_n25q_enable_quad_mode(1);
     // 使能SPI控制器QSPI模式
     spi_set_spi_mode(SPI0, SPI_MODE_QUAD);
+    flash_n25q_set_spi_mode(SPI_MODE_QUAD);
 
     // 读flash ID
-    id = flash_n25q_read_id();
+    id = flash_n25q_read_id(CMD_MULTI_IO_READ_ID);
     xprintf("manf id = 0x%2x\n", id.manf_id);
     xprintf("mem type = 0x%2x\n", id.mem_type);
     xprintf("mem cap = 0x%2x\n", id.mem_cap);
@@ -93,6 +94,7 @@ static void quad_spi_test()
     // 失能N25Q QSPI模式
     flash_n25q_enable_quad_mode(0);
     spi_set_spi_mode(SPI0, SPI_MODE_STANDARD);
+    flash_n25q_set_spi_mode(SPI_MODE_STANDARD);
 
     xprintf("Quad SPI test end...\n");
 }
@@ -111,7 +113,7 @@ int main()
     pinmux_set_io15_func(IO15_SPI_DQ3);
 
     uart_init(UART0, uart0_putc);
-    flash_n25q_init(5);
+    flash_n25q_init(SPI0, 5);
 
     standard_spi_test();
     quad_spi_test();

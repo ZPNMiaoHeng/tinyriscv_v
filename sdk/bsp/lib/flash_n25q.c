@@ -3,7 +3,7 @@
 #include "../../bsp/include/spi.h"
 #include "../../bsp/include/rvic.h"
 #include "../../bsp/include/utils.h"
-#include "flash_n25q.h"
+#include "../../bsp/include/flash_n25q.h"
 
 /* N25Q064特点:
  * 1.总共64Mb大小，即8MB
@@ -14,21 +14,32 @@
  */
 
 static uint8_t current_spi_mode;
+static uint32_t spi_base_addr;
 
 
-void flash_n25q_init(uint16_t clk_div)
+void flash_n25q_init(uint32_t controller, uint16_t clk_div)
 {
-    spi_set_clk_div(SPI0, clk_div);
-    spi_set_role_mode(SPI0, SPI_ROLE_MODE_MASTER);
-    spi_set_spi_mode(SPI0, SPI_MODE_STANDARD);
-    spi_set_cp_mode(SPI0, SPI_CPOL_0_CPHA_0);
-    spi_set_msb_first(SPI0);
-    spi_master_set_ss_delay(SPI0, 1);
-    spi_set_ss_level(SPI0, 1);
-    spi_set_ss_ctrl_by_sw(SPI0, 1);
-    spi_set_enable(SPI0, 1);
+    spi_base_addr = controller;
 
-    current_spi_mode = SPI_MODE_STANDARD;
+    spi_set_clk_div(spi_base_addr, clk_div);
+    spi_set_role_mode(spi_base_addr, SPI_ROLE_MODE_MASTER);
+    spi_set_spi_mode(spi_base_addr, SPI_MODE_STANDARD);
+    spi_set_cp_mode(spi_base_addr, SPI_CPOL_0_CPHA_0);
+    spi_set_msb_first(spi_base_addr);
+    spi_master_set_ss_delay(spi_base_addr, 1);
+    spi_set_ss_level(spi_base_addr, 1);
+    spi_set_ss_ctrl_by_sw(spi_base_addr, 1);
+    spi_set_enable(spi_base_addr, 1);
+}
+
+void flash_n25q_set_spi_mode(uint8_t mode)
+{
+    current_spi_mode = mode;
+}
+
+void flash_n25q_set_spi_controller(uint32_t controller)
+{
+    spi_base_addr = controller;
 }
 
 // 写使能
@@ -42,9 +53,9 @@ void flash_n25q_write_enable(uint8_t en)
     else
         cmd = CMD_WRITE_DISABLE;
 
-    spi_set_ss_level(SPI0, 0);
-    spi_master_write_bytes(SPI0, &cmd, 1);
-    spi_set_ss_level(SPI0, 1);
+    spi_set_ss_level(spi_base_addr, 0);
+    spi_master_write_bytes(spi_base_addr, &cmd, 1);
+    spi_set_ss_level(spi_base_addr, 1);
 }
 
 // 读寄存器
@@ -52,10 +63,10 @@ uint8_t flash_n25q_read_reg(uint8_t cmd)
 {
     uint8_t data;
 
-    spi_set_ss_level(SPI0, 0);
-    spi_master_write_bytes(SPI0, &cmd, 1);
-    spi_master_read_bytes(SPI0, &data, 1);
-    spi_set_ss_level(SPI0, 1);
+    spi_set_ss_level(spi_base_addr, 0);
+    spi_master_write_bytes(spi_base_addr, &cmd, 1);
+    spi_master_read_bytes(spi_base_addr, &data, 1);
+    spi_set_ss_level(spi_base_addr, 1);
 
     return data;
 }
@@ -63,10 +74,10 @@ uint8_t flash_n25q_read_reg(uint8_t cmd)
 // 写寄存器
 void flash_n25q_write_reg(uint8_t cmd, uint8_t data)
 {
-    spi_set_ss_level(SPI0, 0);
-    spi_master_write_bytes(SPI0, &cmd, 1);
-    spi_master_write_bytes(SPI0, &data, 1);
-    spi_set_ss_level(SPI0, 1);
+    spi_set_ss_level(spi_base_addr, 0);
+    spi_master_write_bytes(spi_base_addr, &cmd, 1);
+    spi_master_write_bytes(spi_base_addr, &data, 1);
+    spi_set_ss_level(spi_base_addr, 1);
 }
 
 // 读状态寄存器
@@ -104,16 +115,16 @@ void flash_n25q_read(uint8_t data[], uint32_t len, uint32_t addr)
     tran_addr[1] = (addr >> 8)  & 0xff;
     tran_addr[2] = (addr >> 0)  & 0xff;
 
-    spi_set_ss_level(SPI0, 0);
-    spi_master_write_bytes(SPI0, &cmd, 1);
-    spi_master_write_bytes(SPI0, tran_addr, 3);
+    spi_set_ss_level(spi_base_addr, 0);
+    spi_master_write_bytes(spi_base_addr, &cmd, 1);
+    spi_master_write_bytes(spi_base_addr, tran_addr, 3);
     if (current_spi_mode != SPI_MODE_STANDARD) {
         for (i = 0; i < (DUMMY_CNT >> 1); i++)
-            spi_master_read_bytes(SPI0, data, 1);
-        spi_reset_rxfifo(SPI0);
+            spi_master_read_bytes(spi_base_addr, data, 1);
+        spi_reset_rxfifo(spi_base_addr);
     }
-    spi_master_read_bytes(SPI0, data, len);
-    spi_set_ss_level(SPI0, 1);
+    spi_master_read_bytes(spi_base_addr, data, len);
+    spi_set_ss_level(spi_base_addr, 1);
 }
 
 static void sector_erase(uint8_t cmd, uint32_t addr)
@@ -126,10 +137,10 @@ static void sector_erase(uint8_t cmd, uint32_t addr)
     tran_addr[1] = (addr >> 8)  & 0xff;
     tran_addr[2] = (addr >> 0)  & 0xff;
 
-    spi_set_ss_level(SPI0, 0);
-    spi_master_write_bytes(SPI0, &cmd, 1);
-    spi_master_write_bytes(SPI0, tran_addr, 3);
-    spi_set_ss_level(SPI0, 1);
+    spi_set_ss_level(spi_base_addr, 0);
+    spi_master_write_bytes(spi_base_addr, &cmd, 1);
+    spi_master_write_bytes(spi_base_addr, tran_addr, 3);
+    spi_set_ss_level(spi_base_addr, 1);
 
     while (flash_n25q_is_busy());
 
@@ -167,41 +178,15 @@ void flash_n25q_page_program(uint8_t data[], uint32_t len, uint32_t page)
 
     cmd = CMD_PAGE_PROGRAM;
 
-    spi_set_ss_level(SPI0, 0);
-    spi_master_write_bytes(SPI0, &cmd, 1);
-    spi_master_write_bytes(SPI0, tran_addr, 3);
-    spi_master_write_bytes(SPI0, data, len);
-    spi_set_ss_level(SPI0, 1);
+    spi_set_ss_level(spi_base_addr, 0);
+    spi_master_write_bytes(spi_base_addr, &cmd, 1);
+    spi_master_write_bytes(spi_base_addr, tran_addr, 3);
+    spi_master_write_bytes(spi_base_addr, data, len);
+    spi_set_ss_level(spi_base_addr, 1);
 
     while (flash_n25q_is_busy());
 
     flash_n25q_write_enable(0);
-}
-
-// 读增强型易失配置寄存器
-uint8_t flash_n25q_read_enhanced_volatile_conf_reg()
-{
-    uint8_t data;
-
-    data = flash_n25q_read_reg(CMD_READ_ENHANCED_VOL_CONF_REG);
-
-    return data;
-}
-
-// 读非易失配置寄存器
-uint8_t flash_n25q_read_nonvolatile_conf_reg()
-{
-    uint8_t data;
-
-    data = flash_n25q_read_reg(CMD_READ_NONVOL_CONF_REG);
-
-    return data;
-}
-
-// 写增强型易失配置寄存器
-void flash_n25q_write_enhanced_volatile_conf_reg(uint8_t data)
-{
-    flash_n25q_write_reg(CMD_WRITE_ENHANCED_VOL_CONF_REG, data);
 }
 
 // 使能QUAD SPI模式
@@ -211,21 +196,16 @@ void flash_n25q_enable_quad_mode(uint8_t en)
 
     flash_n25q_write_enable(1);
 
-    data = flash_n25q_read_enhanced_volatile_conf_reg();
+    data = flash_n25q_read_reg(CMD_READ_ENHANCED_VOL_CONF_REG);
     if (en) {
         data &= ~(1 << 7);
         data |= 1 << 6;
     } else {
         data |= 0x3 << 6;
     }
-    flash_n25q_write_enhanced_volatile_conf_reg(data);
+    flash_n25q_write_reg(CMD_WRITE_ENHANCED_VOL_CONF_REG, data);
 
     flash_n25q_write_enable(0);
-
-    if (en)
-        current_spi_mode = SPI_MODE_QUAD;
-    else
-        current_spi_mode = SPI_MODE_STANDARD;
 }
 
 // 设置n25q dummy cycles
@@ -244,21 +224,15 @@ void flash_n25q_set_dummy_clock_cycles(uint8_t num)
 }
 
 // 读flash ID
-n25q_id_t flash_n25q_read_id()
+n25q_id_t flash_n25q_read_id(uint8_t cmd)
 {
     n25q_id_t id;
-    uint8_t cmd;
     uint8_t data[3];
 
-    if (current_spi_mode == SPI_MODE_STANDARD)
-        cmd = CMD_READ_ID;
-    else
-        cmd = CMD_MULTI_IO_READ_ID;
-
-    spi_set_ss_level(SPI0, 0);
-    spi_master_write_bytes(SPI0, &cmd, 1);
-    spi_master_read_bytes(SPI0, data, 3);
-    spi_set_ss_level(SPI0, 1);
+    spi_set_ss_level(spi_base_addr, 0);
+    spi_master_write_bytes(spi_base_addr, &cmd, 1);
+    spi_master_read_bytes(spi_base_addr, data, 3);
+    spi_set_ss_level(spi_base_addr, 1);
 
     id.manf_id = data[0];
     id.mem_type = data[1];

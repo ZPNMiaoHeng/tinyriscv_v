@@ -13,8 +13,7 @@ TARGET = spi_master
 #INCLUDES += -I.
 
 C_SRCS := \
-	main.c \
-	flash_n25q.c
+	main.c
 
 
 BSP_DIR = ../../bsp

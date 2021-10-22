@@ -40,8 +40,10 @@ typedef struct {
     uint8_t mem_cap;
 } n25q_id_t;
 
-void flash_n25q_init(uint16_t clk_div);
-n25q_id_t flash_n25q_read_id();
+void flash_n25q_init(uint32_t controller, uint16_t clk_div);
+void flash_n25q_set_spi_mode(uint8_t mode);
+void flash_n25q_set_spi_controller(uint32_t controller);
+n25q_id_t flash_n25q_read_id(uint8_t cmd);
 void flash_n25q_write_enable(uint8_t en);
 uint8_t flash_n25q_read_reg(uint8_t cmd);
 void flash_n25q_write_reg(uint8_t cmd, uint8_t data);
@@ -51,10 +53,7 @@ void flash_n25q_read(uint8_t data[], uint32_t len, uint32_t addr);
 void flash_n25q_subsector_erase(uint32_t subsector);
 void flash_n25q_sector_erase(uint32_t sector);
 void flash_n25q_page_program(uint8_t data[], uint32_t len, uint32_t page);
-uint8_t flash_n25q_read_enhanced_volatile_conf_reg();
-void flash_n25q_write_enhanced_volatile_conf_reg(uint8_t data);
 void flash_n25q_enable_quad_mode(uint8_t en);
 void flash_n25q_set_dummy_clock_cycles(uint8_t num);
-uint8_t flash_n25q_read_nonvolatile_conf_reg();
 
 #endif
