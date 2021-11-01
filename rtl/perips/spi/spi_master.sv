@@ -25,7 +25,7 @@ module spi_master (
     input  logic [1:0] cp_mode_i,       // [1]表示CPOL, [0]表示CPHA
     input  logic [2:0] div_ratio_i,     // 分频比
     input  logic       msb_first_i,     // 1: MSB, 0: LSB
-    input  logic [3:0] ss_delay_cnt_i,  // SS信号延时时钟个数
+    input  logic [3:0] ss_delay_cnt_i,  // SS信号延时时钟个数, 当ss_sw_ctrl_i=0时才有效
     input  logic       ss_sw_ctrl_i,    // 软件控制SS信号
     input  logic       ss_level_i,      // SS输出电平，仅当ss_sw_ctrl_i=1时有效
     output logic [7:0] data_o,          // 接收到的数据
@@ -89,7 +89,12 @@ module spi_master (
                 ready_d = 1'b1;
                 if (start_i) begin
                     out_data_d = data_i;
-                    state_d = S_SS_ACTIVE;
+                    if (ss_sw_ctrl_i) begin
+                        state_d = S_TRANSMIT;
+                        start_d = 1'b1;
+                    end else begin
+                        state_d = S_SS_ACTIVE;
+                    end
                     ss_delay_cnt_d = '0;
                     ready_d = 1'b0;
                 end
@@ -111,7 +116,11 @@ module spi_master (
                     start_d = 1'b1;
                 // 没有数据要传输
                 end else if (data_valid && (!start_i)) begin
-                    state_d = S_SS_INACTIVE;
+                    if (ss_sw_ctrl_i) begin
+                        state_d = S_IDLE;
+                    end else begin
+                        state_d = S_SS_INACTIVE;
+                    end
                     ss_delay_cnt_d = '0;
                 end
             end
