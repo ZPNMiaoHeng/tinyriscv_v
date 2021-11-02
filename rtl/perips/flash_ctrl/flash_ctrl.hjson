@@ -1,0 +1,71 @@
+// Copyright lowRISC contributors.
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+{ name: "flash_ctrl",
+  clocking: [{clock: "clk_i", reset: "rst_ni"}],
+  bus_interfaces: [
+    { protocol: "tlul", direction: "device" }
+  ],
+  regwidth: "32",
+  registers: [
+    { name: "CTRL",
+      desc: "flash_ctrl control register",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      hwqe: "true",
+      fields: [
+        { bits: "0",
+          name: "START",
+          desc: "start read or write",
+        }
+        { bits: "2:1",
+          name: "OP_MODE",
+          desc: "0: read, 1: program, 2: erase, 3: qspi init",
+        }
+        { bits: "3",
+          name: "SW_CTRL",
+          desc: "0: hardware ctrl, 1: software ctrl",
+        }
+        { bits: "4",
+          name: "PROGRAM_INIT",
+          desc: "0: not program, 1: prepare for program",
+        }
+        { bits: "5",
+          name: "WRITE_ERROR",
+          swaccess: "ro",
+          desc: "0: write succ, 1: write error",
+        }
+        { bits: "31:6",
+          swaccess: "r0w1c",
+          name: "RESERVED",
+          desc: "reserved, not use",
+        }
+      ]
+    }
+    { name: "ADDR",
+      desc: "flash_ctrl address register",
+      swaccess: "rw",
+      hwaccess: "hro",
+      fields: [
+        { bits: "22:0",
+          name: "RW_ADDRESS",
+          desc: "read or write address",
+        }
+        { bits: "31:23",
+          swaccess: "r0w1c",
+          name: "RESERVED",
+          desc: "reserved, not use",
+        }
+      ]
+    }
+    { name: "DATA",
+      desc: "flash_ctrl data register",
+      swaccess: "rw",
+      hwaccess: "hrw",
+      fields: [
+        { bits: "31:0",
+        }
+      ]
+    }
+  ]
+}

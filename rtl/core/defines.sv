@@ -25,6 +25,9 @@
 // ROM
 `define ROM_ADDR_MASK       ~32'hfffff
 `define ROM_ADDR_BASE       32'h00000000
+// Flash
+`define FLASH_ADDR_MASK     ~32'hffffff
+`define FLASH_ADDR_BASE     32'h01000000
 // DEBUG
 `define DEBUG_ADDR_MASK     ~32'hfffff
 `define DEBUG_ADDR_BASE     32'h10000000
@@ -61,6 +64,9 @@
 // Timer2
 `define TIMER2_ADDR_MASK    ~32'hffff
 `define TIMER2_ADDR_BASE    32'h0D000000
+// Flash ctrl
+`define FLASH_CTRL_ADDR_MASK ~32'hffffff
+`define FLASH_CTRL_ADDR_BASE 32'h0E000000
 // I2C1
 `define I2C1_ADDR_MASK      ~32'hffff
 `define I2C1_ADDR_BASE      32'h0B000000
