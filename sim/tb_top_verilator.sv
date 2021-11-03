@@ -53,23 +53,27 @@ module tb_top_verilator #(
     end
 
     integer r;
-    reg result_printed;
+    reg sim_end_q;
+    reg[31:0] end_flag_q;
 
     always @(posedge clk_i or negedge rst_ni) begin
         if (!rst_ni) begin
-            result_printed <= 1'b0;
+            sim_end_q <= 1'b0;
+            end_flag_q <= 32'h0;
         end else begin
-            if (u_tinyriscv_soc_top.ndmreset) begin
-                result_printed <= 1'b0;
-            end else if (!result_printed) begin
-                `ifdef TEST_RISCV_COMPLIANCE
+            sim_end_q <= sim_end;
+            end_flag_q <= end_flag;
+            `ifdef TEST_RISCV_COMPLIANCE
+                if ((!end_flag_q) && (end_flag == 32'h1)) begin
                     if (end_flag == 32'h1) begin
                         for (r = begin_signature; r < end_signature; r = r + 4) begin
                             $display("%x", u_tinyriscv_soc_top.u_rom.u_gen_ram.ram[r[31:2]]);
                         end
                         $finish;
                     end
-                `else
+                end
+            `else
+                if (sim_end && (!sim_end_q)) begin
                     if (sim_end == 1'b1) begin
                         if (sim_succ == 1'b1) begin
                             $display("~~~~~~~~~~~~~~~~~~~ TEST_PASS ~~~~~~~~~~~~~~~~~~~");
@@ -95,10 +99,9 @@ module tb_top_verilator #(
                             $display("fail testnum = %2d", fail_num);
                             `endif
                         end
-                        result_printed <= 1'b1;
                     end
-                `endif
-            end
+                end
+            `endif
         end
     end
 
