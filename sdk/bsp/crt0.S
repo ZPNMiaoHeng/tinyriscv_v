@@ -10,8 +10,8 @@ _start:
 .option pop
 	la sp, _sp
 #ifdef SIMULATION
-    li x26, 0x00
-    li x27, 0x00
+    /* clear sim result flags */
+    csrrwi x0, sstatus, 0x0
 #endif
 
 	/* Load data section */
@@ -44,10 +44,6 @@ _start:
     li a0, 0
     li a1, 0
     call main
-
-#ifdef SIMULATION
-    li x26, 0x01
-#endif
 
 loop:
     j loop
