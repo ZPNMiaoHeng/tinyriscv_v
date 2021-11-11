@@ -1,0 +1,9 @@
+# Object files
+*.o
+*.ko
+*.obj
+*.bin
+*.dump
+*.mem
+flash_loader
+tinyriscv.inc
