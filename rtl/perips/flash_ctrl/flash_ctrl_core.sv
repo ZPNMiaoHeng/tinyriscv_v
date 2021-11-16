@@ -163,9 +163,9 @@ module flash_ctrl_core (
                     op_start_d = 1'b1;
                 // 硬件访问(取指、取数据)
                 end else if (re && (~sw_access)) begin
-                    state_d = OP_READ;
+                    state_d = S_READ;
                     op_addr_d = addr;
-                    op_mode_d = 2'b00;
+                    op_mode_d = OP_READ;
                     op_start_d = 1'b1;
                 end
             end
