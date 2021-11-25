@@ -14,7 +14,14 @@
  limitations under the License.                                          
  */
 
+// 从Flash启动时打开下面这个宏
+//`define FLASH_BOOT
+
+`ifdef FLASH_BOOT
+`define CPU_RESET_ADDR       32'h01000000                   // CPU复位地址
+`else
 `define CPU_RESET_ADDR       32'h00000000                   // CPU复位地址
+`endif
 `define CPU_CLOCK_HZ         25000000                       // CPU时钟(25MHZ)
 `define JTAG_RESET_FF_LEVELS 5
 

@@ -44,6 +44,102 @@ module ifu #(
 
     );
 
+// 从(Nor)Flash启动(非易失)
+`ifdef FLASH_BOOT
+
+    localparam S_RESET    = 3'b001;
+    localparam S_FETCH    = 3'b010;
+    localparam S_VALID    = 3'b100;
+
+    reg[2:0] state_d, state_q;
+
+    wire inst_valid;
+    wire[31:0] fetch_addr_n;
+    reg[31:0] fetch_addr_q;
+
+    wire prdt_taken;
+    wire[31:0] prdt_addr;
+
+
+    always @ (*) begin
+        state_d = state_q;
+
+        case (state_q)
+            // 复位
+            S_RESET: begin
+                // 复位撤销后转到取指状态
+                if (rst_n) begin
+                    state_d = S_FETCH;
+                end
+            end
+
+            // 取指
+            S_FETCH: begin
+                // 取指有效
+                if (instr_gnt_i & (~stall_i[`STALL_IF]) & (~flush_i)) begin
+                    state_d = S_VALID;
+                end
+            end
+
+            // 指令有效
+            S_VALID: begin
+                // 回到取指状态
+                if (stall_i[`STALL_IF] || instr_rvalid_i || flush_i) begin
+                    state_d = S_FETCH;
+                end
+            end
+
+            default: ;
+        endcase
+    end
+
+    // 指令有效
+    assign inst_valid   = (state_q == S_VALID) & instr_rvalid_i & id_ready_i;
+    assign inst_valid_o = inst_valid;
+    // 指令无效时有nop指令代替
+    assign inst_o       = inst_valid ? instr_rdata_i: `INST_NOP;
+    assign pc_o         = fetch_addr_q;
+
+    // 更新取指地址
+    assign fetch_addr_n = flush_i            ? flush_addr_i:
+                          prdt_taken         ? prdt_addr:
+                          inst_valid         ? fetch_addr_q + 4'h4:
+                          fetch_addr_q;
+
+    // 取指请求
+    assign instr_req_o  = (~stall_i[`STALL_IF]) & (state_q == S_FETCH) & (~flush_i);
+    // 取指地址(4字节对齐)
+    assign instr_addr_o = {fetch_addr_q[31:2], 2'b00};
+
+    always @ (posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            state_q <= S_RESET;
+            fetch_addr_q <= `CPU_RESET_ADDR;
+        end else begin
+            state_q <= state_d;
+            fetch_addr_q <= fetch_addr_n;
+        end
+    end
+
+    // 分支预测
+    if (BranchPredictor) begin: g_branch_predictor
+        bpu u_bpu(
+            .clk(clk),
+            .rst_n(rst_n),
+            .inst_i(instr_rdata_i),
+            .inst_valid_i(inst_valid),
+            .pc_i(fetch_addr_q),
+            .prdt_taken_o(prdt_taken),
+            .prdt_addr_o(prdt_addr)
+        );
+    end else begin: g_no_branch_predictor
+        assign prdt_taken = 1'b0;
+        assign prdt_addr  = 32'h0;
+    end
+
+// 从Rom启动(易失)
+`else
+
     localparam S_RESET    = 3'b001;
     localparam S_FETCH    = 3'b010;
     localparam S_VALID    = 3'b100;
@@ -141,5 +237,7 @@ module ifu #(
         assign prdt_taken = 1'b0;
         assign prdt_addr  = 32'h0;
     end
+
+`endif
 
 endmodule
