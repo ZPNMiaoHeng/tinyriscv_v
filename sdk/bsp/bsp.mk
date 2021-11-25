@@ -31,7 +31,7 @@ C_SRCS += $(BSP_DIR)/lib/pinmux.c
 C_SRCS += $(BSP_DIR)/lib/flash_n25q.c
 C_SRCS += $(BSP_DIR)/lib/flash_ctrl.c
 
-LINKER_SCRIPT := $(BSP_DIR)/link.lds
+LINKER_SCRIPT := $(BSP_DIR)/link_rom.lds
 
 INCLUDES += -I$(BSP_DIR)
 
