@@ -6,7 +6,7 @@ MAKE := make
 VERILATOR := verilator
 
 VERI_FLAGS += +vcd
-VERI_CFLAGS +=
+VERI_CFLAGS += -DVL_DEBUG
 
 VERI_VFLAGS += -DTRACE_ENABLED
 
