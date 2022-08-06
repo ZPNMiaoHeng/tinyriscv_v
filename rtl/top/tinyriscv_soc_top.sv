@@ -100,17 +100,7 @@ module tinyriscv_soc_top #(
     wire [31:0]    slave_addr_mask  [SLAVES];
     wire [31:0]    slave_addr_base  [SLAVES];
 
-`ifdef VERILATOR
-    wire           sim_jtag_tck;
-    wire           sim_jtag_tms;
-    wire           sim_jtag_tdi;
-    wire           sim_jtag_trstn;
-    wire           sim_jtag_tdo;
-    wire [31:0]    sim_jtag_exit;
-`endif
-
     wire clk;
-
     wire ndmreset;
     wire ndmreset_n;
     wire debug_req;
@@ -641,6 +631,7 @@ module tinyriscv_soc_top #(
     );
 `endif
 
+    // 内部总线
     obi_interconnect #(
         .MASTERS(MASTERS),
         .SLAVES(SLAVES)
@@ -679,6 +670,7 @@ module tinyriscv_soc_top #(
     );
 `endif
 
+    // 复位信号产生
     rst_gen #(
         .RESET_FIFO_DEPTH(5)
     ) u_rst (
@@ -689,7 +681,7 @@ module tinyriscv_soc_top #(
 
     assign slave_addr_mask[JtagDevice] = `DEBUG_ADDR_MASK;
     assign slave_addr_base[JtagDevice] = `DEBUG_ADDR_BASE;
-    // JTAG module
+    // JTAG模块
     jtag_top #(
 
     ) u_jtag (
@@ -698,19 +690,11 @@ module tinyriscv_soc_top #(
         .debug_req_o        (debug_req),
         .ndmreset_o         (ndmreset),
         .halted_o           (core_halted),
-`ifdef VERILATOR
-        .jtag_tck_i         (sim_jtag_tck),
-        .jtag_tdi_i         (sim_jtag_tdi),
-        .jtag_tms_i         (sim_jtag_tms),
-        .jtag_trst_ni       (sim_jtag_trstn),
-        .jtag_tdo_o         (sim_jtag_tdo),
-`else
         .jtag_tck_i         (jtag_TCK_pin),
         .jtag_tdi_i         (jtag_TDI_pin),
         .jtag_tms_i         (jtag_TMS_pin),
         .jtag_trst_ni       (rst_ext_ni),
         .jtag_tdo_o         (jtag_TDO_pin),
-`endif
         .master_req_o       (master_req[JtagHost]),
         .master_gnt_i       (master_gnt[JtagHost]),
         .master_rvalid_i    (master_rvalid[JtagHost]),
@@ -729,31 +713,5 @@ module tinyriscv_soc_top #(
         .slave_rvalid_o     (slave_rvalid[JtagDevice]),
         .slave_rdata_o      (slave_rdata[JtagDevice])
     );
-
-`ifdef VERILATOR
-    sim_jtag #(
-        .TICK_DELAY(10),
-        .PORT(9999)
-    ) u_sim_jtag (
-        .clock                ( clk                  ),
-        .reset                ( ~rst_ext_ni          ),
-        .enable               ( 1'b1                 ),
-        .init_done            ( rst_ext_ni           ),
-        .jtag_TCK             ( sim_jtag_tck         ),
-        .jtag_TMS             ( sim_jtag_tms         ),
-        .jtag_TDI             ( sim_jtag_tdi         ),
-        .jtag_TRSTn           ( sim_jtag_trstn       ),
-        .jtag_TDO_data        ( sim_jtag_tdo         ),
-        .jtag_TDO_driven      ( 1'b1                 ),
-        .exit                 ( sim_jtag_exit        )
-    );
-
-    always @ (*) begin
-        if (sim_jtag_exit) begin
-            $display("jtag exit...");
-            $finish(2);
-        end
-    end
-`endif
 
 endmodule

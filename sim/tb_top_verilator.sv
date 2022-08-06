@@ -105,15 +105,51 @@ module tb_top_verilator #(
         end
     end
 
+    wire           sim_jtag_tck;
+    wire           sim_jtag_tms;
+    wire           sim_jtag_tdi;
+    wire           sim_jtag_trstn;
+    wire           sim_jtag_tdo;
+    wire [31:0]    sim_jtag_exit;
+
     tinyriscv_soc_top #(
         .TRACE_ENABLE(1'b1)
     ) u_tinyriscv_soc_top (
-        .clk_50m_i(clk_i),
-        .rst_ext_ni(rst_ni),
+        .clk_50m_i     (clk_i),
+        .rst_ext_ni    (rst_ni),
         .dump_wave_en_o(dump_wave_en_o),
-        .halted_ind_pin(halted)
+        .halted_ind_pin(halted),
+        .jtag_TCK_pin  (sim_jtag_tck),
+        .jtag_TMS_pin  (sim_jtag_tms),
+        .jtag_TDI_pin  (sim_jtag_tdi),
+        .jtag_TDO_pin  (sim_jtag_tdo)
     );
 
+    sim_jtag #(
+        .TICK_DELAY(10),
+        .PORT(9999)
+    ) u_sim_jtag (
+        .clock                ( clk_i                ),
+        .reset                ( ~rst_ni              ),
+        .enable               ( 1'b1                 ),
+        .init_done            ( rst_ni               ),
+        .jtag_TCK             ( sim_jtag_tck         ),
+        .jtag_TMS             ( sim_jtag_tms         ),
+        .jtag_TDI             ( sim_jtag_tdi         ),
+        .jtag_TRSTn           ( sim_jtag_trstn       ),
+        .jtag_TDO_data        ( sim_jtag_tdo         ),
+        .jtag_TDO_driven      ( 1'b1                 ),
+        .exit                 ( sim_jtag_exit        )
+    );
+
+    always @ (*) begin
+        if (sim_jtag_exit) begin
+            $display("jtag exit...");
+            $finish(2);
+        end
+    end
+
+    // 默认不显示寄存器值
     wire display_regs = 1'b0;
 
     wire write_gpr_reg = u_tinyriscv_soc_top.u_tinyriscv_core.u_gpr_reg.we_i;

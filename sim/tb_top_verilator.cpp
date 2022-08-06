@@ -35,8 +35,12 @@ int main(int argc, char **argv, char **env)
     top->eval();
 
     while (!Verilated::gotFinish()) {
-        if (t > 40)
-            top->rst_ni = 1;
+        if (t < 50)
+            top->rst_ni         = 1;
+        else if (t < 100)
+            top->rst_ni         = 0;
+        else if (t < 150)
+            top->rst_ni         = 1;
 
         top->clk_i = !top->clk_i;
         top->eval();
