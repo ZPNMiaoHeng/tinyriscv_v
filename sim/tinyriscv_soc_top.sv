@@ -14,8 +14,8 @@
  limitations under the License.                                          
  */
 
-`include "../core/defines.sv"
-`include "../debug/jtag_def.sv"
+`include "../rtl/core/defines.sv"
+`include "../rtl/debug/jtag_def.sv"
 
 // tinyriscv soc顶层模块
 module tinyriscv_soc_top #(

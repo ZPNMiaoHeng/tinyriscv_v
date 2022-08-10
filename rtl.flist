@@ -82,8 +82,6 @@
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
 ../rtl/sys_bus/obi_interconnect_slave_sel.sv
 
-../rtl/top/tinyriscv_soc_top.sv
-
 ../rtl/utils/gen_buf.sv
 ../rtl/utils/gen_dff.sv
 ../rtl/utils/gen_ram.sv

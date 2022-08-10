@@ -6,7 +6,7 @@ set scriptsdir ./scripts
 set constrsdir ./constrs
 set outdir ./out
 set ipdir [file join $outdir ip]
-set srcdir ../../rtl
+set srcdir ../../../rtl
 
 # 在某目录下递归查找所有指定文件
 proc rec_glob { basedir pattern } {
@@ -31,6 +31,7 @@ set src_verilog_files [rec_glob $srcdir "*.sv"]
 set src_all_files [concat $src_pkg_files $src_verilog_files]
 # 添加verilog文件
 add_files -norecurse -fileset sources_1 $src_all_files
+add_files -norecurse -fileset sources_1 ./tinyriscv_soc_top.sv
 
 # 创建constrs_1
 if {[get_filesets -quiet constrs_1] eq ""} {
