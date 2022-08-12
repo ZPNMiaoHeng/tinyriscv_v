@@ -41,6 +41,3 @@ add_files -norecurse -fileset constrs_1 [glob -directory $constrsdir {*.xdc}]
 
 # 创建输出目录
 file mkdir $outdir
-
-# 综合
-synth_design -top $top_module

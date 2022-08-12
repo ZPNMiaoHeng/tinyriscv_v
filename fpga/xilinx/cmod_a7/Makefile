@@ -15,7 +15,15 @@ impl:
 
 .PHONY: bit
 bit:
-	$(VIVADO) $(VIVADOFLAGS) -source scripts/synth.tcl -source scripts/impl.tcl -source scripts/bit_stream.tcl -source scripts/report.tcl
+	$(VIVADO) $(VIVADOFLAGS) -source scripts/synth.tcl -source scripts/impl.tcl -source scripts/bit.tcl -source scripts/report.tcl
+
+.PHONY: bin
+bin:
+	$(VIVADO) $(VIVADOFLAGS) -source scripts/synth.tcl -source scripts/impl.tcl -source scripts/bit.tcl -source scripts/bin.tcl -source scripts/report.tcl
+
+.PHONY: mcs
+mcs:
+	$(VIVADO) $(VIVADOFLAGS) -source scripts/synth.tcl -source scripts/impl.tcl -source scripts/bit.tcl -source scripts/mcs.tcl -source scripts/report.tcl
 
 .PHONY: clean
 clean::
