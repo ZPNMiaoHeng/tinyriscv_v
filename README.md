@@ -54,7 +54,7 @@ make run
 打开另一个终端，进入到tools/openocd目录下，运行openocd：
 
 ```
-./openocd_linux -f ../../sim/jtag_debug.cfg
+./openocd_linux -f ../../sim/remote_bitbang.cfg
 ```
 
 ![openocd](./pic/openocd.png)
