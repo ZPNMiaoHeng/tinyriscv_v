@@ -1,6 +1,6 @@
 # 1.概述
 
-介绍如何将tinyriscv移植到FPGA平台上和如何通过JTAG或者UART下载程序到FPGA。
+介绍如何将tinyriscv移植到FPGA平台上和如何通过JTAG下载程序到FPGA。
 
 1.软件：xilinx vivado(以2018.1版本为例)开发环境。
 
@@ -66,6 +66,8 @@
 
 勾选上红色框里那两项，然后点击Finish按钮。
 
+最后，还要添加顶层文件，即fpga/xilinx/perf-v/tinyriscv_soc_top.sv文件。
+
 至此，RTL源文件添加完成。
 
 ## 2.3添加约束文件
@@ -82,7 +84,7 @@
 
 ![](./images/add_src_6.png)
 
-点击Add Files按钮，选择tinyriscv项目里的FPGA/constrs/tinyriscv.xdc文件，如下图所示：
+点击Add Files按钮，选择tinyriscv项目里的fpga/xilinx/perf-v/constrs/tinyriscv.xdc文件，如下图所示：
 
 ![](./images/add_src_7.png)
 
@@ -156,9 +158,9 @@
 
 打开一个CMD窗口，然后cd进入到tinyriscv项目的tools/openocd目录，执行命令：
 
-`openocd.exe -f tinyriscv_cmsisdap.cfg`
+`openocd_win.exe -f tinyriscv_cmsisdap_jtag.cfg`
 
-如果执行成功的话则会如下图所示：
+如果执行成功的话则会如下图所示（由于项目一直在更新，图片上的信息可能会跟实际的不一致，以文字描述为准）：
 
 ![openocd](./images/openocd.png)
 
@@ -166,39 +168,25 @@
 
 `telnet localhost 4444`
 
-然后在这个CMD窗口下使用load_image命令将固件下载到FPGA，这里以freertos.bin文件为例，如下所示：
+然后在这个CMD窗口下使用load_bin命令将固件下载到FPGA，这里以freertos.bin文件为例，如下所示：
 
-`load_image D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x0 bin 0x0 0x1000000`
+`load_bin D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x20000000 1`
 
-使用verify_image命令来校验是否下载成功，如下所示：
+load_bin命令用法：
 
-`verify_image D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x0`
+`load_bin file address verify[0|1]`
 
-如果下载出错的话会有提示的，没有提示则说明下载成功。
+file：表示要下载的bin文件
+
+address：表示要下载的地址
+
+verify：表示是否检验，1：校验，0：不校验
 
 最后执行以下命令让程序跑起来：
 
 `resume 0`
 
+或者短按一下开发板上的复位按键。
+
 **注意：每次下载程序前记得先执行halt命令停住CPU。**
 
-# 4.Vivado仿真设置
-
-如果要在vivado里进行RTL仿真的话，还需要添加tb目录里的tinyriscv_soc_tb.v文件，具体方法和添加RTL源文件类似，只是在源文件类型里选择simulation sources，如下图所示：
-
-![add_sim](./images/add_sim.png)
-
-最后设置一下define.v文件的路径，如下图所示：
-
-![defines](./images/defines.png)
-
-最后，还要指定inst.data文件的路径，即修改tinyriscv_soc_tb.v文件里的下面这一行：
-
-```
-    // read mem data
-    initial begin
-        $readmemh ("F://yourpath/inst.data", tinyriscv_soc_top_0.u_rom.u_gen_ram.ram);
-    end
-```
-
-设置完成后，即可进行RTL仿真。
