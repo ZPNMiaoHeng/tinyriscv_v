@@ -6,7 +6,7 @@
 
 2.FPGA：xilinx Artix-7 35T。
 
-3.调试器：CMSIS-DAP或者DAPLink。
+3.调试器：CMSIS-DAP或者DAPLink（要带JTAG功能）。
 
 这里只是以Xilinx平台为例，实际上可以移植到任何FPGA平台（只要资源足够）。
 
@@ -168,9 +168,9 @@
 
 `telnet localhost 4444`
 
-然后在这个CMD窗口下使用load_bin命令将固件下载到FPGA，这里以freertos.bin文件为例，如下所示：
+然后在这个CMD窗口下使用load_bin命令将固件下载到FPGA的ROM里（掉电会消失），这里以freertos.bin文件为例，如下所示：
 
-`load_bin D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x20000000 1`
+`load_bin D:/gitee/open/tinyriscv/tests/example/FreeRTOS/Demo/tinyriscv_GCC/freertos.bin 0x0 1`
 
 load_bin命令用法：
 
@@ -185,6 +185,10 @@ verify：表示是否检验，1：校验，0：不校验
 最后执行以下命令让程序跑起来：
 
 `resume 0`
+
+或者
+
+`reset`
 
 或者短按一下开发板上的复位按键。
 
