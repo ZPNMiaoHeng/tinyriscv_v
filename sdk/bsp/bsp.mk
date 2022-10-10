@@ -29,6 +29,7 @@ C_SRCS += $(BSP_DIR)/lib/i2c.c
 C_SRCS += $(BSP_DIR)/lib/spi.c
 C_SRCS += $(BSP_DIR)/lib/pinmux.c
 C_SRCS += $(BSP_DIR)/lib/flash_n25q.c
+C_SRCS += $(BSP_DIR)/lib/flash_gd25q.c
 C_SRCS += $(BSP_DIR)/lib/flash_ctrl.c
 
 LINKER_SCRIPT := $(BSP_DIR)/link_rom.lds
