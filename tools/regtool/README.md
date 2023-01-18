@@ -1,5 +1,12 @@
 # 使用方法
 
+安装依赖。
+```
+$ pip3 install --user hjson
+$ pip3 install --user mistletoe
+$ pip3 install --user mako
+```
+
 ## 1.生成RTL文件
 
 ```
