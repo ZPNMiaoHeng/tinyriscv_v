@@ -47,28 +47,25 @@ module obi_interconnect_master_sel #(
 
     genvar m;
 
-    logic[MASTERS-1:0] master_req;
+    logic[MASTERS-1:0] master_req_vec;
 
     generate
         for (m = 0; m < MASTERS; m = m + 1) begin: gen_master_req_vec
-            assign master_req[m] = master_req_i[m];
+            assign master_req_vec[m] = master_req_i[m] &
+                                       ((master_addr_i[m] & slave_addr_mask_i) == slave_addr_base_i);
         end
     endgenerate
 
-    logic[MASTERS-1:0] master_req_vec;
     logic[MASTERS-1:0] master_sel_vec;
 
     generate
         // 优先级仲裁机制，LSB优先级最高，MSB优先级最低
         for (m = 0; m < MASTERS; m = m + 1) begin: gen_master_sel_vec
             if (m == 0) begin: m_is_0
-                assign master_req_vec[m] = 1'b1;
+                assign master_sel_vec[m] = master_req_vec[0];
             end else begin: m_is_not_0
-                assign master_req_vec[m] = ~(|master_req[m-1:0]);
+                assign master_sel_vec[m] = ~(|master_req_vec[m-1:0]) & master_req_vec[m];
             end
-            assign master_sel_vec[m] = master_req_vec[m] &
-                                       master_req_i[m] &
-                                       ((master_addr_i[m] & slave_addr_mask_i) == slave_addr_base_i);
         end
     endgenerate
 
