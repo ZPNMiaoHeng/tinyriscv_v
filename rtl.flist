@@ -94,3 +94,4 @@
 ../rtl/utils/prim_subreg_ext.sv
 ../rtl/utils/prim_filter.sv
 ../rtl/utils/up_counter.sv
+../rtl/utils/async_fifo.sv
