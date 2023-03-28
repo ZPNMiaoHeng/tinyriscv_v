@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include "../include/utils.h"
 #include "../include/uart.h"
 #include "../include/xprintf.h"
 
@@ -57,7 +58,7 @@ void uart_init(uint32_t base, myputc put)
 {
     // enable tx and rx
     UART_REG(base, UART_CTRL_REG_OFFSET) |= (1 << UART_CTRL_TX_EN_BIT) | (1 << UART_CTRL_RX_EN_BIT);
-
+    uart_set_baud_div(base, CPU_FREQ_HZ / 115200);
     xdev_out(put);
 }
 
