@@ -68,6 +68,7 @@ module jtag_dtm #(
     reg[4:0] state_d;
     reg[4:0] state_q;
     reg dtm_valid;
+    reg dtm_ready;
     reg[DTM_REQ_BITS-1:0] dtm_data_q;
     reg[DTM_REQ_BITS-1:0] dtm_data_d;
     reg[DTM_RESP_BITS-1:0] resp_tap_data_q;
@@ -99,6 +100,7 @@ module jtag_dtm #(
     always @ (*) begin
         state_d = state_q;
         dtm_valid = 1'b0;
+        dtm_ready = 1'b0;
         dtm_data_d = dtm_data_q;
 
         case (state_q)
@@ -119,13 +121,14 @@ module jtag_dtm #(
             end
 
             S_READ: begin
-                dtm_valid = 1'b1;
                 if (dmi_ready_i) begin
+                    dtm_valid = 1'b1;
                     state_d = S_WAIT_READ;
                 end
             end
 
             S_WAIT_READ: begin
+                dtm_ready = 1'b1;
                 if (dmi_valid_i) begin
                     dtm_data_d = dmi_data_i;
                     state_d = S_IDLE;
@@ -133,13 +136,14 @@ module jtag_dtm #(
             end
 
             S_WRITE: begin
-                dtm_valid = 1'b1;
                 if (dmi_ready_i) begin
+                    dtm_valid = 1'b1;
                     state_d = S_WAIT_WRITE;
                 end
             end
 
             S_WAIT_WRITE: begin
+                dtm_ready = 1'b1;
                 if (dmi_valid_i) begin
                     dtm_data_d = dmi_data_i;
                     state_d = S_IDLE;
@@ -154,9 +158,8 @@ module jtag_dtm #(
     end
 
     assign dtm_valid_o = dtm_valid;
-    assign dtm_data_o = dtm_data_q;
-    // we will always be ready to core request
-    assign dtm_ready_o = 1'b1;
+    assign dtm_data_o  = dtm_data_q;
+    assign dtm_ready_o = dtm_ready;
 
     always @ (posedge jtag_tck_i or negedge jtag_trst_ni) begin
         if (!jtag_trst_ni) begin
@@ -178,7 +181,7 @@ module jtag_dtm #(
             end else if ((state_q != S_IDLE) && tap_req_i) begin
                 stick_busy <= 1'b1;
             end
-            if (state_q != S_IDLE) begin
+            if ((state_q != S_IDLE) | tap_req_i) begin
                 is_busy <= 1'b1;
             end else begin
                 is_busy <= 1'b0;
@@ -186,6 +189,6 @@ module jtag_dtm #(
         end
     end
 
-    assign data_o = (stick_busy | is_busy) ? busy_response : dtm_data_q;
+    assign data_o = (stick_busy | is_busy | tap_req_i) ? busy_response : dtm_data_q;
 
 endmodule

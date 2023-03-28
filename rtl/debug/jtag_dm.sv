@@ -126,24 +126,23 @@ module jtag_dm #(
     localparam S_RESP = 2'b10; 
 
     reg[2:0] req_state_d, req_state_q;
-    reg dm_valid_d, dm_valid_q;
+    reg dm_valid_d;
 
     // response FSM
     always @ (*) begin
         req_state_d = req_state_q;
-        dm_valid_d = dm_valid_q;
+        dm_valid_d = 1'b0;
 
         case (req_state_q)
             S_REQ: begin
                 if (dmi_valid_i & dm_ready_o) begin
                     req_state_d = S_RESP;
-                    dm_valid_d = 1'b1;
                 end
             end
 
             S_RESP: begin
                 if (dmi_ready_i) begin
-                    dm_valid_d = 1'b0;
+                    dm_valid_d = 1'b1;
                     req_state_d = S_REQ;
                 end
             end
@@ -155,16 +154,14 @@ module jtag_dm #(
     always @ (posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             req_state_q <= S_REQ;
-            dm_valid_q <= 1'b0;
         end else begin
             req_state_q <= req_state_d;
-            dm_valid_q <= dm_valid_d;
         end
     end
 
     // we always ready to receive dmi request
     assign dm_ready_o = ~sbbusy;
-    assign dm_valid_o = dm_valid_q;
+    assign dm_valid_o = dm_valid_d;
     assign dm_data_o  = {{DMI_ADDR_BITS{1'b0}}, dm_resp_data_q, 2'b00};  // response successfully
 
 

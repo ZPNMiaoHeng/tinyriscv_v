@@ -51,13 +51,12 @@ module jtag_sba(
 
     );
 
-    localparam S_IDLE       = 5'b00001;
-    localparam S_READ       = 5'b00010;
-    localparam S_WAIT_READ  = 5'b00100;
-    localparam S_WRITE      = 5'b01000;
-    localparam S_WAIT_WRITE = 5'b10000;
+    localparam S_IDLE       = 4'b0001;
+    localparam S_READ       = 4'b0010;
+    localparam S_WAIT       = 4'b0100;
+    localparam S_WRITE      = 4'b1000;
 
-    reg[4:0] state_d, state_q;
+    reg[3:0] state_d, state_q;
     reg[2:0] sberror;
     reg[3:0] be_mask;
     reg[1:0] be_index;
@@ -101,6 +100,7 @@ module jtag_sba(
         endcase
     end
 
+    // 访存状态机
     always @ (*) begin
         state_d = state_q;
 
@@ -130,34 +130,33 @@ module jtag_sba(
                 end
             end
 
+            // 读内存
             S_READ: begin
                 master_req = 1'b1;
                 master_be = 4'b1111;
                 if (master_gnt_i) begin
-                    state_d = S_WAIT_READ;
+                    state_d = S_WAIT;
                 end
             end
 
-            S_WAIT_READ: begin
-                if (master_rvalid_i) begin
-                    state_d = S_IDLE;
-                    if (sbautoincrement_i) begin
-                        sbaddress = sbaddress_new;
-                    end
-                end
-            end
-
+            // 写内存
             S_WRITE: begin
                 master_req = 1'b1;
                 master_be = be_mask;
                 master_we = 1'b1;
                 if (master_gnt_i) begin
-                    state_d = S_WAIT_WRITE;
+                    state_d = S_WAIT;
                 end
             end
 
-            S_WAIT_WRITE: begin
+            // 等待读写完成
+            S_WAIT: begin
+                master_req = 1'b1;
+                if (~master_gnt_i) begin
+                    state_d = S_IDLE;
+                end
                 if (master_rvalid_i) begin
+                    master_req = 1'b0;
                     state_d = S_IDLE;
                     if (sbautoincrement_i) begin
                         sbaddress = sbaddress_new;
@@ -181,8 +180,7 @@ module jtag_sba(
     assign master_addr_o    = master_addr;
     assign master_wdata_o   = master_wdata;
 
-    assign sbdata_valid_o   = master_rvalid_i &
-                              ((state_q == S_WAIT_READ) || (state_q == S_WAIT_WRITE));
+    assign sbdata_valid_o   = master_rvalid_i & (state_q == S_WAIT);
     assign sbdata_o         = master_rdata_i;
     assign sberror_o        = sberror;
     assign sbaddress_o      = sbaddress;

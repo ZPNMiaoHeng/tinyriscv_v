@@ -137,18 +137,22 @@ module exu_mem(
     reg mem_stall_d;
     reg mem_reg_we_d;
     reg mem_mem_we_d;
+    reg req_mem_d;
 
+    // 访存状态机
     always @ (*) begin
         state_d = state_q;
 
         mem_stall_d = 1'b0;
         mem_reg_we_d = 1'b0;
         mem_mem_we_d = 1'b0;
+        req_mem_d = 1'b0;
 
         case (state_q)
             S_IDLE: begin
-                if (mem_req_o) begin
+                if (req_mem_i) begin
                     mem_stall_d = 1'b1;
+                    req_mem_d = 1'b1;
                     if (mem_gnt_i) begin
                         if (op_load) begin
                             state_d = S_WAIT_READ;
@@ -160,34 +164,46 @@ module exu_mem(
                 end
             end
 
+            // 读内存
             S_WAIT_READ: begin
+                req_mem_d = 1'b1;
+                mem_stall_d = 1'b1;
+                if (~mem_gnt_i) begin
+                    state_d = S_IDLE;
+                end
                 if (mem_rvalid_i) begin
-                    mem_stall_d = 1'b0;
+                    req_mem_d = 1'b0;
                     state_d = S_IDLE;
                     mem_reg_we_d = 1'b1;
-                end else begin
-                    mem_stall_d = 1'b1;
-                end
-            end
-
-            S_WAIT_WRITE: begin
-                if (mem_rvalid_i) begin
                     mem_stall_d = 1'b0;
-                    state_d = S_IDLE;
-                end else begin
-                    mem_stall_d = 1'b1;
                 end
             end
 
-            default:;
+            // 写内存
+            S_WAIT_WRITE: begin
+                req_mem_d = 1'b1;
+                mem_stall_d = 1'b1;
+                if (~mem_gnt_i) begin
+                    state_d = S_IDLE;
+                end
+                if (mem_rvalid_i) begin
+                    req_mem_d = 1'b0;
+                    state_d = S_IDLE;
+                    mem_stall_d = 1'b0;
+                end
+            end
+
+            default: ;
         endcase
     end
 
-    assign mem_req_o = req_mem_i && (state_q == S_IDLE);
+    // 访存请求
+    assign mem_req_o  = req_mem_d;
+    // 访存地址
     assign mem_addr_o = mem_addr_i;
 
     // 暂停流水线
-    assign mem_stall_o = mem_stall_d;
+    assign mem_stall_o  = mem_stall_d;
     // 写寄存器使能
     assign mem_reg_we_o = mem_reg_we_d;
     // 写内存使能
