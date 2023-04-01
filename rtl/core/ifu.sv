@@ -55,6 +55,7 @@ module ifu #(
     wire[31:0] fetch_addr_n;
     reg[31:0] fetch_addr_q;
     reg inst_valid_d;
+    reg instr_req_d;
 
     wire prdt_taken;
     wire[31:0] prdt_addr;
@@ -67,6 +68,7 @@ module ifu #(
     always @ (*) begin
         state_d = state_q;
         inst_valid_d = 0;
+        instr_req_d = 1'b0;
 
         case (state_q)
             // 复位
@@ -79,6 +81,7 @@ module ifu #(
 
             // 取指
             S_FETCH: begin
+                instr_req_d = 1'b1;
                 // 取指有效
                 if (req_valid) begin
                     state_d = S_VALID;
@@ -87,12 +90,14 @@ module ifu #(
 
             // 指令有效
             S_VALID: begin
-                // 取指无效
-                if (~req_valid) begin
-                    state_d = S_FETCH;
-                end
-                if (instr_rvalid_i) begin
-                    inst_valid_d = 1'b1;
+                if (instr_rvalid_i | flush_i) begin
+                    if (instr_rvalid_i) begin
+                        inst_valid_d = 1'b1;
+                    end
+                    instr_req_d = 1'b1;
+                    if (~req_valid) begin
+                        state_d = S_FETCH;
+                    end
                 end
             end
 
@@ -113,8 +118,8 @@ module ifu #(
                           inst_valid     ? fetch_addr_q + 4'h4:
                           fetch_addr_q;
 
-    // 取指请求(连续不断地取指)
-    assign instr_req_o  = (state_q != S_RESET);
+    // 取指请求
+    assign instr_req_o  = instr_req_d;
     // 取指地址(4字节对齐)
     assign instr_addr_o = {fetch_addr_n[31:2], 2'b00};
 

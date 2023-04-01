@@ -166,13 +166,8 @@ module exu_mem(
 
             // 读内存
             S_WAIT_READ: begin
-                req_mem_d = 1'b1;
                 mem_stall_d = 1'b1;
-                if (~mem_gnt_i) begin
-                    state_d = S_IDLE;
-                end
                 if (mem_rvalid_i) begin
-                    req_mem_d = 1'b0;
                     state_d = S_IDLE;
                     mem_reg_we_d = 1'b1;
                     mem_stall_d = 1'b0;
@@ -181,13 +176,8 @@ module exu_mem(
 
             // 写内存
             S_WAIT_WRITE: begin
-                req_mem_d = 1'b1;
                 mem_stall_d = 1'b1;
-                if (~mem_gnt_i) begin
-                    state_d = S_IDLE;
-                end
                 if (mem_rvalid_i) begin
-                    req_mem_d = 1'b0;
                     state_d = S_IDLE;
                     mem_stall_d = 1'b0;
                 end

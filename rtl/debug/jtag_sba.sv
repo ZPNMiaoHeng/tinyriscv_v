@@ -151,12 +151,7 @@ module jtag_sba(
 
             // 等待读写完成
             S_WAIT: begin
-                master_req = 1'b1;
-                if (~master_gnt_i) begin
-                    state_d = S_IDLE;
-                end
                 if (master_rvalid_i) begin
-                    master_req = 1'b0;
                     state_d = S_IDLE;
                     if (sbautoincrement_i) begin
                         sbaddress = sbaddress_new;
