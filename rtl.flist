@@ -69,14 +69,11 @@
 ../rtl/perips/pinmux/pinmux_reg_top.sv
 ../rtl/perips/pinmux/pinmux_core.sv
 ../rtl/perips/pinmux/pinmux_top.sv
-../rtl/perips/flash_ctrl/flash_ctrl_reg_pkg.sv
-../rtl/perips/flash_ctrl/flash_n25q/flash_n25q_pkg.sv
-../rtl/perips/flash_ctrl/flash_n25q/flash_n25q_tran_pkg.sv
-../rtl/perips/flash_ctrl/flash_n25q/flash_n25q_top.sv
-../rtl/perips/flash_ctrl/flash_n25q/flash_n25q_tran_seq.sv
-../rtl/perips/flash_ctrl/flash_ctrl_top.sv
-../rtl/perips/flash_ctrl/flash_ctrl_core.sv
-../rtl/perips/flash_ctrl/flash_ctrl_reg_top.sv
+../rtl/perips/xip/xip_top.sv
+../rtl/perips/xip/xip_core.sv
+../rtl/perips/xip/xip_w25q64_ctrl.sv
+../rtl/perips/xip/spi_master_transmit.sv
+../rtl/perips/bootrom/bootrom_top.sv
 
 ../rtl/sys_bus/obi_interconnect.sv
 ../rtl/sys_bus/obi_interconnect_master_sel.sv
