@@ -48,9 +48,9 @@ module tinyriscv_soc_top #(
 
     localparam int MASTERS      = 3;  // Number of master ports
 `ifdef VERILATOR
-    localparam int SLAVES       = 17; // Number of slave ports
+    localparam int SLAVES       = 18; // Number of slave ports
 `else
-    localparam int SLAVES       = 16; // Number of slave ports
+    localparam int SLAVES       = 17; // Number of slave ports
 `endif
 
     // masters
@@ -74,9 +74,10 @@ module tinyriscv_soc_top #(
     localparam int I2c1         = 12;
     localparam int Timer1       = 13;
     localparam int Timer2       = 14;
-    localparam int FlashCtrl    = 15;
+    localparam int Xip          = 15;
+    localparam int Bootrom      = 16;
 `ifdef VERILATOR
-    localparam int SimCtrl      = 16;
+    localparam int SimCtrl      = 17;
 `endif
 
     wire           master_req       [MASTERS];
@@ -192,6 +193,8 @@ module tinyriscv_soc_top #(
     assign halted_ind_pin = ~core_halted;
 `endif
 
+    assign master_we[CoreI] = '0;
+    assign master_be[CoreI] = '0;
     tinyriscv_core #(
         .DEBUG_HALT_ADDR(`DEBUG_ADDR_BASE + `HaltAddress),
         .DEBUG_EXCEPTION_ADDR(`DEBUG_ADDR_BASE + `ExceptionAddress),
@@ -204,7 +207,7 @@ module tinyriscv_soc_top #(
         .instr_req_o    (master_req[CoreI]),
         .instr_gnt_i    (master_gnt[CoreI]),
         .instr_rvalid_i (master_rvalid[CoreI]),
-        .instr_addr_o   (core_instr_addr),
+        .instr_addr_o   (master_addr[CoreI]),
         .instr_rdata_i  (master_rdata[CoreI]),
         .instr_err_i    (1'b0),
 
@@ -213,7 +216,7 @@ module tinyriscv_soc_top #(
         .data_rvalid_i  (master_rvalid[CoreD]),
         .data_we_o      (master_we[CoreD]),
         .data_be_o      (master_be[CoreD]),
-        .data_addr_o    (core_data_addr),
+        .data_addr_o    (master_addr[CoreD]),
         .data_wdata_o   (master_wdata[CoreD]),
         .data_rdata_i   (master_rdata[CoreD]),
         .data_err_i     (1'b0),
@@ -223,26 +226,6 @@ module tinyriscv_soc_top #(
 
         .debug_req_i    (debug_req)
     );
-
-    // 是否访问flash
-    wire instr_access_flash;
-    wire data_access_flash;
-
-    assign instr_access_flash = ((core_instr_addr & (`FLASH_ADDR_MASK)) == `FLASH_ADDR_BASE);
-    assign data_access_flash  = ((core_data_addr & (`FLASH_ADDR_MASK)) == `FLASH_ADDR_BASE);
-
-    // 转换后的地址
-    wire [31:0] instr_tran_addr;
-    wire [31:0] data_tran_addr;
-
-    assign instr_tran_addr = (core_instr_addr & (~(`FLASH_CTRL_ADDR_MASK))) | `FLASH_CTRL_ADDR_BASE;
-    assign data_tran_addr  = (core_data_addr & (~(`FLASH_CTRL_ADDR_MASK))) | `FLASH_CTRL_ADDR_BASE;
-
-    // 当访问flash空间时，转去访问flash ctrl模块
-    assign master_addr[CoreI] = instr_access_flash ?  ({instr_tran_addr[31:24], 1'b1, instr_tran_addr[22:0]}) :
-                                core_instr_addr;
-    assign master_addr[CoreD] = data_access_flash ? ({data_tran_addr[31:24], 1'b1, data_tran_addr[22:0]}) :
-                                core_data_addr;
 
     assign slave_addr_mask[Rom] = `ROM_ADDR_MASK;
     assign slave_addr_base[Rom] = `ROM_ADDR_BASE;
@@ -580,10 +563,10 @@ module tinyriscv_soc_top #(
 `endif
     end
 
-    assign slave_addr_mask[FlashCtrl] = `FLASH_CTRL_ADDR_MASK;
-    assign slave_addr_base[FlashCtrl] = `FLASH_CTRL_ADDR_BASE;
-    // 15.flash ctrl模块
-    flash_ctrl_top flash_ctrl (
+    assign slave_addr_mask[Xip] = `XIP_ADDR_MASK;
+    assign slave_addr_base[Xip] = `XIP_ADDR_BASE;
+    // 15.xip模块
+    xip_top xip (
         .clk_i          (clk),
         .rst_ni         (ndmreset_n),
         .spi_clk_o      (flash_spi_clk_pin),
@@ -602,20 +585,36 @@ module tinyriscv_soc_top #(
         .spi_dq3_i      (flash_spi_dq_in[3]),
         .spi_dq3_o      (flash_spi_dq_out[3]),
         .spi_dq3_oe_o   (flash_spi_dq_oe[3]),
-        .req_i          (slave_req[FlashCtrl]),
-        .we_i           (slave_we[FlashCtrl]),
-        .be_i           (slave_be[FlashCtrl]),
-        .addr_i         (slave_addr[FlashCtrl]),
-        .data_i         (slave_wdata[FlashCtrl]),
-        .gnt_o          (slave_gnt[FlashCtrl]),
-        .rvalid_o       (slave_rvalid[FlashCtrl]),
-        .data_o         (slave_rdata[FlashCtrl])
+        .req_i          (slave_req[Xip]),
+        .we_i           (slave_we[Xip]),
+        .be_i           (slave_be[Xip]),
+        .addr_i         (slave_addr[Xip]),
+        .data_i         (slave_wdata[Xip]),
+        .gnt_o          (slave_gnt[Xip]),
+        .rvalid_o       (slave_rvalid[Xip]),
+        .data_o         (slave_rdata[Xip])
+    );
+
+    assign slave_addr_mask[Bootrom] = `BOOTROM_ADDR_MASK;
+    assign slave_addr_base[Bootrom] = `BOOTROM_ADDR_BASE;
+    // 16.bootrom模块
+    bootrom_top bootrom(
+        .clk_i   (clk),
+        .rst_ni  (ndmreset_n),
+        .req_i   (slave_req[Bootrom]),
+        .we_i    (slave_we[Bootrom]),
+        .be_i    (slave_be[Bootrom]),
+        .addr_i  (slave_addr[Bootrom]),
+        .data_i  (slave_wdata[Bootrom]),
+        .gnt_o   (slave_gnt[Bootrom]),
+        .rvalid_o(slave_rvalid[Bootrom]),
+        .data_o  (slave_rdata[Bootrom])
     );
 
 `ifdef VERILATOR
     assign slave_addr_mask[SimCtrl] = `SIM_CTRL_ADDR_MASK;
     assign slave_addr_base[SimCtrl] = `SIM_CTRL_ADDR_BASE;
-    // 16.仿真控制模块
+    // 17.仿真控制模块
     sim_ctrl u_sim_ctrl(
         .clk_i         (clk),
         .rst_ni        (ndmreset_n),
