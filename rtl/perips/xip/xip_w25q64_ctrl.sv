@@ -50,7 +50,8 @@ module xip_w25q64_ctrl(
     // 数据宽度
     localparam SPI_DATA_WIDTH_8  = 2'b00;
     localparam SPI_DATA_WIDTH_16 = 2'b01;
-    localparam SPI_DATA_WIDTH_32 = 2'b10;
+    localparam SPI_DATA_WIDTH_24 = 2'b10;
+    localparam SPI_DATA_WIDTH_32 = 2'b11;
     // 2分频
     localparam SPI_CLK_DIV = 3'd1;
     // SPI极性
@@ -59,20 +60,25 @@ module xip_w25q64_ctrl(
     localparam OP_READ         = 2'b00;
     localparam OP_WRITE        = 2'b01;
     localparam OP_SECTOR_ERASE = 2'b10;
+    localparam OP_QUAD_ENABLE  = 2'b11;
 
-    localparam STATE_NUM        = 12;
-    localparam S_IDLE           = 12'h001;
-    localparam S_SS_LOW         = 12'h002;
-    localparam S_SS_HIGH        = 12'h004;
-    localparam S_WRITE_ENABLE   = 12'h008;
-    localparam S_WRITE_DISABLE  = 12'h010;
-    localparam S_SECTOR_ERASE   = 12'h020;
-    localparam S_PAGE_PROGRAM   = 12'h040;
-    localparam S_WRITE_DATA     = 12'h080;
-    localparam S_READ_DATA      = 12'h100;
-    localparam S_READ           = 12'h200;
-    localparam S_READ_STATUS    = 12'h400;
-    localparam S_CHECK_WIP      = 12'h800;
+    localparam STATE_NUM        = 16;
+    localparam S_IDLE           = 16'h001;
+    localparam S_SS_LOW         = 16'h002;
+    localparam S_SS_HIGH        = 16'h004;
+    localparam S_WRITE_ENABLE   = 16'h008;
+    localparam S_WRITE_DISABLE  = 16'h010;
+    localparam S_SECTOR_ERASE   = 16'h020;
+    localparam S_PAGE_PROGRAM   = 16'h040;
+    localparam S_WRITE_DATA     = 16'h080;
+    localparam S_READ_DATA      = 16'h100;
+    localparam S_READ32         = 16'h200;
+    localparam S_READ_STATUS    = 16'h400;
+    localparam S_CHECK_WIP      = 16'h800;
+    localparam S_QUAD_ENABLE    = 16'h1000;
+    localparam S_READ8          = 16'h2000;
+    localparam S_QUAD_WRITE_ADDR= 16'h4000;
+    localparam S_READ_DUMMY     = 16'h8000;
 
     logic [STATE_NUM-1:0] state_d, state_q;
     logic [STATE_NUM-1:0] next_state_d, next_state_q;
@@ -119,7 +125,7 @@ module xip_w25q64_ctrl(
                     op_d = op_i;
                     wdata_d = wdata_i;
                     state_d = S_SS_LOW;
-                    if ((op_i == OP_WRITE) | (op_i == OP_SECTOR_ERASE)) begin
+                    if ((op_i == OP_WRITE) | (op_i == OP_SECTOR_ERASE) | (op_i == OP_QUAD_ENABLE)) begin
                         next_state_d = S_WRITE_ENABLE;
                     end else begin
                         next_state_d = S_READ_DATA;
@@ -143,8 +149,10 @@ module xip_w25q64_ctrl(
                     data_d = 8'h06;
                     if (op_q == OP_SECTOR_ERASE) begin
                         next_state_d = S_SECTOR_ERASE;
-                    end else begin
+                    end else if (op_q == OP_WRITE) begin
                         next_state_d = S_PAGE_PROGRAM;
+                    end else begin
+                        next_state_d = S_QUAD_ENABLE;
                     end
                     state_d = S_SS_HIGH;
                 end
@@ -162,13 +170,25 @@ module xip_w25q64_ctrl(
                 end
             end
 
+            S_QUAD_ENABLE: begin
+                if (spi_idle) begin
+                    start_d = 1'b1;
+                    read_d = 1'b0;
+                    spi_mode_d = MODE_STAND_SPI;
+                    data_width_d = SPI_DATA_WIDTH_24;
+                    data_d = {8'h01, 8'h00, 8'h02};
+                    state_d = S_SS_HIGH;
+                    next_state_d = S_READ_STATUS;
+                end
+            end
+
             S_PAGE_PROGRAM: begin
                 if (spi_idle) begin
                     start_d = 1'b1;
                     read_d = 1'b0;
                     spi_mode_d = MODE_STAND_SPI;
                     data_width_d = SPI_DATA_WIDTH_32;
-                    data_d = {8'h02, addr_q[23:0]};
+                    data_d = {8'h32, addr_q[23:0]};
                     state_d = S_WRITE_DATA;
                 end
             end
@@ -177,7 +197,7 @@ module xip_w25q64_ctrl(
                 if (spi_idle) begin
                     start_d = 1'b1;
                     read_d = 1'b0;
-                    spi_mode_d = MODE_STAND_SPI;
+                    spi_mode_d = MODE_QUAD_SPI;
                     data_width_d = SPI_DATA_WIDTH_32;
                     data_d = wdata_q;
                     state_d = S_SS_HIGH;
@@ -204,8 +224,18 @@ module xip_w25q64_ctrl(
                     spi_mode_d = MODE_STAND_SPI;
                     data_width_d = SPI_DATA_WIDTH_8;
                     data_d = 8'h05;
-                    state_d = S_READ;
+                    state_d = S_READ8;
                     next_state_d = S_CHECK_WIP;
+                end
+            end
+
+            S_READ8: begin
+                if (spi_idle) begin
+                    start_d = 1'b1;
+                    read_d = 1'b1;
+                    spi_mode_d = MODE_STAND_SPI;
+                    data_width_d = SPI_DATA_WIDTH_8;
+                    state_d = S_SS_HIGH;
                 end
             end
 
@@ -227,18 +257,41 @@ module xip_w25q64_ctrl(
                     start_d = 1'b1;
                     read_d = 1'b0;
                     spi_mode_d = MODE_STAND_SPI;
-                    data_width_d = SPI_DATA_WIDTH_32;
-                    data_d = {8'h03, addr_q[23:0]};
-                    state_d = S_READ;
+                    data_width_d = SPI_DATA_WIDTH_8;
+                    data_d = 8'hEB;
+                    state_d = S_QUAD_WRITE_ADDR;
                     next_state_d = S_IDLE;
                 end
             end
 
-            S_READ: begin
+            S_QUAD_WRITE_ADDR: begin
+                if (spi_idle) begin
+                    start_d = 1'b1;
+                    read_d = 1'b0;
+                    spi_mode_d = MODE_QUAD_SPI;
+                    data_width_d = SPI_DATA_WIDTH_32;
+                    data_d = {addr_q[23:0], 8'h00};
+                    state_d = S_READ_DUMMY;
+                    next_state_d = S_IDLE;
+                end
+            end
+
+            S_READ_DUMMY: begin
                 if (spi_idle) begin
                     start_d = 1'b1;
                     read_d = 1'b1;
-                    spi_mode_d = MODE_STAND_SPI;
+                    spi_mode_d = MODE_QUAD_SPI;
+                    data_width_d = SPI_DATA_WIDTH_16;
+                    state_d = S_READ32;
+                    next_state_d = S_IDLE;
+                end
+            end
+
+            S_READ32: begin
+                if (spi_idle) begin
+                    start_d = 1'b1;
+                    read_d = 1'b1;
+                    spi_mode_d = MODE_QUAD_SPI;
                     data_width_d = SPI_DATA_WIDTH_32;
                     state_d = S_SS_HIGH;
                 end

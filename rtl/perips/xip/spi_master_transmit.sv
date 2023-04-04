@@ -23,7 +23,7 @@ module spi_master_transmit (
     input  logic        read_i,          // 0: write, 1: read
     input  logic [1:0]  spi_mode_i,      // 0: Standard SPI, 1: Dual SPI, 2: Quad SPI, 3: Standard SPI
     input  logic [1:0]  cp_mode_i,       // [1]表示CPOL, [0]表示CPHA
-    input  logic [1:0]  data_width_i,    // 数据宽度, 0: 8bits, 1: 16bits, 2: 32bits, 3: 8bits
+    input  logic [1:0]  data_width_i,    // 数据宽度, 0: 8bits, 1: 16bits, 2: 24bits, 3: 32bits
     input  logic [31:0] data_i,          // 数据输入
     input  logic [2:0]  div_ratio_i,     // 分频比(2 ^ div_ratio_i)
     input  logic        msb_first_i,     // 1: MSB, 0: LSB
@@ -55,9 +55,15 @@ module spi_master_transmit (
     output logic        spi_dq3_oe_o
     );
 
+    // SPI模式
     localparam MODE_STAND_SPI = 2'b00;
     localparam MODE_DUAL_SPI  = 2'b01;
     localparam MODE_QUAD_SPI  = 2'b10;
+    // 数据宽度
+    localparam SPI_DATA_WIDTH_8  = 2'b00;
+    localparam SPI_DATA_WIDTH_16 = 2'b01;
+    localparam SPI_DATA_WIDTH_24 = 2'b10;
+    localparam SPI_DATA_WIDTH_32 = 2'b11;
 
     localparam S_IDLE = 3'b001;
     localparam S_DATA = 3'b010;
@@ -173,28 +179,34 @@ module spi_master_transmit (
                             if (edge_cnt_q != 8'd0) begin
                                 case (spi_mode_q)
                                     MODE_STAND_SPI: begin
-                                        if (data_width_q == 2'd1) begin
+                                        if (data_width_q == SPI_DATA_WIDTH_16) begin
                                             out_data_d = {out_data_q[14:0], 1'b0};
-                                        end else if (data_width_q == 2'd2) begin
+                                        end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                             out_data_d = {out_data_q[30:0], 1'b0};
+                                        end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                            out_data_d = {out_data_q[22:0], 1'b0};
                                         end else begin
                                             out_data_d = {out_data_q[6:0], 1'b0};
                                         end
                                     end
                                     MODE_DUAL_SPI : begin
-                                        if (data_width_q == 2'd1) begin
+                                        if (data_width_q == SPI_DATA_WIDTH_16) begin
                                             out_data_d = {out_data_q[13:0], 2'b0};
-                                        end else if (data_width_q == 2'd2) begin
+                                        end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                             out_data_d = {out_data_q[29:0], 2'b0};
+                                        end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                            out_data_d = {out_data_q[21:0], 2'b0};
                                         end else begin
                                             out_data_d = {out_data_q[5:0], 2'b0};
                                         end
                                     end
                                     MODE_QUAD_SPI : begin
-                                        if (data_width_q == 2'd1) begin
+                                        if (data_width_q == SPI_DATA_WIDTH_16) begin
                                             out_data_d = {out_data_q[11:0], 4'b0};
-                                        end else if (data_width_q == 2'd2) begin
+                                        end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                             out_data_d = {out_data_q[27:0], 4'b0};
+                                        end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                            out_data_d = {out_data_q[19:0], 4'b0};
                                         end else begin
                                             out_data_d = {out_data_q[3:0], 4'b0};
                                         end
@@ -206,28 +218,34 @@ module spi_master_transmit (
                         end else begin
                             case (spi_mode_q)
                                 MODE_STAND_SPI: begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         in_data_d = {in_data_q[14:0], spi_dq1_i};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         in_data_d = {in_data_q[30:0], spi_dq1_i};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        in_data_d = {in_data_q[22:0], spi_dq1_i};
                                     end else begin
                                         in_data_d = {in_data_q[6:0], spi_dq1_i};
                                     end
                                 end
                                 MODE_DUAL_SPI : begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         in_data_d = {in_data_q[13:0], spi_dq1_i, spi_dq0_i};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         in_data_d = {in_data_q[29:0], spi_dq1_i, spi_dq0_i};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        in_data_d = {in_data_q[21:0], spi_dq1_i, spi_dq0_i};
                                     end else begin
                                         in_data_d = {in_data_q[5:0], spi_dq1_i, spi_dq0_i};
                                     end
                                 end
                                 MODE_QUAD_SPI : begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         in_data_d = {in_data_q[11:0], spi_dq3_i, spi_dq2_i, spi_dq1_i, spi_dq0_i};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         in_data_d = {in_data_q[27:0], spi_dq3_i, spi_dq2_i, spi_dq1_i, spi_dq0_i};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        in_data_d = {in_data_q[19:0], spi_dq3_i, spi_dq2_i, spi_dq1_i, spi_dq0_i};
                                     end else begin
                                         in_data_d = {in_data_q[3:0], spi_dq3_i, spi_dq2_i, spi_dq1_i, spi_dq0_i};
                                     end
@@ -241,28 +259,34 @@ module spi_master_transmit (
                         if (!cp_mode_q[0]) begin
                             case (spi_mode_q)
                                 MODE_STAND_SPI: begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         out_data_d = {out_data_q[14:0], 1'b0};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         out_data_d = {out_data_q[30:0], 1'b0};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        out_data_d = {out_data_q[22:0], 1'b0};
                                     end else begin
                                         out_data_d = {out_data_q[6:0], 1'b0};
                                     end
                                 end
                                 MODE_DUAL_SPI : begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         out_data_d = {out_data_q[13:0], 2'b0};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         out_data_d = {out_data_q[29:0], 2'b0};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        out_data_d = {out_data_q[21:0], 2'b0};
                                     end else begin
                                         out_data_d = {out_data_q[5:0], 2'b0};
                                     end
                                 end
                                 MODE_QUAD_SPI : begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         out_data_d = {out_data_q[11:0], 4'b0};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         out_data_d = {out_data_q[27:0], 4'b0};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        out_data_d = {out_data_q[19:0], 4'b0};
                                     end else begin
                                         out_data_d = {out_data_q[3:0], 4'b0};
                                     end
@@ -273,28 +297,34 @@ module spi_master_transmit (
                         end else begin
                             case (spi_mode_q)
                                 MODE_STAND_SPI: begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         in_data_d = {in_data_q[14:0], spi_dq1_i};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         in_data_d = {in_data_q[30:0], spi_dq1_i};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        in_data_d = {in_data_q[22:0], spi_dq1_i};
                                     end else begin
                                         in_data_d = {in_data_q[6:0], spi_dq1_i};
                                     end
                                 end
                                 MODE_DUAL_SPI : begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         in_data_d = {in_data_q[13:0], spi_dq1_i, spi_dq0_i};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         in_data_d = {in_data_q[29:0], spi_dq1_i, spi_dq0_i};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        in_data_d = {in_data_q[21:0], spi_dq1_i, spi_dq0_i};
                                     end else begin
                                         in_data_d = {in_data_q[5:0], spi_dq1_i, spi_dq0_i};
                                     end
                                 end
                                 MODE_QUAD_SPI : begin
-                                    if (data_width_q == 2'd1) begin
+                                    if (data_width_q == SPI_DATA_WIDTH_16) begin
                                         in_data_d = {in_data_q[11:0], spi_dq3_i, spi_dq2_i, spi_dq1_i, spi_dq0_i};
-                                    end else if (data_width_q == 2'd2) begin
+                                    end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                                         in_data_d = {in_data_q[27:0], spi_dq3_i, spi_dq2_i, spi_dq1_i, spi_dq0_i};
+                                    end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                                        in_data_d = {in_data_q[19:0], spi_dq3_i, spi_dq2_i, spi_dq1_i, spi_dq0_i};
                                     end else begin
                                         in_data_d = {in_data_q[3:0], spi_dq3_i, spi_dq2_i, spi_dq1_i, spi_dq0_i};
                                     end
@@ -356,33 +386,40 @@ module spi_master_transmit (
         endcase
     end
 
+    // 沿个数
     always_comb begin
         total_edge_cnt_d = 8'd63;
 
         case (spi_mode_q)
             MODE_STAND_SPI: begin
-                if (data_width_q == 2'd1) begin
+                if (data_width_q == SPI_DATA_WIDTH_16) begin
                     total_edge_cnt_d = 8'd31;
-                end else if (data_width_q == 2'd2) begin
+                end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                     total_edge_cnt_d = 8'd63;
+                end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                    total_edge_cnt_d = 8'd47;
                 end else begin
                     total_edge_cnt_d = 8'd15;
                 end
             end
             MODE_DUAL_SPI : begin
-                if (data_width_q == 2'd1) begin
+                if (data_width_q == SPI_DATA_WIDTH_16) begin
                     total_edge_cnt_d = 8'd15;
-                end else if (data_width_q == 2'd2) begin
+                end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                     total_edge_cnt_d = 8'd31;
+                end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                    total_edge_cnt_d = 8'd23;
                 end else begin
                     total_edge_cnt_d = 8'd7;
                 end
             end
             MODE_QUAD_SPI : begin
-                if (data_width_q == 2'd1) begin
+                if (data_width_q == SPI_DATA_WIDTH_16) begin
                     total_edge_cnt_d = 8'd7;
-                end else if (data_width_q == 2'd2) begin
+                end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                     total_edge_cnt_d = 8'd15;
+                end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                    total_edge_cnt_d = 8'd11;
                 end else begin
                     total_edge_cnt_d = 8'd3;
                 end
@@ -423,6 +460,7 @@ module spi_master_transmit (
         end
     end
 
+    // 输入输出引脚
     always_comb begin
         spi_dq0_d = 1'b0;
         spi_dq1_d = 1'b0;
@@ -435,10 +473,12 @@ module spi_master_transmit (
 
         case (spi_mode_q)
             MODE_STAND_SPI: begin
-                if (data_width_q == 2'd1) begin
+                if (data_width_q == SPI_DATA_WIDTH_16) begin
                     spi_dq0_d = out_data_d[15];
-                end else if (data_width_q == 2'd2) begin
+                end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                     spi_dq0_d = out_data_d[31];
+                end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                    spi_dq0_d = out_data_d[23];
                 end else begin
                     spi_dq0_d = out_data_d[7];
                 end
@@ -446,12 +486,15 @@ module spi_master_transmit (
             end
 
             MODE_DUAL_SPI: begin
-                if (data_width_q == 2'd1) begin
+                if (data_width_q == SPI_DATA_WIDTH_16) begin
                     spi_dq0_d = out_data_d[14];
                     spi_dq1_d = out_data_d[15];
-                end else if (data_width_q == 2'd2) begin
+                end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                     spi_dq0_d = out_data_d[30];
                     spi_dq1_d = out_data_d[31];
+                end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                    spi_dq0_d = out_data_d[22];
+                    spi_dq1_d = out_data_d[23];
                 end else begin
                     spi_dq0_d = out_data_d[6];
                     spi_dq1_d = out_data_d[7];
@@ -466,16 +509,21 @@ module spi_master_transmit (
             end
 
             MODE_QUAD_SPI: begin
-                if (data_width_q == 2'd1) begin
+                if (data_width_q == SPI_DATA_WIDTH_16) begin
                     spi_dq0_d = out_data_d[12];
                     spi_dq1_d = out_data_d[13];
                     spi_dq2_d = out_data_d[14];
                     spi_dq3_d = out_data_d[15];
-                end else if (data_width_q == 2'd2) begin
+                end else if (data_width_q == SPI_DATA_WIDTH_32) begin
                     spi_dq0_d = out_data_d[28];
                     spi_dq1_d = out_data_d[29];
                     spi_dq2_d = out_data_d[30];
                     spi_dq3_d = out_data_d[31];
+                end else if (data_width_q == SPI_DATA_WIDTH_24) begin
+                    spi_dq0_d = out_data_d[20];
+                    spi_dq1_d = out_data_d[21];
+                    spi_dq2_d = out_data_d[22];
+                    spi_dq3_d = out_data_d[23];
                 end else begin
                     spi_dq0_d = out_data_d[4];
                     spi_dq1_d = out_data_d[5];

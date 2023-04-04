@@ -14,10 +14,7 @@
  limitations under the License.                                          
  */
 
-module xip_core #(
-    parameter int unsigned TX_FIFO_DEPTH = 8,
-    parameter int unsigned RX_FIFO_DEPTH = 8
-    )(
+module xip_core(
     input  logic        clk_i,
     input  logic        rst_ni,
 
@@ -55,9 +52,10 @@ module xip_core #(
     localparam OP_READ         = 2'b00;
     localparam OP_WRITE        = 2'b01;
     localparam OP_SECTOR_ERASE = 2'b10;
+    localparam OP_QUAD_ENABLE  = 2'b11;
 
-    localparam S_IDLE  = 2'b01;
-    localparam S_WAIT  = 2'b10;
+    localparam S_IDLE       = 2'b01;
+    localparam S_WAIT_VALID = 2'b10;
 
     logic[1:0] state_d, state_q;
     logic valid_d, valid_q;
@@ -68,9 +66,24 @@ module xip_core #(
     logic valid;
 
     // 去掉基地址
-    assign addr  = {9'h0, addr_i[22:0]};
-    // addr_i[23], 1: 表示擦除扇区; 0: 表示编程数据
-    assign op = (!we_i) ? OP_READ : addr_i[23] ? OP_SECTOR_ERASE : OP_WRITE;
+    assign addr  = {10'h0, addr_i[21:0]};
+
+    // addr_i[23:22], 11：使能Quad SPI模式，10: 擦除扇区; 00: 编程数据
+    always_comb begin
+        op = '0;
+
+        if (we_i) begin
+            if (addr_i[23] & addr_i[22]) begin
+                op = OP_QUAD_ENABLE;
+            end else if (addr_i[23]) begin
+                op = OP_SECTOR_ERASE;
+            end else begin
+                op = OP_WRITE;
+            end
+        end else begin
+            op = OP_READ;
+        end
+    end
 
     assign gnt_o    = (req_i & (state_q == S_IDLE));
     assign rvalid_o = valid_q;
@@ -85,11 +98,11 @@ module xip_core #(
             S_IDLE: begin
                 valid_d = 1'b0;
                 if (req_i) begin
-                    state_d = S_WAIT;
+                    state_d = S_WAIT_VALID;
                 end
             end
 
-            S_WAIT: begin
+            S_WAIT_VALID: begin
                 if (valid) begin
                     state_d = S_IDLE;
                     valid_d = 1'b1;
