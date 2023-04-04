@@ -29,15 +29,16 @@ module bootrom_top(
 	output wire [31:0] data_o
     );
 
-    localparam RomSize = 4;
+    localparam RomSize = 5;
 
     wire [RomSize-1:0][31:0] mem;
 
     assign mem = {
         32'h0000006f,
         32'h000500e7,
-        32'h00451513,
-        32'h00200537
+        32'h02000537,
+        32'h0005a023,
+        32'h02c005b7
     };
 
     reg [5:0] addr_q;
