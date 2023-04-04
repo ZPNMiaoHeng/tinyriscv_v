@@ -1,10 +1,17 @@
 
     .global entry
     .option norvc
+
 entry:
-    lui	    a0, 0x0200
-    slli	a0, a0, 0x4
-    // jump to 0x02000000
-    jalr	a0
+    // enable quad spi mode
+    lui	a1, 0x2c00
+    sw	zero, 0(a1)
+
+    // xip base address(0x02000000)
+    lui	a0, 0x2000
+
+    // jump to xip base address
+    jalr  a0
+
 loop:
     j loop
