@@ -38,32 +38,18 @@ set_property -dict { PACKAGE_PIN M3    IOSTANDARD LVCMOS33 } [get_ports {io_pins
 # C_OUT
 set_property -dict { PACKAGE_PIN L3    IOSTANDARD LVCMOS33 } [get_ports {io_pins[9]}]; #IO_L8P_T1_AD14P_35 Sch=pio[02]
 
-## LED
-# LED4
-#set_property -dict { PACKAGE_PIN R3    IOSTANDARD LVCMOS33 } [get_ports {io_pins[10]}]; #IO_L2P_T0_34 Sch=pio[26]
-# LED5
-#set_property -dict { PACKAGE_PIN T3    IOSTANDARD LVCMOS33 } [get_ports {io_pins[11]}]; #IO_L2N_T0_34 Sch=pio[27]
-# LED6
-#set_property -dict { PACKAGE_PIN R2    IOSTANDARD LVCMOS33 } [get_ports {io_pins[12]}]; #IO_L1P_T0_34 Sch=pio[28]
-# LED7
-#set_property -dict { PACKAGE_PIN T1    IOSTANDARD LVCMOS33 } [get_ports {io_pins[13]}]; #IO_L3P_T0_DQS_34 Sch=pio[29]
-
-## GPIO
-#set_property -dict { PACKAGE_PIN T2    IOSTANDARD LVCMOS33 } [get_ports {io_pins[14]}]; #IO_L1N_T0_34 Sch=pio[30]
-#set_property -dict { PACKAGE_PIN U1    IOSTANDARD LVCMOS33 } [get_ports {io_pins[15]}]; #IO_L3N_T0_DQS_34 Sch=pio[31]
-
-## SPI
+## SPI/LED
 # SS
 set_property -dict { PACKAGE_PIN M1    IOSTANDARD LVCMOS33 } [get_ports {io_pins[11]}]; #IO_L9N_T1_DQS_AD7N_35 Sch=pio[17]
 # DQ1
 set_property -dict { PACKAGE_PIN N3    IOSTANDARD LVCMOS33 } [get_ports {io_pins[13]}]; #IO_L12P_T1_MRCC_35 Sch=pio[18]
-# DQ2
+# DQ2/LED7
 set_property -dict { PACKAGE_PIN P3    IOSTANDARD LVCMOS33 } [get_ports {io_pins[14]}]; #IO_L12N_T1_MRCC_35 Sch=pio[19]
-# DQ3
+# DQ3/LED6
 set_property -dict { PACKAGE_PIN M2    IOSTANDARD LVCMOS33 } [get_ports {io_pins[15]}]; #IO_L9P_T1_DQS_AD7P_35 Sch=pio[20]
-# SCK
+# SCK/LED5
 set_property -dict { PACKAGE_PIN N1    IOSTANDARD LVCMOS33 } [get_ports {io_pins[10]}]; #IO_L10N_T1_AD15N_35 Sch=pio[21]
-# DQ0
+# DQ0/LED4
 set_property -dict { PACKAGE_PIN N2    IOSTANDARD LVCMOS33 } [get_ports {io_pins[12]}]; #IO_L10P_T1_AD15P_35 Sch=pio[22]
 
 ## QSPI Flash引脚(存放程序)
