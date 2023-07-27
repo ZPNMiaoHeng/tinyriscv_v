@@ -1,5 +1,6 @@
 // See LICENSE.SiFive for license details.
 //VCS coverage exclude_file
+/* verilator lint_off STMTDLY */
 import "DPI-C" function int jtag_tick
 (
  input int port,

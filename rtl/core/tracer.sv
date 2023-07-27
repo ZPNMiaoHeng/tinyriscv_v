@@ -500,7 +500,7 @@ module tracer(
 
 
     always_comb begin
-        decoded_str = "";
+        // decoded_str = "";
 
         unique casez (inst_i)
             INSN_LUI:        decode_u_insn("lui");

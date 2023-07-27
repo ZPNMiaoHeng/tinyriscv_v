@@ -54,6 +54,7 @@ testbench_verilator:
 		$(VERI_VFLAGS) \
 		-LDFLAGS "-L../remote_bitbang \
 		-Wl,--enable-new-dtags -Wl,-rpath,remote_bitbang -lrbs" \
+		--no-timing \
 		-CFLAGS "-std=gnu++11 $(VERI_CFLAGS)"
 	$(MAKE) -C $(VERI_OBJ_DIR) -f V$(SIM_TOP_MODULE).mk
 	cp $(VERI_OBJ_DIR)/V$(SIM_TOP_MODULE) testbench_verilator
