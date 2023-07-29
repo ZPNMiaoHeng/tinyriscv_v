@@ -30,7 +30,7 @@ module csr_reg(
     output wire[31:0] exu_rdata_o,          // exu模块读寄存器数据
 
     input wire[31:0] pc_if_i,               // 取指地址
-    output wire trigger_match_o,            // 断点
+    output wire trigger_match_o,            // NOTE - 断点
 
     // form exception
     input wire excep_we_i,                  // exception模块写寄存器标志
@@ -53,6 +53,9 @@ module csr_reg(
 
     wire[31:0] max_tselect = MaxTselect;
 
+    // Machine ISA
+    // MXL(misa[31:30]) = 2'b01 -> XLEN = 32bits;
+    // misa[25: 0] = Extension = 26'b1100 -> I（8）= RV32I/64I/128I base ISA; M（12） = Integer Multiply/Divide extension
     wire[31:0] misa = 32'h40001100;   // 32bits, IM
 
     // for verification result
@@ -75,28 +78,44 @@ module csr_reg(
     reg[31:0] mstatus_d;
     wire[31:0] mstatus_q;
     reg mstatus_we;
+
+    // Nachine Scratch Register
+    // it is used to hold a pointer to a machine-mode hart-local context space and swapped
+    // with a user register upon entry to an M-mode trap handler
     reg[31:0] mscratch_d;
     wire[31:0] mscratch_q;
     reg mscratch_we;
-    reg[31:0] dscratch0_d;
-    wire[31:0] dscratch0_q;
-    reg dscratch0_we;
-    reg[31:0] dscratch1_d;
-    wire[31:0] dscratch1_q;
-    reg dscratch1_we;
+
     reg[31:0] mhartid_d;
     wire[31:0] mhartid_q;
     reg mhartid_we;
+
+// Debug Mode Registers
+    // Debug scratch register 0.
+    reg[31:0] dscratch0_d;
+    wire[31:0] dscratch0_q;
+    reg dscratch0_we;
+    
+    //Debug scratch register 1.
+    reg[31:0] dscratch1_d;
+    wire[31:0] dscratch1_q;
+    reg dscratch1_we;
+
+    // Debug PC
     reg[31:0] dpc_d;
     wire[31:0] dpc_q;
     reg dpc_we;
+    // Debug control and status register
     reg[31:0] dcsr_d;
     wire[31:0] dcsr_q;
     reg dcsr_we;
 
+// Debug/Trace Registers (shared with Debug Mode)
+    // Debug/Trace trigger register select.
     reg[31:0] tselect_d;
     wire[31:0] tselect_q;
     reg tselect_we;
+
     wire              tmatch_control_d;
     wire[HwBpNum-1:0] tmatch_control_q;
     wire[HwBpNum-1:0] tmatch_control_we;
